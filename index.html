@@ -252,6 +252,20 @@
 
         .btn-primary:hover { background-color: #1d4ed8; }
 
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-danger:hover { background-color: #dc2626; }
+
         .table-responsive { overflow-x: auto; }
 
         .styled-table {
@@ -483,7 +497,6 @@
                         <label for="filtro-operador">Operador</label>
                         <select id="filtro-operador" onchange="carregarHistorico()">
                             <option value="">Todos os Operadores</option>
-                            <!-- Preenchido dinamicamente via JS -->
                         </select>
                     </div>
                 </div>
@@ -531,7 +544,7 @@
         const db = getFirestore(app);
 
         let operadorAtual = localStorage.getItem("cardnet_operador") || "";
-        let listaGeralLotes = []; // Cache para guardar todos os dados
+        let listaGeralLotes = [];
 
         window.onload = function() {
             if (operadorAtual) {
@@ -576,10 +589,15 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const nome = document.getElementById('nome-arquivo').value;
+            const nome = document.getElementById('nome-arquivo').value.trim();
             const qtd = document.getElementById('qtd-cartoes').value;
             const dataPrevista = document.getElementById('data-prevista').value;
             const dataCadastroHoje = new Date().toISOString().split('T')[0];
+
+            if (!nome || !qtd || !dataPrevista) {
+                alert("Preencha todos os campos do cadastro!");
+                return;
+            }
 
             try {
                 await addDoc(collection(db, "lotes"), {
@@ -595,6 +613,7 @@
                 carregarLotes();
             } catch (error) {
                 console.error("Erro ao adicionar lote: ", error);
+                alert("Erro ao cadastrar lote. Verifique o console ou as regras do Firebase.");
             }
         });
 
@@ -653,7 +672,7 @@
                             </td>
                             <td>${situacaoHTML}</td>
                             <td>${operadorTexto}</td>
-                            <td><button onclick="deletarLote('${lote.id}')" style="background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;">Excluir</button></td>
+                            <td><button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button></td>
                         `;
                         tabelaLotes.appendChild(tr);
                     }
@@ -719,7 +738,7 @@
                     <td>${situacaoHTML}</td>
                     <td>${lote.operador || '-'}</td>
                 `;
-                tabelaHist.Instrucao = tabelaHist.appendChild(tr);
+                tabelaHist.appendChild(tr);
             });
         }
 
@@ -765,8 +784,13 @@
 
         window.deletarLote = async function(id) {
             if(confirm("Deseja realmente excluir este lote do sistema?")) {
-                await deleteDoc(doc(db, "lotes", id));
-                carregarLotes();
+                try {
+                    await deleteDoc(doc(db, "lotes", id));
+                    carregarLotes();
+                } catch (error) {
+                    console.error("Erro ao excluir:", error);
+                    alert("Erro ao excluir o lote.");
+                }
             }
         }
     </script>
