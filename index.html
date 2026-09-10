@@ -460,19 +460,35 @@
 
         <!-- ABA 2: HISTÓRICO -->
         <div id="aba-historico" class="secao-aba">
+            <!-- KPIs do Histórico -->
+            <section class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon blue">📁</div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Lotes Concluídos (Filtro)</span>
+                        <h2 id="hist-total-lotes">0</h2>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon green">💳</div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Total de Cartões (Filtro)</span>
+                        <h2 id="hist-total-cartoes">0</h2>
+                    </div>
+                </div>
+            </section>
+
             <section class="panel-card">
                 <div class="panel-header">
                     <h3>Histórico de Lotes Finalizados</h3>
                 </div>
 
-                <!-- Filtros do Histórico -->
+                <!-- Filtros do Histórico (Agora dinâmicos) -->
                 <div class="filtro-grid">
                     <div class="input-grupo">
                         <label for="filtro-ano">Ano</label>
                         <select id="filtro-ano" onchange="carregarHistorico()">
                             <option value="">Todos os Anos</option>
-                            <option value="2026">2026</option>
-                            <option value="2027">2027</option>
                         </select>
                     </div>
                     <div class="input-grupo">
@@ -579,6 +595,7 @@
             elementoBtn.classList.add('active');
 
             if (abaId === 'historico') {
+                atualizarFiltrosDinamicos();
                 carregarHistorico();
             }
         };
@@ -613,7 +630,7 @@
                 carregarLotes();
             } catch (error) {
                 console.error("Erro ao adicionar lote: ", error);
-                alert("Erro ao cadastrar lote. Verifique o console ou as regras do Firebase.");
+                alert("Erro ao cadastrar lote.");
             }
         });
 
@@ -628,7 +645,6 @@
                 let totalAtivo = 0;
                 let noPrazo = 0;
                 let atrasado = 0;
-                let operadoresSet = new Set();
 
                 if (querySnapshot.empty) {
                     tabelaLotes.innerHTML = `<tr><td colspan="8" class="text-center">Nenhum lote cadastrado.</td></tr>`;
@@ -640,8 +656,6 @@
                     const lote = docSnap.data();
                     lote.id = docSnap.id;
                     listaGeralLotes.push(lote);
-
-                    if (lote.operador) operadoresSet.add(lote.operador);
 
                     if (lote.status === "Em Produção") {
                         totalAtivo++;
@@ -683,12 +697,48 @@
                 }
 
                 atualizarKPIs(totalAtivo, noPrazo, atrasado);
-                atualizarSelectOperadores(operadoresSet);
 
             } catch (error) {
                 console.error("Erro ao carregar lotes:", error);
                 tabelaLotes.innerHTML = `<tr><td colspan="8" class="text-center" style="color:red;">Erro ao carregar dados do Firebase.</td></tr>`;
             }
+        }
+
+        function atualizarFiltrosDinamicos() {
+            const anosSet = new Set();
+            const operadoresSet = new Set();
+
+            listaGeralLotes.forEach(l => {
+                if (l.status === "Finalizado" && l.dataConclusao) {
+                    const ano = l.dataConclusao.split('-')[0];
+                    anosSet.add(ano);
+                    if (l.operador) operadoresSet.add(l.operador);
+                }
+            });
+
+            // Preenche anos dinamicamente
+            const selectAno = document.getElementById('filtro-ano');
+            const valorAnoAtual = selectAno.value;
+            selectAno.innerHTML = '<option value="">Todos os Anos</option>';
+            Array.from(anosSet).sort().reverse().forEach(ano => {
+                const opt = document.createElement('option');
+                opt.value = ano;
+                opt.innerText = ano;
+                if (ano === valorAnoAtual) opt.selected = true;
+                selectAno.appendChild(opt);
+            });
+
+            // Preenche operadores dinamicamente
+            const selectOp = document.getElementById('filtro-operador');
+            const valorOpAtual = selectOp.value;
+            selectOp.innerHTML = '<option value="">Todos os Operadores</option>';
+            Array.from(operadoresSet).sort().forEach(op => {
+                const opt = document.createElement('option');
+                opt.value = op;
+                opt.innerText = op;
+                if (op === valorOpAtual) opt.selected = true;
+                selectOp.appendChild(opt);
+            });
         }
 
         window.carregarHistorico = function() {
@@ -712,7 +762,14 @@
                 return true;
             });
 
-            if (filtrados.length === 0) {
+            // Calcula totalizadores do histórico filtrado
+            let somaLotes = filtrados.length;
+            let somaCartoes = filtrados.reduce((acc, curr) => acc + (parseInt(curr.qtd) || 0), 0);
+
+            document.getElementById('hist-total-lotes').innerText = somaLotes;
+            document.getElementById('hist-total-cartoes').innerText = somaCartoes.toLocaleString('pt-BR');
+
+            if (somaLotes === 0) {
                 tabelaHist.innerHTML = `<tr><td colspan="6" class="text-center">Nenhum lote encontrado com estes filtros.</td></tr>`;
                 return;
             }
@@ -733,25 +790,12 @@
                 tr.innerHTML = `
                     <td>${lote.dataConclusao.split('-').reverse().join('/')}</td>
                     <td><strong>${lote.nome}</strong></td>
-                    <td>${lote.qtd}</td>
+                    <td>${parseInt(lote.qtd).toLocaleString('pt-BR')}</td>
                     <td>${lote.dataPrevista.split('-').reverse().join('/')}</td>
                     <td>${situacaoHTML}</td>
                     <td>${lote.operador || '-'}</td>
                 `;
                 tabelaHist.appendChild(tr);
-            });
-        }
-
-        function atualizarSelectOperadores(operadoresSet) {
-            const selectOp = document.getElementById('filtro-operador');
-            const valorAtual = selectOp.value;
-            selectOp.innerHTML = '<option value="">Todos os Operadores</option>';
-            operadoresSet.forEach(op => {
-                const opt = document.createElement('option');
-                opt.value = op;
-                opt.innerText = op;
-                if (op === valorAtual) opt.selected = true;
-                selectOp.appendChild(opt);
             });
         }
 
