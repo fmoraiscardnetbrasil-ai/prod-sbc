@@ -483,7 +483,7 @@
                     <h3>Histórico de Lotes Finalizados</h3>
                 </div>
 
-                <!-- Filtros do Histórico (Agora dinâmicos) -->
+                <!-- Filtros do Histórico -->
                 <div class="filtro-grid">
                     <div class="input-grupo">
                         <label for="filtro-ano">Ano</label>
@@ -527,11 +527,12 @@
                                 <th>Data Prevista</th>
                                 <th>Situação</th>
                                 <th>Finalizado por</th>
+                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody id="tabela-historico">
                             <tr>
-                                <td colspan="6" class="text-center">Selecione os filtros ou aguarde carregar...</td>
+                                <td colspan="7" class="text-center">Selecione os filtros ou aguarde carregar...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -770,7 +771,7 @@
             document.getElementById('hist-total-cartoes').innerText = somaCartoes.toLocaleString('pt-BR');
 
             if (somaLotes === 0) {
-                tabelaHist.innerHTML = `<tr><td colspan="6" class="text-center">Nenhum lote encontrado com estes filtros.</td></tr>`;
+                tabelaHist.innerHTML = `<tr><td colspan="7" class="text-center">Nenhum lote encontrado com estes filtros.</td></tr>`;
                 return;
             }
 
@@ -794,6 +795,7 @@
                     <td>${lote.dataPrevista.split('-').reverse().join('/')}</td>
                     <td>${situacaoHTML}</td>
                     <td>${lote.operador || '-'}</td>
+                    <td><button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button></td>
                 `;
                 tabelaHist.appendChild(tr);
             });
@@ -831,6 +833,13 @@
                 try {
                     await deleteDoc(doc(db, "lotes", id));
                     carregarLotes();
+                    // Se estiver na aba histórico, recarrega os filtros e a tabela de histórico também
+                    setTimeout(() => {
+                        if(document.getElementById('aba-historico').classList.contains('active')) {
+                            atualizarFiltrosDinamicos();
+                            carregarHistorico();
+                        }
+                    }, 300);
                 } catch (error) {
                     console.error("Erro ao excluir:", error);
                     alert("Erro ao excluir o lote.");
