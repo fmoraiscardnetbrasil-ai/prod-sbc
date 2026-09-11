@@ -298,6 +298,7 @@
         .badge-no-prazo { color: #059669; font-weight: 600; background: #ecfdf5; padding: 4px 10px; border-radius: 20px; font-size: 12px; display: inline-block;}
         .badge-atrasado { color: #dc2626; font-weight: 600; background: #fef2f2; padding: 4px 10px; border-radius: 20px; font-size: 12px; display: inline-block;}
         .badge-finalizado { color: #2563eb; font-weight: 600; background: #eff6ff; padding: 4px 10px; border-radius: 20px; font-size: 12px; display: inline-block;}
+        .badge-parcial { color: #d97706; font-weight: 600; background: #fffbeb; padding: 4px 10px; border-radius: 20px; font-size: 12px; display: inline-block;}
 
         .login-overlay {
             position: fixed;
@@ -680,7 +681,7 @@
                             <td>${lote.qtd}</td>
                             <td>${lote.dataPrevista.split('-').reverse().join('/')}</td>
                             <td>
-                                <select onchange="atualizarStatus('${lote.id}', this.value)">
+                                <select onchange="verificarEAtualizarStatus('${lote.id}', '${lote.nome}', ${lote.qtd}, '${lote.dataPrevista}', '${lote.dataCadastro}', this)">
                                     <option value="Em Produção" selected>Em Produção</option>
                                     <option value="Finalizado">Finalizado</option>
                                 </select>
@@ -717,7 +718,6 @@
                 }
             });
 
-            // Preenche anos dinamicamente
             const selectAno = document.getElementById('filtro-ano');
             const valorAnoAtual = selectAno.value;
             selectAno.innerHTML = '<option value="">Todos os Anos</option>';
@@ -729,7 +729,6 @@
                 selectAno.appendChild(opt);
             });
 
-            // Preenche operadores dinamicamente
             const selectOp = document.getElementById('filtro-operador');
             const valorOpAtual = selectOp.value;
             selectOp.innerHTML = '<option value="">Todos os Operadores</option>';
@@ -763,7 +762,6 @@
                 return true;
             });
 
-            // Calcula totalizadores do histórico filtrado
             let somaLotes = filtrados.length;
             let somaCartoes = filtrados.reduce((acc, curr) => acc + (parseInt(curr.qtd) || 0), 0);
 
@@ -787,11 +785,14 @@
                     situacaoHTML = `<span class="badge-finalizado">✅ No Prazo</span>`;
                 }
 
+                const qtdExibida = parseInt(lote.qtd).toLocaleString('pt-BR');
+                const badgeTipo = lote.parcial ? `<br><span class="badge-parcial">Envio Parcial</span>` : '';
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${lote.dataConclusao.split('-').reverse().join('/')}</td>
                     <td><strong>${lote.nome}</strong></td>
-                    <td>${parseInt(lote.qtd).toLocaleString('pt-BR')}</td>
+                    <td>${qtdExibida} ${badgeTipo}</td>
                     <td>${lote.dataPrevista.split('-').reverse().join('/')}</td>
                     <td>${situacaoHTML}</td>
                     <td>${lote.operador || '-'}</td>
@@ -807,25 +808,74 @@
             document.getElementById("kpi-atrasado").innerText = atr;
         }
 
-        window.atualizarStatus = async function(id, novoStatus) {
-            if (!operadorAtual) {
-                alert("Identifique-se primeiro!");
-                return;
-            }
-
-            const loteRef = doc(db, "lotes", id);
-            const dadosAtualizacao = { status: novoStatus };
-
+        window.verificarEAtualizarStatus = async function(id, nomeArquivo, qtdOriginal, dataPrevista, dataCadastro, selectElement) {
+            const novoStatus = selectElement.value;
+            
             if (novoStatus === "Finalizado") {
-                dadosAtualizacao.dataConclusao = new Date().toISOString().split('T')[0];
-                dadosAtualizacao.operador = operadorAtual;
-            } else {
-                dadosAtualizacao.dataConclusao = null;
-                dadosAtualizacao.operador = null;
-            }
+                if (!operadorAtual) {
+                    alert("Identifique-se primeiro!");
+                    selectElement.value = "Em Produção";
+                    return;
+                }
 
-            await updateDoc(loteRef, dadosAtualizacao);
-            carregarLotes();
+                const inputQtd = prompt(`Quantos cartões foram enviados neste lote?\n(Total do lote: ${qtdOriginal})`, qtdOriginal);
+                
+                if (inputQtd === null) {
+                    // Cancelou
+                    selectElement.value = "Em Produção";
+                    return;
+                }
+
+                const qtdEnviada = parseInt(inputQtd);
+
+                if (isNaN(qtdEnviada) || qtdEnviada <= 0) {
+                    alert("Quantidade inválida!");
+                    selectElement.value = "Em Produção";
+                    return;
+                }
+
+                if (qtdEnviada > qtdOriginal) {
+                    alert("A quantidade enviada não pode ser maior que o total do lote original!");
+                    selectElement.value = "Em Produção";
+                    return;
+                }
+
+                const hojeStr = new Date().toISOString().split('T')[0];
+                const loteRef = doc(db, "lotes", id);
+
+                if (qtdEnviada === qtdOriginal) {
+                    // Envio total normal
+                    await updateDoc(loteRef, {
+                        status: "Finalizado",
+                        dataConclusao: hojeStr,
+                        operador: operadorAtual,
+                        parcial: false
+                    });
+                } else {
+                    // Envio Parcial: Atualiza o atual com a quantidade enviada e marca como finalizado
+                    await updateDoc(loteRef, {
+                        qtd: qtdEnviada,
+                        status: "Finalizado",
+                        dataConclusao: hojeStr,
+                        operador: operadorAtual,
+                        parcial: true
+                    });
+
+                    // Cria automaticamente o saldo restante como um novo lote em produção
+                    const saldoRestante = qtdOriginal - qtdEnviada;
+                    await addDoc(collection(db, "lotes"), {
+                        nome: nomeArquivo + " (Saldo)",
+                        qtd: saldoRestante,
+                        dataPrevista: dataPrevista,
+                        dataCadastro: dataCadastro || hojeStr,
+                        status: "Em Produção",
+                        dataConclusao: null,
+                        operador: null
+                    });
+                }
+
+                carregarLotes();
+            }
         }
 
         window.deletarLote = async function(id) {
@@ -833,7 +883,6 @@
                 try {
                     await deleteDoc(doc(db, "lotes", id));
                     carregarLotes();
-                    // Se estiver na aba histórico, recarrega os filtros e a tabela de histórico também
                     setTimeout(() => {
                         if(document.getElementById('aba-historico').classList.contains('active')) {
                             atualizarFiltrosDinamicos();
