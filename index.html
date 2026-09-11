@@ -661,7 +661,7 @@
     <!-- LÓGICA DO SISTEMA E FIREBASE (JavaScript) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCVPh1U7jH0WLuPWLWtZDvAgEfPLROqxcA",
@@ -679,22 +679,28 @@
         let operadorAtual = (localStorage.getItem("cardnet_operador") || "").toUpperCase();
         let listaGeralLotes = [];
 
-        function obterSenhas() {
-            let senhasSalvas = localStorage.getItem("cardnet_senhas_cadastradas");
-            if (!senhasSalvas) {
-                const padrao = {
-                    "FLÁVIO": "123",
-                    "FLAVIO": "123",
-                    "ANDRÉ": "123",
-                    "ANDRE": "123"
-                };
-                localStorage.setItem("cardnet_senhas_cadastradas", JSON.stringify(padrao));
-                return padrao;
+        async function verificarInicializacaoOperadores() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "operadores"));
+                if (querySnapshot.empty) {
+                    // Cadastra padrões iniciais se o banco estiver vazio
+                    const padrao = {
+                        "FLÁVIO": "123",
+                        "FLAVIO": "123",
+                        "ANDRÉ": "123",
+                        "ANDRE": "123"
+                    };
+                    for (let [nome, senha] of Object.entries(padrao)) {
+                        await setDoc(doc(db, "operadores", nome), { senha: senha });
+                    }
+                }
+            } catch (e) {
+                console.error("Erro ao verificar operadores iniciais:", e);
             }
-            return JSON.parse(senhasSalvas);
         }
 
-        window.onload = function() {
+        window.onload = async function() {
+            await verificarInicializacaoOperadores();
             if (operadorAtual) {
                 document.getElementById("modal-login").style.display = "none";
                 document.getElementById("display-usuario").innerText = "👤 Operador: " + operadorAtual;
@@ -702,7 +708,7 @@
             carregarLotes();
         };
 
-        window.fazerLogin = function() {
+        window.fazerLogin = async function() {
             const nome = document.getElementById("input-operador-login").value.trim().toUpperCase();
             const senha = document.getElementById("input-senha-login").value;
 
@@ -711,18 +717,31 @@
                 return;
             }
 
-            const senhasCadastradas = obterSenhas();
+            try {
+                const docRef = doc(db, "operadores", nome);
+                const querySnapshot = await getDocs(collection(db, "operadores"));
+                
+                let senhaSalva = null;
+                querySnapshot.forEach((d) => {
+                    if (d.id === nome) {
+                        senhaSalva = d.data().senha;
+                    }
+                });
 
-            if (!senhasCadastradas[nome] || senhasCadastradas[nome] !== senha) {
-                alert("Nome de operador ou senha inválidos! Acesso negado.");
-                return;
+                if (!senhaSalva || senhaSalva !== senha) {
+                    alert("Nome de operador ou senha inválidos! Acesso negado.");
+                    return;
+                }
+
+                localStorage.setItem("cardnet_operador", nome);
+                operadorAtual = nome;
+                document.getElementById("modal-login").style.display = "none";
+                document.getElementById("display-usuario").innerText = "👤 Operador: " + operadorAtual;
+                location.reload();
+            } catch (error) {
+                console.error("Erro no login:", error);
+                alert("Erro ao validar credenciais no servidor.");
             }
-
-            localStorage.setItem("cardnet_operador", nome);
-            operadorAtual = nome;
-            document.getElementById("modal-login").style.display = "none";
-            document.getElementById("display-usuario").innerText = "👤 Operador: " + operadorAtual;
-            location.reload();
         };
 
         window.mostrarTelaCadastro = function() {
@@ -730,7 +749,7 @@
             document.getElementById("modal-cadastro").style.display = "flex";
         };
 
-        window.salvarNovoOperador = function() {
+        window.salvarNovoOperador = async function() {
             const nome = document.getElementById("cad-operador").value.trim().toUpperCase();
             const senha = document.getElementById("cad-senha").value;
 
@@ -739,18 +758,26 @@
                 return;
             }
 
-            let senhasCadastradas = obterSenhas();
+            try {
+                const querySnapshot = await getDocs(collection(db, "operadores"));
+                let existe = false;
+                querySnapshot.forEach((d) => {
+                    if (d.id === nome) existe = true;
+                });
 
-            if (senhasCadastradas[nome]) {
-                alert("Este operador já está cadastrado! Use a tela de login ou redefina a senha.");
-                return;
+                if (existe) {
+                    alert("Este operador já está cadastrado! Use a tela de login ou redefina a senha.");
+                    return;
+                }
+
+                await setDoc(doc(db, "operadores", nome), { senha: senha });
+
+                alert("Operador cadastrado com sucesso! Faça o login agora.");
+                voltarParaLogin('cadastro');
+            } catch (error) {
+                console.error("Erro ao cadastrar operador:", error);
+                alert("Erro ao salvar novo operador.");
             }
-
-            senhasCadastradas[nome] = senha;
-            localStorage.setItem("cardnet_senhas_cadastradas", JSON.stringify(senhasCadastradas));
-
-            alert("Operador cadastrado com sucesso! Faça o login agora.");
-            voltarParaLogin('cadastro');
         };
 
         window.mostrarTelaRecuperacao = function() {
@@ -767,7 +794,7 @@
             document.getElementById("modal-login").style.display = "flex";
         };
 
-        window.salvarNovaSenha = function() {
+        window.salvarNovaSenha = async function() {
             const nome = document.getElementById("rec-operador").value.trim().toUpperCase();
             const senhaMestra = document.getElementById("rec-senha-mestra").value;
             const novaSenha = document.getElementById("rec-nova-senha").value;
@@ -784,17 +811,25 @@
                 return;
             }
 
-            let senhasCadastradas = obterSenhas();
-            
-            if (!senhasCadastradas[nome]) {
-                alert("Operador não encontrado no sistema!");
-                return;
-            }
+            try {
+                const querySnapshot = await getDocs(collection(db, "operadores"));
+                let existe = false;
+                querySnapshot.forEach((d) => {
+                    if (d.id === nome) existe = true;
+                });
 
-            senhasCadastradas[nome] = novaSenha;
-            localStorage.setItem("cardnet_senhas_cadastradas", JSON.stringify(senhasCadastradas));
-            alert("Senha redefinida com sucesso! Faça o login com a nova senha.");
-            voltarParaLogin('recuperacao');
+                if (!existe) {
+                    alert("Operador não encontrado no sistema!");
+                    return;
+                }
+
+                await setDoc(doc(db, "operadores", nome), { senha: novaSenha });
+                alert("Senha redefinida com sucesso! Faça o login com a nova senha.");
+                voltarParaLogin('recuperacao');
+            } catch (error) {
+                console.error("Erro ao redefinir senha:", error);
+                alert("Erro ao atualizar senha.");
+            }
         };
 
         window.sairSistema = function() {
