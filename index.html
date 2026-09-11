@@ -252,6 +252,21 @@
 
         .btn-primary:hover { background-color: #1d4ed8; }
 
+        .btn-secondary {
+            background-color: #64748b;
+            color: white;
+            border: none;
+            padding: 11px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            height: 42px;
+        }
+
+        .btn-secondary:hover { background-color: #475569; }
+
         .btn-danger {
             background-color: #ef4444;
             color: white;
@@ -324,6 +339,20 @@
 
         .login-card h2 { color: #1e293b; margin-bottom: 10px; font-size: 22px; }
         .login-card p { color: #64748b; font-size: 14px; margin-bottom: 20px; }
+        
+        .login-input-grupo {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .login-input-grupo label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+            display: block;
+            margin-bottom: 5px;
+        }
+
         .login-card input {
             width: 100%;
             padding: 12px;
@@ -331,8 +360,22 @@
             border-radius: 8px;
             font-size: 15px;
             outline: none;
-            text-align: center;
-            margin-bottom: 15px;
+            background-color: #fff;
+        }
+
+        .link-esqueci {
+            display: block;
+            margin-top: 15px;
+            font-size: 13px;
+            color: #2563eb;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .link-esqueci:hover { color: #1d4ed8; }
+
+        #input-operador-login, #rec-operador {
+            text-transform: uppercase;
         }
 
         @media (max-width: 768px) {
@@ -343,13 +386,52 @@
 </head>
 <body>
 
-    <!-- Tela de Login Rápida para Identificação do Operador -->
+    <!-- TELA 1: LOGIN -->
     <div id="modal-login" class="login-overlay">
         <div class="login-card">
-            <h2>Identificação do Operador</h2>
-            <p>Digite seu nome para acessar o sistema:</p>
-            <input type="text" id="input-operador-login" placeholder="Ex: Flávio, Carlos..." autocomplete="off">
-            <button onclick="fazerLogin()" class="btn-primary" style="width:100%;">Entrar no Sistema</button>
+            <h2>Acesso Restrito</h2>
+            <p>Informe suas credenciais para continuar:</p>
+            
+            <div class="login-input-grupo">
+                <label for="input-operador-login">Nome do Operador</label>
+                <input type="text" id="input-operador-login" placeholder="Ex: FLÁVIO ou ANDRÉ" autocomplete="off" oninput="this.value = this.value.toUpperCase()">
+            </div>
+
+            <div class="login-input-grupo">
+                <label for="input-senha-login">Senha de Acesso</label>
+                <input type="password" id="input-senha-login" placeholder="Digite sua senha" autocomplete="off">
+            </div>
+
+            <button onclick="fazerLogin()" class="btn-primary" style="width:100%; margin-top: 5px;">Entrar no Sistema</button>
+            <span class="link-esqueci" onclick="mostrarTelaRecuperacao()">Esqueci minha senha</span>
+        </div>
+    </div>
+
+    <!-- TELA 2: RECUPERAÇÃO / REDEFINIÇÃO DE SENHA -->
+    <div id="modal-recuperacao" class="login-overlay" style="display: none;">
+        <div class="login-card">
+            <h2>Redefinir Senha</h2>
+            <p>Insira o operador e a <b>Senha Mestra</b> de liberação para criar uma nova senha:</p>
+            
+            <div class="login-input-grupo">
+                <label for="rec-operador">Nome do Operador</label>
+                <input type="text" id="rec-operador" placeholder="Ex: FLÁVIO" autocomplete="off" oninput="this.value = this.value.toUpperCase()">
+            </div>
+
+            <div class="login-input-grupo">
+                <label for="rec-senha-mestra">Senha Mestra (Administrador)</label>
+                <input type="password" id="rec-senha-mestra" placeholder="Senha mestre de liberação" autocomplete="off">
+            </div>
+
+            <div class="login-input-grupo">
+                <label for="rec-nova-senha">Nova Senha</label>
+                <input type="password" id="rec-nova-senha" placeholder="Digite a nova senha" autocomplete="off">
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 5px;">
+                <button onclick="voltarParaLogin()" class="btn-secondary" style="width: 50%;">Voltar</button>
+                <button onclick="salvarNovaSenha()" class="btn-primary" style="width: 50%;">Salvar</button>
+            </div>
         </div>
     </div>
 
@@ -561,8 +643,25 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let operadorAtual = localStorage.getItem("cardnet_operador") || "";
+        let operadorAtual = (localStorage.getItem("cardnet_operador") || "").toUpperCase();
         let listaGeralLotes = [];
+
+        // Gerenciamento de senhas salvas no navegador (localStorage) para permitir redefinição dinâmica
+        function obterSenhas() {
+            let senhasSalvas = localStorage.getItem("cardnet_senhas_cadastradas");
+            if (!senhasSalvas) {
+                // Senhas padrões iniciais
+                const padrao = {
+                    "FLÁVIO": "123",
+                    "FLAVIO": "123",
+                    "ANDRÉ": "123",
+                    "ANDRE": "123"
+                };
+                localStorage.setItem("cardnet_senhas_cadastradas", JSON.stringify(padrao));
+                return padrao;
+            }
+            return JSON.parse(senhasSalvas);
+        }
 
         window.onload = function() {
             if (operadorAtual) {
@@ -573,15 +672,75 @@
         };
 
         window.fazerLogin = function() {
-            const nome = document.getElementById("input-operador-login").value.trim();
-            if (nome === "") {
-                alert("Por favor, digite seu nome!");
+            const nome = document.getElementById("input-operador-login").value.trim().toUpperCase();
+            const senha = document.getElementById("input-senha-login").value;
+
+            if (nome === "" || senha === "") {
+                alert("Por favor, preencha o nome e a senha!");
                 return;
             }
+
+            const senhasCadastradas = obterSenhas();
+
+            if (!senhasCadastradas[nome] || senhasCadastradas[nome] !== senha) {
+                alert("Nome de operador ou senha inválidos! Acesso negado.");
+                return;
+            }
+
             localStorage.setItem("cardnet_operador", nome);
             operadorAtual = nome;
             document.getElementById("modal-login").style.display = "none";
             document.getElementById("display-usuario").innerText = "👤 Operador: " + operadorAtual;
+            location.reload();
+        };
+
+        window.mostrarTelaRecuperacao = function() {
+            document.getElementById("modal-login").style.display = "none";
+            document.getElementById("modal-recuperacao").style.display = "flex";
+        };
+
+        window.voltarParaLogin = function() {
+            document.getElementById("modal-recuperacao").style.display = "none";
+            document.getElementById("modal-login").style.display = "flex";
+        };
+
+        window.salvarNovaSenha = function() {
+            const nome = document.getElementById("rec-operador").value.trim().toUpperCase();
+            const senhaMestra = document.getElementById("rec-senha-mestra").value;
+            const novaSenha = document.getElementById("rec-nova-senha").value;
+
+            if (!nome || !senhaMestra || !novaSenha) {
+                alert("Preencha todos os campos da redefinição!");
+                return;
+            }
+
+            // Definição da Senha Mestra de segurança do sistema (Você pode alterar 'admin999' para o que preferir)
+            const SENHA_MESTRA_SISTEMA = "admin999";
+
+            if (senhaMestra !== SENHA_MESTRA_SISTEMA) {
+                alert("Senha mestra incorreta! Apenas um administrador pode redefinir a senha.");
+                return;
+            }
+
+            let senhasCadastradas = obterSenhas();
+            
+            // Valida se o operador existe cadastrado
+            if (nome !== "FLÁVIO" && nome !== "FLAVIO" && nome !== "ANDRÉ" && nome !== "ANDRE") {
+                alert("Operador não reconhecido no sistema!");
+                return;
+            }
+
+            // Atualiza a senha
+            senhasCadastradas[nome] = novaSenha;
+            // Se for Flavio/Andre, garante acentuação e variações corretas
+            if(nome === "FLAVIO") senhasCadastradas["FLÁVIO"] = novaSenha;
+            if(nome === "FLÁVIO") senhasCadastradas["FLAVIO"] = novaSenha;
+            if(nome === "ANDRE") senhasCadastradas["ANDRÉ"] = novaSenha;
+            if(nome === "ANDRÉ") senhasCadastradas["ANDRE"] = novaSenha;
+
+            localStorage.setItem("cardnet_senhas_cadastradas", JSON.stringify(senhasCadastradas));
+            alert("Senha redefinida com sucesso! Agora você já pode fazer o login com a nova senha.");
+            voltarParaLogin();
         };
 
         window.sairSistema = function() {
@@ -607,6 +766,11 @@
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            if (operadorAtual !== "FLÁVIO" && operadorAtual !== "FLAVIO" && operadorAtual !== "ANDRÉ" && operadorAtual !== "ANDRE") {
+                alert("Apenas os usuários FLÁVIO ou ANDRÉ têm permissão para cadastrar novos lotes!");
+                return;
+            }
             
             const nome = document.getElementById('nome-arquivo').value.trim();
             const qtd = document.getElementById('qtd-cartoes').value;
@@ -672,7 +836,7 @@
                         }
 
                         const dataCadFormatada = lote.dataCadastro ? lote.dataCadastro.split('-').reverse().join('/') : '-';
-                        const operadorTexto = lote.operador ? lote.operador : '<span style="color:#94a3b8">Pendente</span>';
+                        const operadorTexto = lote.operador ? lote.operador.toUpperCase() : '<span style="color:#94a3b8">Pendente</span>';
 
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
@@ -714,7 +878,7 @@
                 if (l.status === "Finalizado" && l.dataConclusao) {
                     const ano = l.dataConclusao.split('-')[0];
                     anosSet.add(ano);
-                    if (l.operador) operadoresSet.add(l.operador);
+                    if (l.operador) operadoresSet.add(l.operador.toUpperCase());
                 }
             });
 
@@ -757,7 +921,7 @@
 
                 if (anoFiltro && anoLote !== anoFiltro) return false;
                 if (mesFiltro && mesLote !== mesFiltro) return false;
-                if (opFiltro && l.operador !== opFiltro) return false;
+                if (opFiltro && l.operador && l.operador.toUpperCase() !== opFiltro) return false;
 
                 return true;
             });
@@ -787,6 +951,7 @@
 
                 const qtdExibida = parseInt(lote.qtd).toLocaleString('pt-BR');
                 const badgeTipo = lote.parcial ? `<br><span class="badge-parcial">Envio Parcial</span>` : '';
+                const operadorNome = lote.operador ? lote.operador.toUpperCase() : '-';
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -795,7 +960,7 @@
                     <td>${qtdExibida} ${badgeTipo}</td>
                     <td>${lote.dataPrevista.split('-').reverse().join('/')}</td>
                     <td>${situacaoHTML}</td>
-                    <td>${lote.operador || '-'}</td>
+                    <td>${operadorNome}</td>
                     <td><button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button></td>
                 `;
                 tabelaHist.appendChild(tr);
@@ -821,7 +986,6 @@
                 const inputQtd = prompt(`Quantos cartões foram enviados neste lote?\n(Total do lote: ${qtdOriginal})`, qtdOriginal);
                 
                 if (inputQtd === null) {
-                    // Cancelou
                     selectElement.value = "Em Produção";
                     return;
                 }
@@ -844,7 +1008,6 @@
                 const loteRef = doc(db, "lotes", id);
 
                 if (qtdEnviada === qtdOriginal) {
-                    // Envio total normal
                     await updateDoc(loteRef, {
                         status: "Finalizado",
                         dataConclusao: hojeStr,
@@ -852,7 +1015,6 @@
                         parcial: false
                     });
                 } else {
-                    // Envio Parcial: Atualiza o atual com a quantidade enviada e marca como finalizado
                     await updateDoc(loteRef, {
                         qtd: qtdEnviada,
                         status: "Finalizado",
@@ -861,7 +1023,6 @@
                         parcial: true
                     });
 
-                    // Cria automaticamente o saldo restante como um novo lote em produção
                     const saldoRestante = qtdOriginal - qtdEnviada;
                     await addDoc(collection(db, "lotes"), {
                         nome: nomeArquivo + " (Saldo)",
