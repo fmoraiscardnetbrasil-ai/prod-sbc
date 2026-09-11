@@ -363,8 +363,8 @@
             background-color: #fff;
         }
 
-        .link-esqueci {
-            display: block;
+        .link-acao {
+            display: inline-block;
             margin-top: 15px;
             font-size: 13px;
             color: #2563eb;
@@ -372,9 +372,15 @@
             text-decoration: underline;
         }
 
-        .link-esqueci:hover { color: #1d4ed8; }
+        .link-acao:hover { color: #1d4ed8; }
 
-        #input-operador-login, #rec-operador {
+        .links-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        #input-operador-login, #cad-operador, #rec-operador {
             text-transform: uppercase;
         }
 
@@ -403,15 +409,42 @@
             </div>
 
             <button onclick="fazerLogin()" class="btn-primary" style="width:100%; margin-top: 5px;">Entrar no Sistema</button>
-            <span class="link-esqueci" onclick="mostrarTelaRecuperacao()">Esqueci minha senha</span>
+            
+            <div class="links-container">
+                <span class="link-acao" onclick="mostrarTelaCadastro()">Cadastrar Operador</span>
+                <span class="link-acao" onclick="mostrarTelaRecuperacao()">Esqueci a senha</span>
+            </div>
         </div>
     </div>
 
-    <!-- TELA 2: RECUPERAÇÃO / REDEFINIÇÃO DE SENHA -->
+    <!-- TELA 2: CADASTRO DE NOVO OPERADOR -->
+    <div id="modal-cadastro" class="login-overlay" style="display: none;">
+        <div class="login-card">
+            <h2>Novo Operador</h2>
+            <p>Cadastre um novo nome e senha para acesso ao sistema:</p>
+            
+            <div class="login-input-grupo">
+                <label for="cad-operador">Nome do Operador</label>
+                <input type="text" id="cad-operador" placeholder="Ex: CARLOS" autocomplete="off" oninput="this.value = this.value.toUpperCase()">
+            </div>
+
+            <div class="login-input-grupo">
+                <label for="cad-senha">Senha de Acesso</label>
+                <input type="password" id="cad-senha" placeholder="Crie uma senha" autocomplete="off">
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 5px;">
+                <button onclick="voltarParaLogin('cadastro')" class="btn-secondary" style="width: 50%;">Voltar</button>
+                <button onclick="salvarNovoOperador()" class="btn-primary" style="width: 50%;">Cadastrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA 3: REDEFINIÇÃO DE SENHA -->
     <div id="modal-recuperacao" class="login-overlay" style="display: none;">
         <div class="login-card">
             <h2>Redefinir Senha</h2>
-            <p>Insira o operador e a <b>Senha Mestra</b> de liberação para criar uma nova senha:</p>
+            <p>Insira o operador e a <b>Senha Mestra</b> para criar uma nova senha:</p>
             
             <div class="login-input-grupo">
                 <label for="rec-operador">Nome do Operador</label>
@@ -429,7 +462,7 @@
             </div>
 
             <div style="display: flex; gap: 10px; margin-top: 5px;">
-                <button onclick="voltarParaLogin()" class="btn-secondary" style="width: 50%;">Voltar</button>
+                <button onclick="voltarParaLogin('recuperacao')" class="btn-secondary" style="width: 50%;">Voltar</button>
                 <button onclick="salvarNovaSenha()" class="btn-primary" style="width: 50%;">Salvar</button>
             </div>
         </div>
@@ -646,11 +679,9 @@
         let operadorAtual = (localStorage.getItem("cardnet_operador") || "").toUpperCase();
         let listaGeralLotes = [];
 
-        // Gerenciamento de senhas salvas no navegador (localStorage) para permitir redefinição dinâmica
         function obterSenhas() {
             let senhasSalvas = localStorage.getItem("cardnet_senhas_cadastradas");
             if (!senhasSalvas) {
-                // Senhas padrões iniciais
                 const padrao = {
                     "FLÁVIO": "123",
                     "FLAVIO": "123",
@@ -694,13 +725,45 @@
             location.reload();
         };
 
+        window.mostrarTelaCadastro = function() {
+            document.getElementById("modal-login").style.display = "none";
+            document.getElementById("modal-cadastro").style.display = "flex";
+        };
+
+        window.salvarNovoOperador = function() {
+            const nome = document.getElementById("cad-operador").value.trim().toUpperCase();
+            const senha = document.getElementById("cad-senha").value;
+
+            if (!nome || !senha) {
+                alert("Preencha o nome e a senha para cadastrar o operador!");
+                return;
+            }
+
+            let senhasCadastradas = obterSenhas();
+
+            if (senhasCadastradas[nome]) {
+                alert("Este operador já está cadastrado! Use a tela de login ou redefina a senha.");
+                return;
+            }
+
+            senhasCadastradas[nome] = senha;
+            localStorage.setItem("cardnet_senhas_cadastradas", JSON.stringify(senhasCadastradas));
+
+            alert("Operador cadastrado com sucesso! Faça o login agora.");
+            voltarParaLogin('cadastro');
+        };
+
         window.mostrarTelaRecuperacao = function() {
             document.getElementById("modal-login").style.display = "none";
             document.getElementById("modal-recuperacao").style.display = "flex";
         };
 
-        window.voltarParaLogin = function() {
-            document.getElementById("modal-recuperacao").style.display = "none";
+        window.voltarParaLogin = function(origem) {
+            if(origem === 'cadastro') {
+                document.getElementById("modal-cadastro").style.display = "none";
+            } else {
+                document.getElementById("modal-recuperacao").style.display = "none";
+            }
             document.getElementById("modal-login").style.display = "flex";
         };
 
@@ -714,8 +777,7 @@
                 return;
             }
 
-            // Definição da Senha Mestra de segurança do sistema (Você pode alterar 'admin999' para o que preferir)
-            const SENHA_MESTRA_SISTEMA = "admin999";
+            const SENHA_MESTRA_SISTEMA = "admin";
 
             if (senhaMestra !== SENHA_MESTRA_SISTEMA) {
                 alert("Senha mestra incorreta! Apenas um administrador pode redefinir a senha.");
@@ -724,23 +786,15 @@
 
             let senhasCadastradas = obterSenhas();
             
-            // Valida se o operador existe cadastrado
-            if (nome !== "FLÁVIO" && nome !== "FLAVIO" && nome !== "ANDRÉ" && nome !== "ANDRE") {
-                alert("Operador não reconhecido no sistema!");
+            if (!senhasCadastradas[nome]) {
+                alert("Operador não encontrado no sistema!");
                 return;
             }
 
-            // Atualiza a senha
             senhasCadastradas[nome] = novaSenha;
-            // Se for Flavio/Andre, garante acentuação e variações corretas
-            if(nome === "FLAVIO") senhasCadastradas["FLÁVIO"] = novaSenha;
-            if(nome === "FLÁVIO") senhasCadastradas["FLAVIO"] = novaSenha;
-            if(nome === "ANDRE") senhasCadastradas["ANDRÉ"] = novaSenha;
-            if(nome === "ANDRÉ") senhasCadastradas["ANDRE"] = novaSenha;
-
             localStorage.setItem("cardnet_senhas_cadastradas", JSON.stringify(senhasCadastradas));
-            alert("Senha redefinida com sucesso! Agora você já pode fazer o login com a nova senha.");
-            voltarParaLogin();
+            alert("Senha redefinida com sucesso! Faça o login com a nova senha.");
+            voltarParaLogin('recuperacao');
         };
 
         window.sairSistema = function() {
@@ -767,8 +821,8 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            if (operadorAtual !== "FLÁVIO" && operadorAtual !== "FLAVIO" && operadorAtual !== "ANDRÉ" && operadorAtual !== "ANDRE") {
-                alert("Apenas os usuários FLÁVIO ou ANDRÉ têm permissão para cadastrar novos lotes!");
+            if (!operadorAtual) {
+                alert("Identifique-se primeiro!");
                 return;
             }
             
