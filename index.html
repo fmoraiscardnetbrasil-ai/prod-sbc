@@ -94,6 +94,7 @@
             display: flex;
             gap: 10px;
             margin-bottom: 25px;
+            flex-wrap: wrap;
         }
 
         .btn-aba {
@@ -141,6 +142,7 @@
 
         .kpi-card:nth-child(2) { border-left-color: #10b981; }
         .kpi-card:nth-child(3) { border-left-color: #ef4444; }
+        .kpi-card:nth-child(4) { border-left-color: #f59e0b; }
 
         .kpi-icon {
             font-size: 28px;
@@ -186,6 +188,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .info-auxiliar {
@@ -487,6 +491,7 @@
         <div class="abas-container">
             <button class="btn-aba active" onclick="mudarAba('producao', this)">📦 Produção Atual</button>
             <button class="btn-aba" onclick="mudarAba('historico', this)">📊 Histórico Concluídos</button>
+            <button class="btn-aba" onclick="mudarAba('relatorios', this)">📈 Relatórios & Controle</button>
         </div>
 
         <!-- ABA 1: PRODUÇÃO -->
@@ -656,6 +661,103 @@
             </section>
         </div>
 
+        <!-- ABA 3: RELATÓRIOS E CONTROLE -->
+        <div id="aba-relatorios" class="secao-aba">
+            <!-- KPIs Relatórios -->
+            <section class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon blue">📋</div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Total OS Entregues</span>
+                        <h2 id="rel-total-os">0</h2>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon green">🟢</div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Entregues no Prazo</span>
+                        <h2 id="rel-no-prazo">0</h2>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon red">🔴</div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Entregues com Atraso</span>
+                        <h2 id="rel-atrasados">0</h2>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon yellow">💳</div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Volume Total Cartões</span>
+                        <h2 id="rel-volume-cartoes">0</h2>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel-card">
+                <div class="panel-header space-between">
+                    <h3>Detalhamento e Controle de Entregas por Período</h3>
+                    <span class="info-auxiliar">Acompanhe volumes, parciais e prazos</span>
+                </div>
+
+                <!-- Filtros dos Relatórios -->
+                <div class="filtro-grid">
+                    <div class="input-grupo">
+                        <label for="rel-filtro-ano">Ano</label>
+                        <select id="rel-filtro-ano" onchange="carregarRelatorios()">
+                            <option value="">Todos os Anos</option>
+                        </select>
+                    </div>
+                    <div class="input-grupo">
+                        <label for="rel-filtro-mes">Mês</label>
+                        <select id="rel-filtro-mes" onchange="carregarRelatorios()">
+                            <option value="">Todos os Meses</option>
+                            <option value="01">Janeiro</option>
+                            <option value="02">Fevereiro</option>
+                            <option value="03">Março</option>
+                            <option value="04">Abril</option>
+                            <option value="05">Maio</option>
+                            <option value="06">Junho</option>
+                            <option value="07">Julho</option>
+                            <option value="08">Agosto</option>
+                            <option value="09">Setembro</option>
+                            <option value="10">Outubro</option>
+                            <option value="11">Novembro</option>
+                            <option value="12">Dezembro</option>
+                        </select>
+                    </div>
+                    <div class="input-grupo">
+                        <label for="rel-filtro-operador">Operador Responsável</label>
+                        <select id="rel-filtro-operador" onchange="carregarRelatorios()">
+                            <option value="">Todos os Operadores</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="styled-table">
+                        <thead>
+                            <tr>
+                                <th>Data Conclusão</th>
+                                <th>Nome do Arquivo / OS</th>
+                                <th>Qtd Cartões</th>
+                                <th>Data Prevista</th>
+                                <th>Status do Prazo</th>
+                                <th>Tipo de Envio</th>
+                                <th>Operador</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-relatorio-detalhado">
+                            <tr>
+                                <td colspan="7" class="text-center">Carregando dados do relatório...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
     </main>
 
     <!-- LÓGICA DO SISTEMA E FIREBASE (JavaScript) -->
@@ -700,7 +802,6 @@
 
         window.onload = async function() {
             await verificarInicializacaoOperadores();
-            // Mantém sempre o modal de login aberto ao carregar a página
             document.getElementById("modal-login").style.display = "flex";
             carregarLotes();
         };
@@ -732,7 +833,6 @@
                 document.getElementById("modal-login").style.display = "none";
                 document.getElementById("display-usuario").innerText = "👤 Operador: " + operadorAtual;
                 
-                // Limpa os campos de login para a próxima vez
                 document.getElementById("input-operador-login").value = "";
                 document.getElementById("input-senha-login").value = "";
             } catch (error) {
@@ -848,6 +948,9 @@
             if (abaId === 'historico') {
                 atualizarFiltrosDinamicos();
                 carregarHistorico();
+            } else if (abaId === 'relatorios') {
+                atualizarFiltrosRelatorios();
+                carregarRelatorios();
             }
         };
 
@@ -996,6 +1099,41 @@
             });
         }
 
+        function atualizarFiltrosRelatorios() {
+            const anosSet = new Set();
+            const operadoresSet = new Set();
+
+            listaGeralLotes.forEach(l => {
+                if (l.status === "Finalizado" && l.dataConclusao) {
+                    const ano = l.dataConclusao.split('-')[0];
+                    anosSet.add(ano);
+                    if (l.operador) operadoresSet.add(l.operador.toUpperCase());
+                }
+            });
+
+            const selectAno = document.getElementById('rel-filtro-ano');
+            const valorAnoAtual = selectAno.value;
+            selectAno.innerHTML = '<option value="">Todos os Anos</option>';
+            Array.from(anosSet).sort().reverse().forEach(ano => {
+                const opt = document.createElement('option');
+                opt.value = ano;
+                opt.innerText = ano;
+                if (ano === valorAnoAtual) opt.selected = true;
+                selectAno.appendChild(opt);
+            });
+
+            const selectOp = document.getElementById('rel-filtro-operador');
+            const valorOpAtual = selectOp.value;
+            selectOp.innerHTML = '<option value="">Todos os Operadores</option>';
+            Array.from(operadoresSet).sort().forEach(op => {
+                const opt = document.createElement('option');
+                opt.value = op;
+                opt.innerText = op;
+                if (op === valorOpAtual) opt.selected = true;
+                selectOp.appendChild(opt);
+            });
+        }
+
         window.carregarHistorico = function() {
             const tabelaHist = document.getElementById('tabela-historico');
             const anoFiltro = document.getElementById('filtro-ano').value;
@@ -1055,6 +1193,82 @@
                     <td><button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button></td>
                 `;
                 tabelaHist.appendChild(tr);
+            });
+        }
+
+        window.carregarRelatorios = function() {
+            const tabelaRel = document.getElementById('tabela-relatorio-detalhado');
+            const anoFiltro = document.getElementById('rel-filtro-ano').value;
+            const mesFiltro = document.getElementById('rel-filtro-mes').value;
+            const opFiltro = document.getElementById('rel-filtro-operador').value;
+
+            tabelaRel.innerHTML = "";
+
+            const finalizados = listaGeralLotes.filter(l => l.status === "Finalizado");
+
+            const filtrados = finalizados.filter(l => {
+                if (!l.dataConclusao) return false;
+                const [anoLote, mesLote, ] = l.dataConclusao.split('-');
+
+                if (anoFiltro && anoLote !== anoFiltro) return false;
+                if (mesFiltro && mesLote !== mesFiltro) return false;
+                if (opFiltro && l.operador && l.operador.toUpperCase() !== opFiltro) return false;
+
+                return true;
+            });
+
+            let totalOS = filtrados.length;
+            let totalNoPrazo = 0;
+            let totalAtrasados = 0;
+            let volumeCartoes = 0;
+
+            filtrados.forEach(lote => {
+                volumeCartoes += (parseInt(lote.qtd) || 0);
+                if (lote.dataConclusao > lote.dataPrevista) {
+                    totalAtrasados++;
+                } else {
+                    totalNoPrazo++;
+                }
+            });
+
+            // Atualiza os KPIs do Relatório
+            document.getElementById('rel-total-os').innerText = totalOS;
+            document.getElementById('rel-no-prazo').innerText = totalNoPrazo;
+            document.getElementById('rel-atrasados').innerText = totalAtrasados;
+            document.getElementById('rel-volume-cartoes').innerText = volumeCartoes.toLocaleString('pt-BR');
+
+            if (totalOS === 0) {
+                tabelaRel.innerHTML = `<tr><td colspan="7" class="text-center">Nenhum dado encontrado para o período selecionado.</td></tr>`;
+                return;
+            }
+
+            filtrados.forEach(lote => {
+                let situacaoHTML = "";
+                if (lote.dataConclusao > lote.dataPrevista) {
+                    const prev = new Date(lote.dataPrevista);
+                    const conc = new Date(lote.dataConclusao);
+                    const diffTime = Math.abs(conc - prev);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    situacaoHTML = `<span class="badge-atrasado">🔴 Atrasado (${diffDays}d)</span>`;
+                } else {
+                    situacaoHTML = `<span class="badge-no-prazo">🟢 No Prazo</span>`;
+                }
+
+                let tipoEnvioHTML = lote.parcial ? `<span class="badge-parcial">Parcial</span>` : `<span class="badge-finalizado">Total (100%)</span>`;
+                const qtdExibida = parseInt(lote.qtd).toLocaleString('pt-BR');
+                const operadorNome = lote.operador ? lote.operador.toUpperCase() : '-';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${lote.dataConclusao.split('-').reverse().join('/')}</td>
+                    <td><strong>${lote.nome}</strong></td>
+                    <td>${qtdExibida}</td>
+                    <td>${lote.dataPrevista.split('-').reverse().join('/')}</td>
+                    <td>${situacaoHTML}</td>
+                    <td>${tipoEnvioHTML}</td>
+                    <td>${operadorNome}</td>
+                `;
+                tabelaRel.appendChild(tr);
             });
         }
 
@@ -1140,6 +1354,9 @@
                         if(document.getElementById('aba-historico').classList.contains('active')) {
                             atualizarFiltrosDinamicos();
                             carregarHistorico();
+                        } else if(document.getElementById('aba-relatorios').classList.contains('active')) {
+                            atualizarFiltrosRelatorios();
+                            carregarRelatorios();
                         }
                     }, 300);
                 } catch (error) {
