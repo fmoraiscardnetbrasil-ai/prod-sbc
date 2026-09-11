@@ -676,14 +676,13 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        let operadorAtual = (localStorage.getItem("cardnet_operador") || "").toUpperCase();
+        let operadorAtual = "";
         let listaGeralLotes = [];
 
         async function verificarInicializacaoOperadores() {
             try {
                 const querySnapshot = await getDocs(collection(db, "operadores"));
                 if (querySnapshot.empty) {
-                    // Cadastra padrões iniciais se o banco estiver vazio
                     const padrao = {
                         "FLÁVIO": "123",
                         "FLAVIO": "123",
@@ -701,10 +700,8 @@
 
         window.onload = async function() {
             await verificarInicializacaoOperadores();
-            if (operadorAtual) {
-                document.getElementById("modal-login").style.display = "none";
-                document.getElementById("display-usuario").innerText = "👤 Operador: " + operadorAtual;
-            }
+            // Mantém sempre o modal de login aberto ao carregar a página
+            document.getElementById("modal-login").style.display = "flex";
             carregarLotes();
         };
 
@@ -718,9 +715,7 @@
             }
 
             try {
-                const docRef = doc(db, "operadores", nome);
                 const querySnapshot = await getDocs(collection(db, "operadores"));
-                
                 let senhaSalva = null;
                 querySnapshot.forEach((d) => {
                     if (d.id === nome) {
@@ -733,11 +728,13 @@
                     return;
                 }
 
-                localStorage.setItem("cardnet_operador", nome);
                 operadorAtual = nome;
                 document.getElementById("modal-login").style.display = "none";
                 document.getElementById("display-usuario").innerText = "👤 Operador: " + operadorAtual;
-                location.reload();
+                
+                // Limpa os campos de login para a próxima vez
+                document.getElementById("input-operador-login").value = "";
+                document.getElementById("input-senha-login").value = "";
             } catch (error) {
                 console.error("Erro no login:", error);
                 alert("Erro ao validar credenciais no servidor.");
@@ -773,6 +770,8 @@
                 await setDoc(doc(db, "operadores", nome), { senha: senha });
 
                 alert("Operador cadastrado com sucesso! Faça o login agora.");
+                document.getElementById("cad-operador").value = "";
+                document.getElementById("cad-senha").value = "";
                 voltarParaLogin('cadastro');
             } catch (error) {
                 console.error("Erro ao cadastrar operador:", error);
@@ -825,6 +824,9 @@
 
                 await setDoc(doc(db, "operadores", nome), { senha: novaSenha });
                 alert("Senha redefinida com sucesso! Faça o login com a nova senha.");
+                document.getElementById("rec-operador").value = "";
+                document.getElementById("rec-senha-mestra").value = "";
+                document.getElementById("rec-nova-senha").value = "";
                 voltarParaLogin('recuperacao');
             } catch (error) {
                 console.error("Erro ao redefinir senha:", error);
@@ -833,7 +835,6 @@
         };
 
         window.sairSistema = function() {
-            localStorage.removeItem("cardnet_operador");
             location.reload();
         };
 
@@ -857,7 +858,8 @@
             e.preventDefault();
 
             if (!operadorAtual) {
-                alert("Identifique-se primeiro!");
+                alert("Identifique-se primeiro fazendo login!");
+                document.getElementById("modal-login").style.display = "flex";
                 return;
             }
             
@@ -1067,8 +1069,9 @@
             
             if (novoStatus === "Finalizado") {
                 if (!operadorAtual) {
-                    alert("Identifique-se primeiro!");
+                    alert("Você precisa estar logado para finalizar um lote!");
                     selectElement.value = "Em Produção";
+                    document.getElementById("modal-login").style.display = "flex";
                     return;
                 }
 
