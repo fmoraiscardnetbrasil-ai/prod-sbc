@@ -980,7 +980,6 @@
             const qtd = document.getElementById('qtd-cartoes').value;
             const dataPrevista = document.getElementById('data-prevista').value;
             
-            // Pega a data e hora exata do cadastro (timestamp ISO completo)
             const dataHoraCadastroCompleta = new Date().toISOString();
 
             if (!nome || !qtd || !dataPrevista) {
@@ -993,7 +992,7 @@
                     nome: nome,
                     qtd: parseInt(qtd),
                     dataPrevista: dataPrevista,
-                    dataCadastro: dataHoraCadastroCompleta, // Salva data + horário preciso
+                    dataCadastro: dataHoraCadastroCompleta,
                     status: "Em Produção",
                     dataConclusao: null,
                     operador: null
@@ -1018,10 +1017,17 @@
                 querySnapshot.forEach((docSnap) => {
                     const lote = docSnap.data();
                     lote.id = docSnap.id;
+                    
+                    // CORREÇÃO INTELIGENTE: Se o lote for antigo e tiver apenas a data (sem 'T'), 
+                    // ajustamos para considerar as 16:00:00 do mesmo dia para a ordenação e exibição ficarem corretas.
+                    if (lote.dataCadastro && !lote.dataCadastro.includes('T')) {
+                        lote.dataCadastro = lote.dataCadastro + "T16:00:00.000Z";
+                    }
+
                     listaGeralLotes.push(lote);
                 });
 
-                // Ordena os lotes: do mais antigo para o mais recente baseado na data/hora completa de cadastro
+                // Ordena os lotes: do mais antigo para o mais recente baseado na data/hora completa
                 const ativos = listaGeralLotes.filter(l => l.status === "Em Produção");
                 ativos.sort((a, b) => (a.dataCadastro || "").localeCompare(b.dataCadastro || ""));
 
@@ -1053,7 +1059,6 @@
                         noPrazoCartoes += (parseInt(lote.qtd) || 0);
                     }
 
-                    // Formata a exibição da data e hora (Ex: 26/09/2026 14:35)
                     let dataHoraExibida = '-';
                     if (lote.dataCadastro) {
                         const dtObj = new Date(lote.dataCadastro);
@@ -1065,8 +1070,7 @@
                             const min = String(dtObj.getMinutes()).padStart(2, '0');
                             dataHoraExibida = `${dia}/${mes}/${ano} ${hora}:${min}`;
                         } else {
-                            // Compatibilidade com cadastros antigos que tinham apenas YYYY-MM-DD
-                            dataHoraExibida = lote.dataCadastro.split('-').reverse().join('/');
+                            dataHoraExibida = lote.dataCadastro.split('T')[0].split('-').reverse().join('/');
                         }
                     }
 
@@ -1370,7 +1374,6 @@
                     });
 
                     const saldoRestante = qtdOriginal - qtdEnviada;
-                    // Mantém a mesma data/hora de cadastro do lote original para o saldo restante
                     await addDoc(collection(db, "lotes"), {
                         nome: nomeArquivo + " (Saldo)",
                         qtd: saldoRestante,
