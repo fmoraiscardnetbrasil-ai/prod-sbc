@@ -569,7 +569,7 @@
                     <table class="styled-table">
                         <thead>
                             <tr>
-                                <th>Data Cadastro</th>
+                                <th>Data / Hora Cadastro</th>
                                 <th>Arquivo</th>
                                 <th>Qtd</th>
                                 <th>Data Prevista</th>
@@ -979,7 +979,9 @@
             const nome = document.getElementById('nome-arquivo').value.trim();
             const qtd = document.getElementById('qtd-cartoes').value;
             const dataPrevista = document.getElementById('data-prevista').value;
-            const dataCadastroHoje = new Date().toISOString().split('T')[0];
+            
+            // Pega a data e hora exata do cadastro (timestamp ISO completo)
+            const dataHoraCadastroCompleta = new Date().toISOString();
 
             if (!nome || !qtd || !dataPrevista) {
                 alert("Preencha todos os campos do cadastro!");
@@ -991,7 +993,7 @@
                     nome: nome,
                     qtd: parseInt(qtd),
                     dataPrevista: dataPrevista,
-                    dataCadastro: dataCadastroHoje,
+                    dataCadastro: dataHoraCadastroCompleta, // Salva data + horário preciso
                     status: "Em Produção",
                     dataConclusao: null,
                     operador: null
@@ -1019,7 +1021,7 @@
                     listaGeralLotes.push(lote);
                 });
 
-                // Ordena os lotes: do mais antigo para o mais recente baseado na data de cadastro
+                // Ordena os lotes: do mais antigo para o mais recente baseado na data/hora completa de cadastro
                 const ativos = listaGeralLotes.filter(l => l.status === "Em Produção");
                 ativos.sort((a, b) => (a.dataCadastro || "").localeCompare(b.dataCadastro || ""));
 
@@ -1051,13 +1053,29 @@
                         noPrazoCartoes += (parseInt(lote.qtd) || 0);
                     }
 
-                    const dataCadFormatada = lote.dataCadastro ? lote.dataCadastro.split('-').reverse().join('/') : '-';
+                    // Formata a exibição da data e hora (Ex: 26/09/2026 14:35)
+                    let dataHoraExibida = '-';
+                    if (lote.dataCadastro) {
+                        const dtObj = new Date(lote.dataCadastro);
+                        if (!isNaN(dtObj)) {
+                            const dia = String(dtObj.getDate()).padStart(2, '0');
+                            const mes = String(dtObj.getMonth() + 1).padStart(2, '0');
+                            const ano = dtObj.getFullYear();
+                            const hora = String(dtObj.getHours()).padStart(2, '0');
+                            const min = String(dtObj.getMinutes()).padStart(2, '0');
+                            dataHoraExibida = `${dia}/${mes}/${ano} ${hora}:${min}`;
+                        } else {
+                            // Compatibilidade com cadastros antigos que tinham apenas YYYY-MM-DD
+                            dataHoraExibida = lote.dataCadastro.split('-').reverse().join('/');
+                        }
+                    }
+
                     const operadorTexto = lote.operador ? lote.operador.toUpperCase() : '<span style="color:#94a3b8">Pendente</span>';
                     const qtdFormatada = (parseInt(lote.qtd) || 0).toLocaleString('pt-BR');
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td>${dataCadFormatada}</td>
+                        <td>${dataHoraExibida}</td>
                         <td><strong>${lote.nome}</strong></td>
                         <td>${qtdFormatada}</td>
                         <td>${lote.dataPrevista.split('-').reverse().join('/')}</td>
@@ -1352,11 +1370,12 @@
                     });
 
                     const saldoRestante = qtdOriginal - qtdEnviada;
+                    // Mantém a mesma data/hora de cadastro do lote original para o saldo restante
                     await addDoc(collection(db, "lotes"), {
                         nome: nomeArquivo + " (Saldo)",
                         qtd: saldoRestante,
                         dataPrevista: dataPrevista,
-                        dataCadastro: dataCadastro || hojeStr,
+                        dataCadastro: dataCadastro || new Date().toISOString(),
                         status: "Em Produção",
                         dataConclusao: null,
                         operador: null
