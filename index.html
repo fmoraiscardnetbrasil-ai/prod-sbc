@@ -159,9 +159,16 @@
         }
 
         .kpi-info h2 {
-            font-size: 24px;
+            font-size: 22px;
             color: #1e293b;
             margin-top: 4px;
+        }
+
+        .kpi-sub {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 2px;
+            font-weight: 500;
         }
 
         .panel-card {
@@ -503,6 +510,7 @@
                     <div class="kpi-info">
                         <span class="kpi-title">Total Ativo</span>
                         <h2 id="kpi-total">0</h2>
+                        <div class="kpi-sub" id="kpi-total-cartoes">0 cartões</div>
                     </div>
                 </div>
                 <div class="kpi-card">
@@ -510,6 +518,7 @@
                     <div class="kpi-info">
                         <span class="kpi-title">No Prazo</span>
                         <h2 id="kpi-noprazo">0</h2>
+                        <div class="kpi-sub" id="kpi-noprazo-cartoes">0 cartões</div>
                     </div>
                 </div>
                 <div class="kpi-card">
@@ -517,6 +526,7 @@
                     <div class="kpi-info">
                         <span class="kpi-title">Atrasados / Alerta</span>
                         <h2 id="kpi-atrasado">0</h2>
+                        <div class="kpi-sub" id="kpi-atrasado-cartoes">0 cartões</div>
                     </div>
                 </div>
             </section>
@@ -551,7 +561,7 @@
             <!-- Tabela -->
             <section class="panel-card">
                 <div class="panel-header space-between">
-                    <h3>Monitoramento de Lotes</h3>
+                    <h3>Monitoramento de Lotes (Mais antigos primeiro)</h3>
                     <span class="info-auxiliar">Rastreabilidade e Prazos</span>
                 </div>
                 
@@ -1002,66 +1012,85 @@
                 tabelaLotes.innerHTML = "";
                 
                 const hojeStr = new Date().toISOString().split('T')[0];
-                let totalAtivo = 0;
-                let noPrazo = 0;
-                let atrasado = 0;
-
-                if (querySnapshot.empty) {
-                    tabelaLotes.innerHTML = `<tr><td colspan="8" class="text-center">Nenhum lote cadastrado.</td></tr>`;
-                    atualizarKPIs(0, 0, 0);
-                    return;
-                }
-
+                
                 querySnapshot.forEach((docSnap) => {
                     const lote = docSnap.data();
                     lote.id = docSnap.id;
                     listaGeralLotes.push(lote);
-
-                    if (lote.status === "Em Produção") {
-                        totalAtivo++;
-                        let situacaoHTML = "";
-
-                        if (lote.dataPrevista < hojeStr) {
-                            situacaoHTML = `<span class="badge-atrasado">🔴 ATRASADO</span>`;
-                            atrasado++;
-                        } else {
-                            situacaoHTML = `<span class="badge-no-prazo">🟢 No Prazo</span>`;
-                            noPrazo++;
-                        }
-
-                        const dataCadFormatada = lote.dataCadastro ? lote.dataCadastro.split('-').reverse().join('/') : '-';
-                        const operadorTexto = lote.operador ? lote.operador.toUpperCase() : '<span style="color:#94a3b8">Pendente</span>';
-
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${dataCadFormatada}</td>
-                            <td><strong>${lote.nome}</strong></td>
-                            <td>${lote.qtd}</td>
-                            <td>${lote.dataPrevista.split('-').reverse().join('/')}</td>
-                            <td>
-                                <select onchange="verificarEAtualizarStatus('${lote.id}', '${lote.nome}', ${lote.qtd}, '${lote.dataPrevista}', '${lote.dataCadastro}', this)">
-                                    <option value="Em Produção" selected>Em Produção</option>
-                                    <option value="Finalizado">Finalizado</option>
-                                </select>
-                            </td>
-                            <td>${situacaoHTML}</td>
-                            <td>${operadorTexto}</td>
-                            <td><button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button></td>
-                        `;
-                        tabelaLotes.appendChild(tr);
-                    }
                 });
 
-                if (totalAtivo === 0) {
+                // Ordena os lotes: do mais antigo para o mais recente baseado na data de cadastro
+                const ativos = listaGeralLotes.filter(l => l.status === "Em Produção");
+                ativos.sort((a, b) => (a.dataCadastro || "").localeCompare(b.dataCadastro || ""));
+
+                let totalAtivoCount = 0;
+                let totalAtivoCartoes = 0;
+                let noPrazoCount = 0;
+                let noPrazoCartoes = 0;
+                let atrasadoCount = 0;
+                let atrasadoCartoes = 0;
+
+                if (ativos.length === 0) {
                     tabelaLotes.innerHTML = `<tr><td colspan="8" class="text-center">Nenhum lote em produção no momento.</td></tr>`;
+                    atualizarKPIsProducao(0, 0, 0, 0, 0, 0);
+                    return;
                 }
 
-                atualizarKPIs(totalAtivo, noPrazo, atrasado);
+                ativos.forEach(lote => {
+                    totalAtivoCount++;
+                    totalAtivoCartoes += (parseInt(lote.qtd) || 0);
+
+                    let situacaoHTML = "";
+                    if (lote.dataPrevista < hojeStr) {
+                        situacaoHTML = `<span class="badge-atrasado">🔴 ATRASADO</span>`;
+                        atrasadoCount++;
+                        atrasadoCartoes += (parseInt(lote.qtd) || 0);
+                    } else {
+                        situacaoHTML = `<span class="badge-no-prazo">🟢 No Prazo</span>`;
+                        noPrazoCount++;
+                        noPrazoCartoes += (parseInt(lote.qtd) || 0);
+                    }
+
+                    const dataCadFormatada = lote.dataCadastro ? lote.dataCadastro.split('-').reverse().join('/') : '-';
+                    const operadorTexto = lote.operador ? lote.operador.toUpperCase() : '<span style="color:#94a3b8">Pendente</span>';
+                    const qtdFormatada = (parseInt(lote.qtd) || 0).toLocaleString('pt-BR');
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${dataCadFormatada}</td>
+                        <td><strong>${lote.nome}</strong></td>
+                        <td>${qtdFormatada}</td>
+                        <td>${lote.dataPrevista.split('-').reverse().join('/')}</td>
+                        <td>
+                            <select onchange="verificarEAtualizarStatus('${lote.id}', '${lote.nome}', ${lote.qtd}, '${lote.dataPrevista}', '${lote.dataCadastro}', this)">
+                                <option value="Em Produção" selected>Em Produção</option>
+                                <option value="Finalizado">Finalizado</option>
+                            </select>
+                        </td>
+                        <td>${situacaoHTML}</td>
+                        <td>${operadorTexto}</td>
+                        <td><button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button></td>
+                    `;
+                    tabelaLotes.appendChild(tr);
+                });
+
+                atualizarKPIsProducao(totalAtivoCount, totalAtivoCartoes, noPrazoCount, noPrazoCartoes, atrasadoCount, atrasadoCartoes);
 
             } catch (error) {
                 console.error("Erro ao carregar lotes:", error);
                 tabelaLotes.innerHTML = `<tr><td colspan="8" class="text-center" style="color:red;">Erro ao carregar dados do Firebase.</td></tr>`;
             }
+        }
+
+        function atualizarKPIsProducao(totOS, totCart, nPrazoOS, nPrazoCart, atrOS, atrCart) {
+            document.getElementById("kpi-total").innerText = `${totOS} OS`;
+            document.getElementById("kpi-total-cartoes").innerText = `${totCart.toLocaleString('pt-BR')} cartões`;
+
+            document.getElementById("kpi-noprazo").innerText = `${nPrazoOS} OS`;
+            document.getElementById("kpi-noprazo-cartoes").innerText = `${nPrazoCart.toLocaleString('pt-BR')} cartões`;
+
+            document.getElementById("kpi-atrasado").innerText = `${atrOS} OS`;
+            document.getElementById("kpi-atrasado-cartoes").innerText = `${atrCart.toLocaleString('pt-BR')} cartões`;
         }
 
         function atualizarFiltrosDinamicos() {
@@ -1231,7 +1260,6 @@
                 }
             });
 
-            // Atualiza os KPIs do Relatório
             document.getElementById('rel-total-os').innerText = totalOS;
             document.getElementById('rel-no-prazo').innerText = totalNoPrazo;
             document.getElementById('rel-atrasados').innerText = totalAtrasados;
@@ -1270,12 +1298,6 @@
                 `;
                 tabelaRel.appendChild(tr);
             });
-        }
-
-        function atualizarKPIs(total, nPrazo, atr) {
-            document.getElementById("kpi-total").innerText = total;
-            document.getElementById("kpi-noprazo").innerText = nPrazo;
-            document.getElementById("kpi-atrasado").innerText = atr;
         }
 
         window.verificarEAtualizarStatus = async function(id, nomeArquivo, qtdOriginal, dataPrevista, dataCadastro, selectElement) {
