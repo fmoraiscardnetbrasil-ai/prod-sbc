@@ -161,7 +161,6 @@
             padding: 0 20px;
         }
 
-        /* Abas de Navegação */
         .abas-container {
             display: flex;
             gap: 10px;
@@ -869,6 +868,14 @@
         let operadorAtual = "";
         let listaGeralLotes = [];
 
+        // Função de validação de permissões (Apenas FLÁVIO e ANDRÉ)
+        function eAdministrador() {
+            if (!operadorAtual) return false;
+            const op = operadorAtual.trim().toUpperCase();
+            const permitidos = ["FLÁVIO", "FLAVIO", "ANDRÉ", "ANDRE"];
+            return permitidos.includes(op);
+        }
+
         // Alternância de Tema
         window.alternarTema = function() {
             const body = document.body;
@@ -1047,7 +1054,6 @@
             }
         };
 
-        // Função de Trocar Usuário (Limpa campos e volta para o login)
         window.trocarUsuario = function() {
             operadorAtual = "";
             document.getElementById("display-usuario").innerText = "👤 Operador: -";
@@ -1056,7 +1062,6 @@
             document.getElementById("modal-login").style.display = "flex";
         };
 
-        // Função de Sair do Sistema (Recarrega a página completamente)
         window.sairSistema = function() {
             if (confirm("Deseja realmente sair e encerrar a sessão?")) {
                 location.reload();
@@ -1088,6 +1093,12 @@
             if (!operadorAtual) {
                 alert("Identifique-se primeiro fazendo login!");
                 document.getElementById("modal-login").style.display = "flex";
+                return;
+            }
+
+            // TRAVA DE PERMISSÃO PARA CADASTRO
+            if (!eAdministrador()) {
+                alert("Acesso Negado: Apenas os operadores FLÁVIO e ANDRÉ possuem permissão para cadastrar novos lotes.");
                 return;
             }
             
@@ -1318,7 +1329,6 @@
                 return true;
             });
 
-            // Ordena os itens do mais antigo para o mais recente baseado na data de conclusão
             filtrados.sort((a, b) => (a.dataConclusao || "").localeCompare(b.dataConclusao || ""));
 
             let somaLotes = filtrados.length;
@@ -1383,7 +1393,6 @@
                 return true;
             });
 
-            // Ordena os itens do mais antigo para o mais recente baseado na data de conclusão
             filtrados.sort((a, b) => (a.dataConclusao || "").localeCompare(b.dataConclusao || ""));
 
             let totalOS = filtrados.length;
@@ -1475,39 +1484,57 @@
                 const hojeStr = new Date().toISOString().split('T')[0];
                 const loteRef = doc(db, "lotes", id);
 
-                if (qtdEnviada === qtdOriginal) {
-                    await updateDoc(loteRef, {
-                        status: "Finalizado",
-                        dataConclusao: hojeStr,
-                        operador: operadorAtual,
-                        parcial: false
-                    });
-                } else {
-                    await updateDoc(loteRef, {
-                        qtd: qtdEnviada,
-                        status: "Finalizado",
-                        dataConclusao: hojeStr,
-                        operador: operadorAtual,
-                        parcial: true
-                    });
+                try {
+                    if (qtdEnviada === qtdOriginal) {
+                        await updateDoc(loteRef, {
+                            status: "Finalizado",
+                            dataConclusao: hojeStr,
+                            operador: operadorAtual,
+                            parcial: false
+                        });
+                    } else {
+                        await updateDoc(loteRef, {
+                            qtd: qtdEnviada,
+                            status: "Finalizado",
+                            dataConclusao: hojeStr,
+                            operador: operadorAtual,
+                            parcial: true
+                        });
 
-                    const saldoRestante = qtdOriginal - qtdEnviada;
-                    await addDoc(collection(db, "lotes"), {
-                        nome: nomeArquivo + " (Saldo)",
-                        qtd: saldoRestante,
-                        dataPrevista: dataPrevista,
-                        dataCadastro: dataCadastro || new Date().toISOString(),
-                        status: "Em Produção",
-                        dataConclusao: null,
-                        operador: null
-                    });
+                        const saldoRestante = qtdOriginal - qtdEnviada;
+                        await addDoc(collection(db, "lotes"), {
+                            nome: nomeArquivo + " (Saldo)",
+                            qtd: saldoRestante,
+                            dataPrevista: dataPrevista,
+                            dataCadastro: dataCadastro || new Date().toISOString(),
+                            status: "Em Produção",
+                            dataConclusao: null,
+                            operador: null
+                        });
+                    }
+
+                    carregarLotes();
+                } catch (error) {
+                    console.error("Erro ao atualizar status:", error);
+                    alert("Erro ao atualizar o lote no servidor.");
+                    selectElement.value = "Em Produção";
                 }
-
-                carregarLotes();
             }
         }
 
         window.deletarLote = async function(id) {
+            if (!operadorAtual) {
+                alert("Você precisa estar logado para excluir um lote!");
+                document.getElementById("modal-login").style.display = "flex";
+                return;
+            }
+
+            // TRAVA DE PERMISSÃO PARA EXCLUSÃO
+            if (!eAdministrador()) {
+                alert("Acesso Negado: Apenas os operadores FLÁVIO e ANDRÉ possuem permissão para excluir lotes.");
+                return;
+            }
+
             if(confirm("Deseja realmente excluir este lote do sistema?")) {
                 try {
                     await deleteDoc(doc(db, "lotes", id));
@@ -1523,7 +1550,7 @@
                     }, 300);
                 } catch (error) {
                     console.error("Erro ao excluir:", error);
-                    alert("Erro ao excluir o lote.");
+                    alert("Erro ao excluir o lote. Verifique suas permissões.");
                 }
             }
         }
