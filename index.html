@@ -608,8 +608,8 @@
                 </div>
             </section>
 
-            <!-- Formulário de Cadastro -->
-            <section class="panel-card">
+            <!-- Formulário de Cadastro (Será ocultado para não-admins) -->
+            <section class="panel-card" id="secao-cadastro-lote" style="display: none;">
                 <div class="panel-header">
                     <h3>Cadastrar Novo Arquivo</h3>
                 </div>
@@ -653,7 +653,7 @@
                                 <th>Status</th>
                                 <th>Situação do Prazo</th>
                                 <th>Finalizado por</th>
-                                <th>Ações</th>
+                                <th id="th-acoes-producao" style="display: none;">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="tabela-lotes">
@@ -735,7 +735,7 @@
                                 <th>Data Prevista</th>
                                 <th>Situação</th>
                                 <th>Finalizado por</th>
-                                <th>Ações</th>
+                                <th id="th-acoes-historico" style="display: none;">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="tabela-historico">
@@ -876,6 +876,29 @@
             return permitidos.includes(op);
         }
 
+        // Função para ocultar visualmente botões e áreas
+        function atualizarVisibilidadeUI() {
+            const admin = eAdministrador();
+            
+            // 1. Mostrar/Ocultar Formulário de Cadastro
+            const secaoCadastro = document.getElementById('secao-cadastro-lote');
+            if (secaoCadastro) {
+                secaoCadastro.style.display = admin ? 'block' : 'none';
+            }
+
+            // 2. Mostrar/Ocultar Cabeçalho de Ações (Produção)
+            const thProducao = document.getElementById('th-acoes-producao');
+            if (thProducao) {
+                thProducao.style.display = admin ? 'table-cell' : 'none';
+            }
+
+            // 3. Mostrar/Ocultar Cabeçalho de Ações (Histórico)
+            const thHistorico = document.getElementById('th-acoes-historico');
+            if (thHistorico) {
+                thHistorico.style.display = admin ? 'table-cell' : 'none';
+            }
+        }
+
         // Alternância de Tema
         window.alternarTema = function() {
             const body = document.body;
@@ -952,6 +975,9 @@
                 operadorAtual = nome;
                 document.getElementById("modal-login").style.display = "none";
                 document.getElementById("display-usuario").innerText = "👤 Operador: " + operadorAtual;
+                
+                atualizarVisibilidadeUI();
+                carregarLotes();
                 
                 document.getElementById("input-operador-login").value = "";
                 document.getElementById("input-senha-login").value = "";
@@ -1059,6 +1085,9 @@
             document.getElementById("display-usuario").innerText = "👤 Operador: -";
             document.getElementById("input-operador-login").value = "";
             document.getElementById("input-senha-login").value = "";
+            
+            atualizarVisibilidadeUI();
+            
             document.getElementById("modal-login").style.display = "flex";
         };
 
@@ -1132,7 +1161,9 @@
         });
 
         async function carregarLotes() {
-            tabelaLotes.innerHTML = `<tr><td colspan="8" class="text-center">Carregando dados...</td></tr>`;
+            const colunasVisiveis = eAdministrador() ? 8 : 7;
+            tabelaLotes.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center">Carregando dados...</td></tr>`;
+            
             try {
                 const querySnapshot = await getDocs(collection(db, "lotes"));
                 listaGeralLotes = [];
@@ -1162,7 +1193,7 @@
                 let atrasadoCartoes = 0;
 
                 if (ativos.length === 0) {
-                    tabelaLotes.innerHTML = `<tr><td colspan="8" class="text-center">Nenhum lote em produção no momento.</td></tr>`;
+                    tabelaLotes.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center">Nenhum lote em produção no momento.</td></tr>`;
                     atualizarKPIsProducao(0, 0, 0, 0, 0, 0);
                     return;
                 }
@@ -1199,6 +1230,9 @@
 
                     const operadorTexto = lote.operador ? lote.operador.toUpperCase() : '<span style="color:#94a3b8">Pendente</span>';
                     const qtdFormatada = (parseInt(lote.qtd) || 0).toLocaleString('pt-BR');
+                    
+                    // Só cria a coluna de botão se for administrador
+                    const celulaAcoes = eAdministrador() ? `<td><button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button></td>` : '';
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
@@ -1214,7 +1248,7 @@
                         </td>
                         <td>${situacaoHTML}</td>
                         <td>${operadorTexto}</td>
-                        <td><button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button></td>
+                        ${celulaAcoes}
                     `;
                     tabelaLotes.appendChild(tr);
                 });
@@ -1223,7 +1257,7 @@
 
             } catch (error) {
                 console.error("Erro ao carregar lotes:", error);
-                tabelaLotes.innerHTML = `<tr><td colspan="8" class="text-center" style="color:red;">Erro ao carregar dados do Firebase.</td></tr>`;
+                tabelaLotes.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center" style="color:red;">Erro ao carregar dados do Firebase.</td></tr>`;
             }
         }
 
@@ -1313,6 +1347,7 @@
             const anoFiltro = document.getElementById('filtro-ano').value;
             const mesFiltro = document.getElementById('filtro-mes').value;
             const opFiltro = document.getElementById('filtro-operador').value;
+            const colunasVisiveis = eAdministrador() ? 7 : 6;
 
             tabelaHist.innerHTML = "";
 
@@ -1338,7 +1373,7 @@
             document.getElementById('hist-total-cartoes').innerText = somaCartoes.toLocaleString('pt-BR');
 
             if (somaLotes === 0) {
-                tabelaHist.innerHTML = `<tr><td colspan="7" class="text-center">Nenhum lote encontrado com estes filtros.</td></tr>`;
+                tabelaHist.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center">Nenhum lote encontrado com estes filtros.</td></tr>`;
                 return;
             }
 
@@ -1358,6 +1393,9 @@
                 const badgeTipo = lote.parcial ? `<br><span class="badge-parcial">Envio Parcial</span>` : '';
                 const operadorNome = lote.operador ? lote.operador.toUpperCase() : '-';
 
+                // Só cria a coluna de botão se for administrador
+                const celulaAcoes = eAdministrador() ? `<td><button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button></td>` : '';
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${lote.dataConclusao.split('-').reverse().join('/')}</td>
@@ -1366,7 +1404,7 @@
                     <td>${lote.dataPrevista.split('-').reverse().join('/')}</td>
                     <td>${situacaoHTML}</td>
                     <td>${operadorNome}</td>
-                    <td><button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button></td>
+                    ${celulaAcoes}
                 `;
                 tabelaHist.appendChild(tr);
             });
