@@ -689,7 +689,7 @@
 
             <section class="panel-card">
                 <div class="panel-header">
-                    <h3>Histórico de Lotes Finalizados</h3>
+                    <h3>Histórico de Lotes Finalizados (Do mais antigo para o mais recente)</h3>
                 </div>
 
                 <!-- Filtros do Histórico -->
@@ -785,7 +785,7 @@
 
             <section class="panel-card">
                 <div class="panel-header space-between">
-                    <h3>Detalhamento e Controle de Entregas por Período</h3>
+                    <h3>Detalhamento e Controle de Entregas por Período (Do mais antigo para o mais recente)</h3>
                     <span class="info-auxiliar">Acompanhe volumes, parciais e prazos</span>
                 </div>
 
@@ -1318,6 +1318,9 @@
                 return true;
             });
 
+            // Ordena os itens do mais antigo para o mais recente baseado na data de conclusão
+            filtrados.sort((a, b) => (a.dataConclusao || "").localeCompare(b.dataConclusao || ""));
+
             let somaLotes = filtrados.length;
             let somaCartoes = filtrados.reduce((acc, curr) => acc + (parseInt(curr.qtd) || 0), 0);
 
@@ -1379,6 +1382,9 @@
 
                 return true;
             });
+
+            // Ordena os itens do mais antigo para o mais recente baseado na data de conclusão
+            filtrados.sort((a, b) => (a.dataConclusao || "").localeCompare(b.dataConclusao || ""));
 
             let totalOS = filtrados.length;
             let totalNoPrazo = 0;
