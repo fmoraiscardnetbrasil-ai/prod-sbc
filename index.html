@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cardnet - Sistema de Produção</title>
+    <title>Cardnet - Sistema de Produção por Setor</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -62,7 +62,7 @@
         }
 
         .nav-container {
-            max-width: 1200px;
+            max-width: 1300px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
@@ -103,24 +103,7 @@
             font-weight: 500;
         }
 
-        .btn-theme {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-navbar);
-            padding: 6px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-theme:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .btn-acao-nav {
+        .btn-theme, .btn-acao-nav, .btn-sair-nav {
             background: transparent;
             border: 1px solid var(--border-color);
             color: var(--text-navbar);
@@ -132,31 +115,17 @@
             transition: all 0.2s;
         }
 
-        .btn-acao-nav:hover {
+        .btn-theme:hover, .btn-acao-nav:hover {
             background: rgba(255, 255, 255, 0.1);
             border-color: #38bdf8;
             color: #38bdf8;
         }
 
-        .btn-sair-nav {
-            background: transparent;
-            border: 1px solid #ef4444;
-            color: #ef4444;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .btn-sair-nav:hover {
-            background: #ef4444;
-            color: white;
-        }
+        .btn-sair-nav { border-color: #ef4444; color: #ef4444; }
+        .btn-sair-nav:hover { background: #ef4444; color: white; }
 
         .main-container {
-            max-width: 1200px;
+            max-width: 1300px;
             margin: 30px auto;
             padding: 0 20px;
         }
@@ -180,22 +149,14 @@
             transition: all 0.2s;
         }
 
-        .btn-aba.active {
-            background: #2563eb;
-            color: white;
-        }
+        .btn-aba.active { background: #2563eb; color: white; }
 
-        .secao-aba {
-            display: none;
-        }
-
-        .secao-aba.active {
-            display: block;
-        }
+        .secao-aba { display: none; }
+        .secao-aba.active { display: block; }
 
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -213,7 +174,6 @@
 
         .kpi-card:nth-child(2) { border-left-color: #10b981; }
         .kpi-card:nth-child(3) { border-left-color: #ef4444; }
-        .kpi-card:nth-child(4) { border-left-color: #f59e0b; }
 
         .kpi-icon {
             font-size: 28px;
@@ -229,18 +189,8 @@
             text-transform: uppercase;
         }
 
-        .kpi-info h2 {
-            font-size: 22px;
-            color: var(--text-main);
-            margin-top: 4px;
-        }
-
-        .kpi-sub {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 2px;
-            font-weight: 500;
-        }
+        .kpi-info h2 { font-size: 22px; color: var(--text-main); margin-top: 4px; }
+        .kpi-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; font-weight: 500; }
 
         .panel-card {
             background: var(--bg-card);
@@ -256,24 +206,9 @@
             padding-bottom: 12px;
         }
 
-        .panel-header h3 {
-            font-size: 18px;
-            color: var(--text-main);
-            font-weight: 600;
-        }
-
-        .space-between {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .info-auxiliar {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
+        .panel-header h3 { font-size: 18px; color: var(--text-main); font-weight: 600; }
+        .space-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .info-auxiliar { font-size: 13px; color: var(--text-muted); }
 
         .form-grid {
             display: grid;
@@ -293,32 +228,17 @@
             border: 1px solid var(--border-color);
         }
 
-        .input-grupo {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .input-grupo label {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-muted);
-        }
-
+        .input-grupo { display: flex; flex-direction: column; gap: 6px; }
+        .input-grupo label { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+        
         .input-grupo input, .input-grupo select {
             padding: 10px 14px;
             border: 1px solid var(--input-border);
             border-radius: 8px;
             font-size: 14px;
             outline: none;
-            transition: border-color 0.2s;
             background-color: var(--input-bg);
             color: var(--input-text);
-        }
-
-        .input-grupo input:focus, .input-grupo select:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
 
         .btn-primary {
@@ -330,7 +250,6 @@
             font-weight: 600;
             font-size: 14px;
             cursor: pointer;
-            transition: background-color 0.2s;
             height: 42px;
         }
 
@@ -345,11 +264,8 @@
             font-weight: 600;
             font-size: 14px;
             cursor: pointer;
-            transition: background-color 0.2s;
             height: 42px;
         }
-
-        .btn-secondary:hover { background-color: #475569; }
 
         .btn-danger {
             background-color: #ef4444;
@@ -360,7 +276,6 @@
             cursor: pointer;
             font-size: 13px;
             font-weight: 500;
-            transition: background-color 0.2s;
         }
 
         .btn-danger:hover { background-color: #dc2626; }
@@ -384,9 +299,9 @@
         }
 
         .styled-table td {
-            padding: 14px 16px;
+            padding: 12px 16px;
             border-bottom: 1px solid var(--border-color);
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text-main);
             vertical-align: middle;
         }
@@ -394,10 +309,33 @@
         .styled-table tbody tr:hover { background-color: var(--table-hover); }
         .text-center { text-align: center; }
 
-        .badge-no-prazo { color: #059669; font-weight: 600; background: #ecfdf5; padding: 4px 10px; border-radius: 20px; font-size: 12px; display: inline-block;}
-        .badge-atrasado { color: #dc2626; font-weight: 600; background: #fef2f2; padding: 4px 10px; border-radius: 20px; font-size: 12px; display: inline-block;}
-        .badge-finalizado { color: #2563eb; font-weight: 600; background: #eff6ff; padding: 4px 10px; border-radius: 20px; font-size: 12px; display: inline-block;}
-        .badge-parcial { color: #d97706; font-weight: 600; background: #fffbeb; padding: 4px 10px; border-radius: 20px; font-size: 12px; display: inline-block;}
+        .badge-no-prazo { color: #059669; font-weight: 600; background: #ecfdf5; padding: 4px 8px; border-radius: 20px; font-size: 12px; display: inline-block;}
+        .badge-atrasado { color: #dc2626; font-weight: 600; background: #fef2f2; padding: 4px 8px; border-radius: 20px; font-size: 12px; display: inline-block;}
+        .badge-finalizado { color: #2563eb; font-weight: 600; background: #eff6ff; padding: 4px 8px; border-radius: 20px; font-size: 12px; display: inline-block;}
+        .badge-parcial { color: #d97706; font-weight: 600; background: #fffbeb; padding: 4px 8px; border-radius: 20px; font-size: 12px; display: inline-block;}
+
+        /* Selects e Detalhes dos Setores */
+        .select-setor {
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid var(--input-border);
+            outline: none;
+            cursor: pointer;
+        }
+        .setor-pendente { background-color: #fef3c7; color: #92400e; border-color: #f59e0b; }
+        .setor-concluido { background-color: #d1fae5; color: #065f46; border-color: #10b981; }
+        .setor-na { background-color: #e2e8f0; color: #475569; border-color: #cbd5e1; }
+
+        .info-setor-hist {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 11px;
+        }
+        .info-setor-hist .op-nome { font-weight: 600; color: #3b82f6; }
+        .info-setor-hist .op-data { color: var(--text-muted); font-size: 10px; }
 
         .login-overlay {
             position: fixed;
@@ -425,18 +363,8 @@
         .login-card h2 { color: var(--text-main); margin-bottom: 10px; font-size: 22px; }
         .login-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; }
         
-        .login-input-grupo {
-            margin-bottom: 15px;
-            text-align: left;
-        }
-
-        .login-input-grupo label {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-muted);
-            display: block;
-            margin-bottom: 5px;
-        }
+        .login-input-grupo { margin-bottom: 15px; text-align: left; }
+        .login-input-grupo label { font-size: 13px; font-weight: 500; color: var(--text-muted); display: block; margin-bottom: 5px; }
 
         .login-card input {
             width: 100%;
@@ -449,26 +377,10 @@
             color: var(--input-text);
         }
 
-        .link-acao {
-            display: inline-block;
-            margin-top: 15px;
-            font-size: 13px;
-            color: #38bdf8;
-            cursor: pointer;
-            text-decoration: underline;
-        }
+        .link-acao { display: inline-block; margin-top: 15px; font-size: 13px; color: #38bdf8; cursor: pointer; text-decoration: underline; }
+        .links-container { display: flex; justify-content: space-between; margin-top: 10px; }
 
-        .link-acao:hover { color: #0ea5e9; }
-
-        .links-container {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-        }
-
-        #input-operador-login, #cad-operador, #rec-operador {
-            text-transform: uppercase;
-        }
+        #input-operador-login, #cad-operador, #rec-operador { text-transform: uppercase; }
 
         @media (max-width: 768px) {
             .form-grid { grid-template-columns: 1fr; }
@@ -558,7 +470,7 @@
         <div class="nav-container">
             <div class="logo-area">
                 <span class="logo-icon">💳</span>
-                <h1>Cardnet <span>Produção & Prazos</span></h1>
+                <h1>Cardnet <span>Produção & Setores</span></h1>
             </div>
             <div class="user-info">
                 <button class="btn-theme" id="btn-alternar-tema" onclick="alternarTema()" title="Alternar Tema Claro/Escuro">🌙</button>
@@ -608,7 +520,7 @@
                 </div>
             </section>
 
-            <!-- Formulário de Cadastro (Será ocultado para não-admins) -->
+            <!-- Formulário de Cadastro (Ocultado para não-admins) -->
             <section class="panel-card" id="secao-cadastro-lote" style="display: none;">
                 <div class="panel-header">
                     <h3>Cadastrar Novo Arquivo</h3>
@@ -638,27 +550,29 @@
             <!-- Tabela -->
             <section class="panel-card">
                 <div class="panel-header space-between">
-                    <h3>Monitoramento de Lotes (Mais antigos primeiro)</h3>
-                    <span class="info-auxiliar">Rastreabilidade e Prazos</span>
+                    <h3>Monitoramento de Lotes por Setor</h3>
+                    <span class="info-auxiliar">Acompanhe o status de Gravação, IDV e Manuseio</span>
                 </div>
                 
                 <div class="table-responsive">
                     <table class="styled-table">
                         <thead>
                             <tr>
-                                <th>Data / Hora Cadastro</th>
+                                <th>Data Cadastro</th>
                                 <th>Arquivo</th>
                                 <th>Qtd</th>
-                                <th>Data Prevista</th>
-                                <th>Status</th>
-                                <th>Situação do Prazo</th>
-                                <th>Finalizado por</th>
+                                <th>Previsão</th>
+                                <th>Gravação</th>
+                                <th>IDV</th>
+                                <th>Manuseio</th>
+                                <th>Prazo</th>
+                                <th>Última Alt.</th>
                                 <th id="th-acoes-producao" style="display: none;">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="tabela-lotes">
                             <tr>
-                                <td colspan="8" class="text-center">Carregando dados...</td>
+                                <td colspan="10" class="text-center">Carregando dados...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -668,19 +582,18 @@
 
         <!-- ABA 2: HISTÓRICO -->
         <div id="aba-historico" class="secao-aba">
-            <!-- KPIs do Histórico -->
             <section class="kpi-grid">
                 <div class="kpi-card">
                     <div class="kpi-icon blue">📁</div>
                     <div class="kpi-info">
-                        <span class="kpi-title">Lotes Concluídos (Filtro)</span>
+                        <span class="kpi-title">Lotes Concluídos</span>
                         <h2 id="hist-total-lotes">0</h2>
                     </div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-icon green">💳</div>
                     <div class="kpi-info">
-                        <span class="kpi-title">Total de Cartões (Filtro)</span>
+                        <span class="kpi-title">Total de Cartões</span>
                         <h2 id="hist-total-cartoes">0</h2>
                     </div>
                 </div>
@@ -688,10 +601,9 @@
 
             <section class="panel-card">
                 <div class="panel-header">
-                    <h3>Histórico de Lotes Finalizados (Do mais antigo para o mais recente)</h3>
+                    <h3>Histórico de Lotes Finalizados</h3>
                 </div>
 
-                <!-- Filtros do Histórico -->
                 <div class="filtro-grid">
                     <div class="input-grupo">
                         <label for="filtro-ano">Ano</label>
@@ -718,7 +630,7 @@
                         </select>
                     </div>
                     <div class="input-grupo">
-                        <label for="filtro-operador">Operador</label>
+                        <label for="filtro-operador">Operador Finalizador</label>
                         <select id="filtro-operador" onchange="carregarHistorico()">
                             <option value="">Todos os Operadores</option>
                         </select>
@@ -732,15 +644,16 @@
                                 <th>Data Conclusão</th>
                                 <th>Arquivo</th>
                                 <th>Qtd</th>
-                                <th>Data Prevista</th>
+                                <th>Gravação</th>
+                                <th>IDV</th>
+                                <th>Manuseio</th>
                                 <th>Situação</th>
-                                <th>Finalizado por</th>
                                 <th id="th-acoes-historico" style="display: none;">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="tabela-historico">
                             <tr>
-                                <td colspan="7" class="text-center">Selecione os filtros ou aguarde carregar...</td>
+                                <td colspan="8" class="text-center">Aguarde...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -748,9 +661,8 @@
             </section>
         </div>
 
-        <!-- ABA 3: RELATÓRIOS E CONTROLE -->
+        <!-- ABA 3: RELATÓRIOS -->
         <div id="aba-relatorios" class="secao-aba">
-            <!-- KPIs Relatórios -->
             <section class="kpi-grid">
                 <div class="kpi-card">
                     <div class="kpi-icon blue">📋</div>
@@ -782,13 +694,36 @@
                 </div>
             </section>
 
+            <!-- Tabela de Produção por Operador -->
+            <section class="panel-card" style="margin-bottom: 25px;">
+                <div class="panel-header">
+                    <h3>📊 Resumo de Produção por Operador (Trabalho Realizado)</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="styled-table">
+                        <thead>
+                            <tr>
+                                <th>Operador</th>
+                                <th>OS Gravadas</th>
+                                <th>OS com IDV</th>
+                                <th>OS com Manuseio</th>
+                                <th>Total Ações em Etapas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-produtividade-operadores">
+                            <tr>
+                                <td colspan="5" class="text-center">Carregando contagem...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
             <section class="panel-card">
                 <div class="panel-header space-between">
-                    <h3>Detalhamento e Controle de Entregas por Período (Do mais antigo para o mais recente)</h3>
-                    <span class="info-auxiliar">Acompanhe volumes, parciais e prazos</span>
+                    <h3>Detalhamento e Controle de Entregas por Período</h3>
                 </div>
 
-                <!-- Filtros dos Relatórios -->
                 <div class="filtro-grid">
                     <div class="input-grupo">
                         <label for="rel-filtro-ano">Ano</label>
@@ -829,15 +764,16 @@
                                 <th>Data Conclusão</th>
                                 <th>Nome do Arquivo / OS</th>
                                 <th>Qtd Cartões</th>
-                                <th>Data Prevista</th>
+                                <th>Gravação</th>
+                                <th>IDV</th>
+                                <th>Manuseio</th>
                                 <th>Status do Prazo</th>
-                                <th>Tipo de Envio</th>
-                                <th>Operador</th>
+                                <th>Tipo Envio</th>
                             </tr>
                         </thead>
                         <tbody id="tabela-relatorio-detalhado">
                             <tr>
-                                <td colspan="7" class="text-center">Carregando dados do relatório...</td>
+                                <td colspan="8" class="text-center">Carregando dados do relatório...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -847,7 +783,7 @@
 
     </main>
 
-    <!-- LÓGICA DO SISTEMA E FIREBASE (JavaScript) -->
+    <!-- JS & FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, doc, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -868,7 +804,6 @@
         let operadorAtual = "";
         let listaGeralLotes = [];
 
-        // Função de validação de permissões (Apenas FLÁVIO e ANDRÉ)
         function eAdministrador() {
             if (!operadorAtual) return false;
             const op = operadorAtual.trim().toUpperCase();
@@ -876,30 +811,19 @@
             return permitidos.includes(op);
         }
 
-        // Função para ocultar visualmente botões e áreas
         function atualizarVisibilidadeUI() {
             const admin = eAdministrador();
             
-            // 1. Mostrar/Ocultar Formulário de Cadastro
             const secaoCadastro = document.getElementById('secao-cadastro-lote');
-            if (secaoCadastro) {
-                secaoCadastro.style.display = admin ? 'block' : 'none';
-            }
+            if (secaoCadastro) secaoCadastro.style.display = admin ? 'block' : 'none';
 
-            // 2. Mostrar/Ocultar Cabeçalho de Ações (Produção)
             const thProducao = document.getElementById('th-acoes-producao');
-            if (thProducao) {
-                thProducao.style.display = admin ? 'table-cell' : 'none';
-            }
+            if (thProducao) thProducao.style.display = admin ? 'table-cell' : 'none';
 
-            // 3. Mostrar/Ocultar Cabeçalho de Ações (Histórico)
             const thHistorico = document.getElementById('th-acoes-historico');
-            if (thHistorico) {
-                thHistorico.style.display = admin ? 'table-cell' : 'none';
-            }
+            if (thHistorico) thHistorico.style.display = admin ? 'table-cell' : 'none';
         }
 
-        // Alternância de Tema
         window.alternarTema = function() {
             const body = document.body;
             const btnTema = document.getElementById("btn-alternar-tema");
@@ -918,18 +842,13 @@
             try {
                 const querySnapshot = await getDocs(collection(db, "operadores"));
                 if (querySnapshot.empty) {
-                    const padrao = {
-                        "FLÁVIO": "123",
-                        "FLAVIO": "123",
-                        "ANDRÉ": "123",
-                        "ANDRE": "123"
-                    };
+                    const padrao = { "FLÁVIO": "123", "FLAVIO": "123", "ANDRÉ": "123", "ANDRE": "123" };
                     for (let [nome, senha] of Object.entries(padrao)) {
                         await setDoc(doc(db, "operadores", nome), { senha: senha });
                     }
                 }
             } catch (e) {
-                console.error("Erro ao verificar operadores iniciais:", e);
+                console.error("Erro ao verificar operadores:", e);
             }
         }
 
@@ -953,8 +872,8 @@
             const nome = document.getElementById("input-operador-login").value.trim().toUpperCase();
             const senha = document.getElementById("input-senha-login").value;
 
-            if (nome === "" || senha === "") {
-                alert("Por favor, preencha o nome e a senha!");
+            if (!nome || !senha) {
+                alert("Preencha nome e senha!");
                 return;
             }
 
@@ -962,13 +881,11 @@
                 const querySnapshot = await getDocs(collection(db, "operadores"));
                 let senhaSalva = null;
                 querySnapshot.forEach((d) => {
-                    if (d.id === nome) {
-                        senhaSalva = d.data().senha;
-                    }
+                    if (d.id === nome) senhaSalva = d.data().senha;
                 });
 
                 if (!senhaSalva || senhaSalva !== senha) {
-                    alert("Nome de operador ou senha inválidos! Acesso negado.");
+                    alert("Acesso negado! Usuário ou senha incorretos.");
                     return;
                 }
 
@@ -983,7 +900,7 @@
                 document.getElementById("input-senha-login").value = "";
             } catch (error) {
                 console.error("Erro no login:", error);
-                alert("Erro ao validar credenciais no servidor.");
+                alert("Erro ao conectar ao servidor.");
             }
         };
 
@@ -997,31 +914,18 @@
             const senha = document.getElementById("cad-senha").value;
 
             if (!nome || !senha) {
-                alert("Preencha o nome e a senha para cadastrar o operador!");
+                alert("Preencha todos os campos!");
                 return;
             }
 
             try {
-                const querySnapshot = await getDocs(collection(db, "operadores"));
-                let existe = false;
-                querySnapshot.forEach((d) => {
-                    if (d.id === nome) existe = true;
-                });
-
-                if (existe) {
-                    alert("Este operador já está cadastrado! Use a tela de login ou redefina a senha.");
-                    return;
-                }
-
                 await setDoc(doc(db, "operadores", nome), { senha: senha });
-
-                alert("Operador cadastrado com sucesso! Faça o login agora.");
+                alert("Operador cadastrado com sucesso!");
                 document.getElementById("cad-operador").value = "";
                 document.getElementById("cad-senha").value = "";
                 voltarParaLogin('cadastro');
             } catch (error) {
-                console.error("Erro ao cadastrar operador:", error);
-                alert("Erro ao salvar novo operador.");
+                alert("Erro ao salvar operador.");
             }
         };
 
@@ -1031,11 +935,8 @@
         };
 
         window.voltarParaLogin = function(origem) {
-            if(origem === 'cadastro') {
-                document.getElementById("modal-cadastro").style.display = "none";
-            } else {
-                document.getElementById("modal-recuperacao").style.display = "none";
-            }
+            if(origem === 'cadastro') document.getElementById("modal-cadastro").style.display = "none";
+            else document.getElementById("modal-recuperacao").style.display = "none";
             document.getElementById("modal-login").style.display = "flex";
         };
 
@@ -1044,57 +945,29 @@
             const senhaMestra = document.getElementById("rec-senha-mestra").value;
             const novaSenha = document.getElementById("rec-nova-senha").value;
 
-            if (!nome || !senhaMestra || !novaSenha) {
-                alert("Preencha todos os campos da redefinição!");
-                return;
-            }
-
-            const SENHA_MESTRA_SISTEMA = "admin";
-
-            if (senhaMestra !== SENHA_MESTRA_SISTEMA) {
-                alert("Senha mestra incorreta! Apenas um administrador pode redefinir a senha.");
+            if (senhaMestra !== "admin") {
+                alert("Senha mestra incorreta!");
                 return;
             }
 
             try {
-                const querySnapshot = await getDocs(collection(db, "operadores"));
-                let existe = false;
-                querySnapshot.forEach((d) => {
-                    if (d.id === nome) existe = true;
-                });
-
-                if (!existe) {
-                    alert("Operador não encontrado no sistema!");
-                    return;
-                }
-
                 await setDoc(doc(db, "operadores", nome), { senha: novaSenha });
-                alert("Senha redefinida com sucesso! Faça o login com a nova senha.");
-                document.getElementById("rec-operador").value = "";
-                document.getElementById("rec-senha-mestra").value = "";
-                document.getElementById("rec-nova-senha").value = "";
+                alert("Senha redefinida com sucesso!");
                 voltarParaLogin('recuperacao');
             } catch (error) {
-                console.error("Erro ao redefinir senha:", error);
-                alert("Erro ao atualizar senha.");
+                alert("Erro ao redefinir senha.");
             }
         };
 
         window.trocarUsuario = function() {
             operadorAtual = "";
             document.getElementById("display-usuario").innerText = "👤 Operador: -";
-            document.getElementById("input-operador-login").value = "";
-            document.getElementById("input-senha-login").value = "";
-            
             atualizarVisibilidadeUI();
-            
             document.getElementById("modal-login").style.display = "flex";
         };
 
         window.sairSistema = function() {
-            if (confirm("Deseja realmente sair e encerrar a sessão?")) {
-                location.reload();
-            }
+            if (confirm("Deseja sair do sistema?")) location.reload();
         };
 
         window.mudarAba = function(abaId, elementoBtn) {
@@ -1120,48 +993,66 @@
             e.preventDefault();
 
             if (!operadorAtual) {
-                alert("Identifique-se primeiro fazendo login!");
-                document.getElementById("modal-login").style.display = "flex";
+                alert("Identifique-se no login primeiro!");
                 return;
             }
 
-            // TRAVA DE PERMISSÃO PARA CADASTRO
             if (!eAdministrador()) {
-                alert("Acesso Negado: Apenas os operadores FLÁVIO e ANDRÉ possuem permissão para cadastrar novos lotes.");
+                alert("Apenas Flávio e André podem cadastrar lotes.");
                 return;
             }
             
             const nome = document.getElementById('nome-arquivo').value.trim();
             const qtd = document.getElementById('qtd-cartoes').value;
             const dataPrevista = document.getElementById('data-prevista').value;
-            
-            const dataHoraCadastroCompleta = new Date().toISOString();
-
-            if (!nome || !qtd || !dataPrevista) {
-                alert("Preencha todos os campos do cadastro!");
-                return;
-            }
 
             try {
                 await addDoc(collection(db, "lotes"), {
                     nome: nome,
                     qtd: parseInt(qtd),
                     dataPrevista: dataPrevista,
-                    dataCadastro: dataHoraCadastroCompleta,
+                    dataCadastro: new Date().toISOString(),
                     status: "Em Produção",
+                    setores: {
+                        gravacao: { status: "Pendente", op: null, data: null },
+                        idv: { status: "Pendente", op: null, data: null },
+                        manuseio: { status: "Pendente", op: null, data: null }
+                    },
                     dataConclusao: null,
                     operador: null
                 });
                 form.reset();
                 carregarLotes();
             } catch (error) {
-                console.error("Erro ao adicionar lote: ", error);
                 alert("Erro ao cadastrar lote.");
             }
         });
 
+        function normalizarSetores(setores, statusGeral) {
+            if (!setores) {
+                const baseStatus = statusGeral === "Finalizado" ? "Concluído" : "Pendente";
+                return {
+                    gravacao: { status: baseStatus, op: null, data: null },
+                    idv: { status: baseStatus, op: null, data: null },
+                    manuseio: { status: baseStatus, op: null, data: null }
+                };
+            }
+
+            const resultado = {};
+            ['gravacao', 'idv', 'manuseio'].forEach(sec => {
+                if (typeof setores[sec] === 'string') {
+                    resultado[sec] = { status: setores[sec], op: null, data: null };
+                } else if (setores[sec]) {
+                    resultado[sec] = setores[sec];
+                } else {
+                    resultado[sec] = { status: "Pendente", op: null, data: null };
+                }
+            });
+            return resultado;
+        }
+
         async function carregarLotes() {
-            const colunasVisiveis = eAdministrador() ? 8 : 7;
+            const colunasVisiveis = eAdministrador() ? 10 : 9;
             tabelaLotes.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center">Carregando dados...</td></tr>`;
             
             try {
@@ -1174,26 +1065,19 @@
                 querySnapshot.forEach((docSnap) => {
                     const lote = docSnap.data();
                     lote.id = docSnap.id;
-                    
-                    if (lote.dataCadastro && !lote.dataCadastro.includes('T')) {
-                        lote.dataCadastro = lote.dataCadastro + "T16:00:00.000Z";
-                    }
-
+                    lote.setores = normalizarSetores(lote.setores, lote.status);
                     listaGeralLotes.push(lote);
                 });
 
                 const ativos = listaGeralLotes.filter(l => l.status === "Em Produção");
                 ativos.sort((a, b) => (a.dataCadastro || "").localeCompare(b.dataCadastro || ""));
 
-                let totalAtivoCount = 0;
-                let totalAtivoCartoes = 0;
-                let noPrazoCount = 0;
-                let noPrazoCartoes = 0;
-                let atrasadoCount = 0;
-                let atrasadoCartoes = 0;
+                let totalAtivoCount = 0, totalAtivoCartoes = 0;
+                let noPrazoCount = 0, noPrazoCartoes = 0;
+                let atrasadoCount = 0, atrasadoCartoes = 0;
 
                 if (ativos.length === 0) {
-                    tabelaLotes.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center">Nenhum lote em produção no momento.</td></tr>`;
+                    tabelaLotes.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center">Nenhum lote em produção.</td></tr>`;
                     atualizarKPIsProducao(0, 0, 0, 0, 0, 0);
                     return;
                 }
@@ -1202,13 +1086,14 @@
                     totalAtivoCount++;
                     totalAtivoCartoes += (parseInt(lote.qtd) || 0);
 
-                    let situacaoHTML = "";
+                    let situacaoHTML = (lote.dataPrevista < hojeStr) 
+                        ? `<span class="badge-atrasado">🔴 ATRASADO</span>`
+                        : `<span class="badge-no-prazo">🟢 No Prazo</span>`;
+
                     if (lote.dataPrevista < hojeStr) {
-                        situacaoHTML = `<span class="badge-atrasado">🔴 ATRASADO</span>`;
                         atrasadoCount++;
                         atrasadoCartoes += (parseInt(lote.qtd) || 0);
                     } else {
-                        situacaoHTML = `<span class="badge-no-prazo">🟢 No Prazo</span>`;
                         noPrazoCount++;
                         noPrazoCartoes += (parseInt(lote.qtd) || 0);
                     }
@@ -1217,22 +1102,18 @@
                     if (lote.dataCadastro) {
                         const dtObj = new Date(lote.dataCadastro);
                         if (!isNaN(dtObj)) {
-                            const dia = String(dtObj.getDate()).padStart(2, '0');
-                            const mes = String(dtObj.getMonth() + 1).padStart(2, '0');
-                            const ano = dtObj.getFullYear();
-                            const hora = String(dtObj.getHours()).padStart(2, '0');
-                            const min = String(dtObj.getMinutes()).padStart(2, '0');
-                            dataHoraExibida = `${dia}/${mes}/${ano} ${hora}:${min}`;
-                        } else {
-                            dataHoraExibida = lote.dataCadastro.split('T')[0].split('-').reverse().join('/');
+                            dataHoraExibida = `${String(dtObj.getDate()).padStart(2, '0')}/${String(dtObj.getMonth() + 1).padStart(2, '0')} ${String(dtObj.getHours()).padStart(2, '0')}:${String(dtObj.getMinutes()).padStart(2, '0')}`;
                         }
                     }
 
                     const operadorTexto = lote.operador ? lote.operador.toUpperCase() : '<span style="color:#94a3b8">Pendente</span>';
                     const qtdFormatada = (parseInt(lote.qtd) || 0).toLocaleString('pt-BR');
                     
-                    // Só cria a coluna de botão se for administrador
                     const celulaAcoes = eAdministrador() ? `<td><button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button></td>` : '';
+
+                    const selectGravacao = criarSelectSetor(lote.id, 'gravacao', lote.setores.gravacao.status);
+                    const selectIDV = criarSelectSetor(lote.id, 'idv', lote.setores.idv.status);
+                    const selectManuseio = criarSelectSetor(lote.id, 'manuseio', lote.setores.manuseio.status);
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
@@ -1240,12 +1121,9 @@
                         <td><strong>${lote.nome}</strong></td>
                         <td>${qtdFormatada}</td>
                         <td>${lote.dataPrevista.split('-').reverse().join('/')}</td>
-                        <td>
-                            <select onchange="verificarEAtualizarStatus('${lote.id}', '${lote.nome}', ${lote.qtd}, '${lote.dataPrevista}', '${lote.dataCadastro}', this)">
-                                <option value="Em Produção" selected>Em Produção</option>
-                                <option value="Finalizado">Finalizado</option>
-                            </select>
-                        </td>
+                        <td>${selectGravacao}</td>
+                        <td>${selectIDV}</td>
+                        <td>${selectManuseio}</td>
                         <td>${situacaoHTML}</td>
                         <td>${operadorTexto}</td>
                         ${celulaAcoes}
@@ -1257,89 +1135,190 @@
 
             } catch (error) {
                 console.error("Erro ao carregar lotes:", error);
-                tabelaLotes.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center" style="color:red;">Erro ao carregar dados do Firebase.</td></tr>`;
             }
         }
+
+        function criarSelectSetor(loteId, setorNome, valorAtual) {
+            let classeCor = "setor-pendente";
+            if (valorAtual === "Concluído") classeCor = "setor-concluido";
+            else if (valorAtual === "N/A") classeCor = "setor-na";
+
+            return `
+                <select class="select-setor ${classeCor}" onchange="atualizarSetorLote('${loteId}', '${setorNome}', this.value)">
+                    <option value="Pendente" ${valorAtual === "Pendente" ? "selected" : ""}>⏳ Pendente</option>
+                    <option value="Concluído" ${valorAtual === "Concluído" ? "selected" : ""}>✅ Concluído</option>
+                    <option value="N/A" ${valorAtual === "N/A" ? "selected" : ""}>🚫 N/A (Não se aplica)</option>
+                </select>
+            `;
+        }
+
+        window.atualizarSetorLote = async function(loteId, setorNome, novoValor) {
+            if (!operadorAtual) {
+                alert("Faça o login para alterar o status do setor!");
+                carregarLotes();
+                return;
+            }
+
+            try {
+                const lote = listaGeralLotes.find(l => l.id === loteId);
+                if (!lote) return;
+
+                const novosSetores = { ...lote.setores };
+                
+                if (novoValor === "Concluído") {
+                    novosSetores[setorNome] = {
+                        status: "Concluído",
+                        op: operadorAtual,
+                        data: new Date().toISOString()
+                    };
+                } else if (novoValor === "N/A") {
+                    novosSetores[setorNome] = {
+                        status: "N/A",
+                        op: null,
+                        data: new Date().toISOString()
+                    };
+                } else {
+                    novosSetores[setorNome] = {
+                        status: "Pendente",
+                        op: null,
+                        data: null
+                    };
+                }
+                
+                // Checa se todos estão prontos (seja Concluído ou N/A)
+                const setorPronto = (s) => s.status === "Concluído" || s.status === "N/A";
+                const todosProntos = setorPronto(novosSetores.gravacao) && 
+                                     setorPronto(novosSetores.idv) && 
+                                     setorPronto(novosSetores.manuseio);
+
+                if (todosProntos) {
+                    const inputQtd = prompt(`Todos os setores aplicáveis foram finalizados! Confirmar envio de cartões para finalização da OS:\n(Total cadastrado: ${lote.qtd})`, lote.qtd);
+                    
+                    if (inputQtd === null) {
+                        carregarLotes();
+                        return;
+                    }
+
+                    const qtdEnviada = parseInt(inputQtd);
+                    if (isNaN(qtdEnviada) || qtdEnviada <= 0 || qtdEnviada > lote.qtd) {
+                        alert("Quantidade inválida!");
+                        carregarLotes();
+                        return;
+                    }
+
+                    const hojeStr = new Date().toISOString().split('T')[0];
+
+                    if (qtdEnviada === lote.qtd) {
+                        await updateDoc(doc(db, "lotes", loteId), {
+                            setores: novosSetores,
+                            status: "Finalizado",
+                            dataConclusao: hojeStr,
+                            operador: operadorAtual,
+                            parcial: false
+                        });
+                    } else {
+                        await updateDoc(doc(db, "lotes", loteId), {
+                            qtd: qtdEnviada,
+                            setores: novosSetores,
+                            status: "Finalizado",
+                            dataConclusao: hojeStr,
+                            operador: operadorAtual,
+                            parcial: true
+                        });
+
+                        const saldo = lote.qtd - qtdEnviada;
+                        await addDoc(collection(db, "lotes"), {
+                            nome: lote.nome + " (Saldo)",
+                            qtd: saldo,
+                            dataPrevista: lote.dataPrevista,
+                            dataCadastro: new Date().toISOString(),
+                            status: "Em Produção",
+                            setores: {
+                                gravacao: { status: "Pendente", op: null, data: null },
+                                idv: { status: "Pendente", op: null, data: null },
+                                manuseio: { status: "Pendente", op: null, data: null }
+                            },
+                            dataConclusao: null,
+                            operador: null
+                        });
+                    }
+                } else {
+                    await updateDoc(doc(db, "lotes", loteId), {
+                        setores: novosSetores,
+                        operador: operadorAtual
+                    });
+                }
+
+                carregarLotes();
+            } catch (error) {
+                console.error("Erro ao atualizar setor:", error);
+                alert("Erro ao salvar atualização do setor.");
+            }
+        };
 
         function atualizarKPIsProducao(totOS, totCart, nPrazoOS, nPrazoCart, atrOS, atrCart) {
             document.getElementById("kpi-total").innerText = `${totOS} OS`;
             document.getElementById("kpi-total-cartoes").innerText = `${totCart.toLocaleString('pt-BR')} cartões`;
-
             document.getElementById("kpi-noprazo").innerText = `${nPrazoOS} OS`;
             document.getElementById("kpi-noprazo-cartoes").innerText = `${nPrazoCart.toLocaleString('pt-BR')} cartões`;
-
             document.getElementById("kpi-atrasado").innerText = `${atrOS} OS`;
             document.getElementById("kpi-atrasado-cartoes").innerText = `${atrCart.toLocaleString('pt-BR')} cartões`;
         }
 
         function atualizarFiltrosDinamicos() {
-            const anosSet = new Set();
-            const operadoresSet = new Set();
-
+            const anosSet = new Set(), operadoresSet = new Set();
             listaGeralLotes.forEach(l => {
                 if (l.status === "Finalizado" && l.dataConclusao) {
-                    const ano = l.dataConclusao.split('-')[0];
-                    anosSet.add(ano);
+                    anosSet.add(l.dataConclusao.split('-')[0]);
                     if (l.operador) operadoresSet.add(l.operador.toUpperCase());
                 }
             });
 
-            const selectAno = document.getElementById('filtro-ano');
-            const valorAnoAtual = selectAno.value;
-            selectAno.innerHTML = '<option value="">Todos os Anos</option>';
-            Array.from(anosSet).sort().reverse().forEach(ano => {
-                const opt = document.createElement('option');
-                opt.value = ano;
-                opt.innerText = ano;
-                if (ano === valorAnoAtual) opt.selected = true;
-                selectAno.appendChild(opt);
-            });
-
-            const selectOp = document.getElementById('filtro-operador');
-            const valorOpAtual = selectOp.value;
-            selectOp.innerHTML = '<option value="">Todos os Operadores</option>';
-            Array.from(operadoresSet).sort().forEach(op => {
-                const opt = document.createElement('option');
-                opt.value = op;
-                opt.innerText = op;
-                if (op === valorOpAtual) opt.selected = true;
-                selectOp.appendChild(opt);
-            });
+            montarSelect('filtro-ano', anosSet, "Todos os Anos");
+            montarSelect('filtro-operador', operadoresSet, "Todos os Operadores");
         }
 
         function atualizarFiltrosRelatorios() {
-            const anosSet = new Set();
-            const operadoresSet = new Set();
-
+            const anosSet = new Set(), operadoresSet = new Set();
             listaGeralLotes.forEach(l => {
                 if (l.status === "Finalizado" && l.dataConclusao) {
-                    const ano = l.dataConclusao.split('-')[0];
-                    anosSet.add(ano);
+                    anosSet.add(l.dataConclusao.split('-')[0]);
                     if (l.operador) operadoresSet.add(l.operador.toUpperCase());
                 }
             });
 
-            const selectAno = document.getElementById('rel-filtro-ano');
-            const valorAnoAtual = selectAno.value;
-            selectAno.innerHTML = '<option value="">Todos os Anos</option>';
-            Array.from(anosSet).sort().reverse().forEach(ano => {
-                const opt = document.createElement('option');
-                opt.value = ano;
-                opt.innerText = ano;
-                if (ano === valorAnoAtual) opt.selected = true;
-                selectAno.appendChild(opt);
-            });
+            montarSelect('rel-filtro-ano', anosSet, "Todos os Anos");
+            montarSelect('rel-filtro-operador', operadoresSet, "Todos os Operadores");
+        }
 
-            const selectOp = document.getElementById('rel-filtro-operador');
-            const valorOpAtual = selectOp.value;
-            selectOp.innerHTML = '<option value="">Todos os Operadores</option>';
-            Array.from(operadoresSet).sort().forEach(op => {
+        function montarSelect(idSelect, conjunto, placeholder) {
+            const sel = document.getElementById(idSelect);
+            const val = sel.value;
+            sel.innerHTML = `<option value="">${placeholder}</option>`;
+            Array.from(conjunto).sort().reverse().forEach(v => {
                 const opt = document.createElement('option');
-                opt.value = op;
-                opt.innerText = op;
-                if (op === valorOpAtual) opt.selected = true;
-                selectOp.appendChild(opt);
+                opt.value = v;
+                opt.innerText = v;
+                if (v === val) opt.selected = true;
+                sel.appendChild(opt);
             });
+        }
+
+        function formatarInfoSetor(objSetor) {
+            if (!objSetor || objSetor.status === "Pendente") return `<span style="color:#94a3b8">⏳ Pendente</span>`;
+            if (objSetor.status === "N/A") return `<span style="color:#64748b; font-weight:600;">🚫 N/A</span>`;
+            
+            let htmlOp = objSetor.op ? `<span class="op-nome">👤 ${objSetor.op}</span>` : `<span class="op-nome">✅ Concluído</span>`;
+            let htmlData = "";
+            
+            if (objSetor.data) {
+                const dt = new Date(objSetor.data);
+                if (!isNaN(dt)) {
+                    htmlData = `<span class="op-data">🕒 ${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')} ${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}</span>`;
+                }
+            }
+
+            return `<div class="info-setor-hist">${htmlOp}${htmlData}</div>`;
         }
 
         window.carregarHistorico = function() {
@@ -1347,68 +1326,50 @@
             const anoFiltro = document.getElementById('filtro-ano').value;
             const mesFiltro = document.getElementById('filtro-mes').value;
             const opFiltro = document.getElementById('filtro-operador').value;
-            const colunasVisiveis = eAdministrador() ? 7 : 6;
+            const colunasVisiveis = eAdministrador() ? 8 : 7;
 
             tabelaHist.innerHTML = "";
 
-            const finalizados = listaGeralLotes.filter(l => l.status === "Finalizado");
-
-            const filtrados = finalizados.filter(l => {
-                if (!l.dataConclusao) return false;
-                const [anoLote, mesLote, ] = l.dataConclusao.split('-');
-
+            const filtrados = listaGeralLotes.filter(l => {
+                if (l.status !== "Finalizado" || !l.dataConclusao) return false;
+                const [anoLote, mesLote] = l.dataConclusao.split('-');
                 if (anoFiltro && anoLote !== anoFiltro) return false;
                 if (mesFiltro && mesLote !== mesFiltro) return false;
                 if (opFiltro && l.operador && l.operador.toUpperCase() !== opFiltro) return false;
-
                 return true;
             });
 
             filtrados.sort((a, b) => (a.dataConclusao || "").localeCompare(b.dataConclusao || ""));
 
-            let somaLotes = filtrados.length;
-            let somaCartoes = filtrados.reduce((acc, curr) => acc + (parseInt(curr.qtd) || 0), 0);
+            document.getElementById('hist-total-lotes').innerText = filtrados.length;
+            document.getElementById('hist-total-cartoes').innerText = filtrados.reduce((a, c) => a + (parseInt(c.qtd) || 0), 0).toLocaleString('pt-BR');
 
-            document.getElementById('hist-total-lotes').innerText = somaLotes;
-            document.getElementById('hist-total-cartoes').innerText = somaCartoes.toLocaleString('pt-BR');
-
-            if (somaLotes === 0) {
-                tabelaHist.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center">Nenhum lote encontrado com estes filtros.</td></tr>`;
+            if (filtrados.length === 0) {
+                tabelaHist.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center">Nenhum lote encontrado.</td></tr>`;
                 return;
             }
 
             filtrados.forEach(lote => {
-                let situacaoHTML = "";
-                if (lote.dataConclusao > lote.dataPrevista) {
-                    const prev = new Date(lote.dataPrevista);
-                    const conc = new Date(lote.dataConclusao);
-                    const diffTime = Math.abs(conc - prev);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    situacaoHTML = `<span class="badge-atrasado">⚠️ (${diffDays}d atraso)</span>`;
-                } else {
-                    situacaoHTML = `<span class="badge-finalizado">✅ No Prazo</span>`;
-                }
+                let situacaoHTML = (lote.dataConclusao > lote.dataPrevista) 
+                    ? `<span class="badge-atrasado">⚠️ Atrasado</span>` 
+                    : `<span class="badge-finalizado">✅ No Prazo</span>`;
 
-                const qtdExibida = parseInt(lote.qtd).toLocaleString('pt-BR');
-                const badgeTipo = lote.parcial ? `<br><span class="badge-parcial">Envio Parcial</span>` : '';
-                const operadorNome = lote.operador ? lote.operador.toUpperCase() : '-';
-
-                // Só cria a coluna de botão se for administrador
                 const celulaAcoes = eAdministrador() ? `<td><button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button></td>` : '';
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${lote.dataConclusao.split('-').reverse().join('/')}</td>
                     <td><strong>${lote.nome}</strong></td>
-                    <td>${qtdExibida} ${badgeTipo}</td>
-                    <td>${lote.dataPrevista.split('-').reverse().join('/')}</td>
+                    <td>${parseInt(lote.qtd).toLocaleString('pt-BR')} ${lote.parcial ? '<span class="badge-parcial">Parcial</span>' : ''}</td>
+                    <td>${formatarInfoSetor(lote.setores.gravacao)}</td>
+                    <td>${formatarInfoSetor(lote.setores.idv)}</td>
+                    <td>${formatarInfoSetor(lote.setores.manuseio)}</td>
                     <td>${situacaoHTML}</td>
-                    <td>${operadorNome}</td>
                     ${celulaAcoes}
                 `;
                 tabelaHist.appendChild(tr);
             });
-        }
+        };
 
         window.carregarRelatorios = function() {
             const tabelaRel = document.getElementById('tabela-relatorio-detalhado');
@@ -1418,180 +1379,118 @@
 
             tabelaRel.innerHTML = "";
 
-            const finalizados = listaGeralLotes.filter(l => l.status === "Finalizado");
-
-            const filtrados = finalizados.filter(l => {
-                if (!l.dataConclusao) return false;
-                const [anoLote, mesLote, ] = l.dataConclusao.split('-');
-
+            const filtrados = listaGeralLotes.filter(l => {
+                if (l.status !== "Finalizado" || !l.dataConclusao) return false;
+                const [anoLote, mesLote] = l.dataConclusao.split('-');
                 if (anoFiltro && anoLote !== anoFiltro) return false;
                 if (mesFiltro && mesLote !== mesFiltro) return false;
                 if (opFiltro && l.operador && l.operador.toUpperCase() !== opFiltro) return false;
-
                 return true;
             });
 
-            filtrados.sort((a, b) => (a.dataConclusao || "").localeCompare(b.dataConclusao || ""));
-
-            let totalOS = filtrados.length;
-            let totalNoPrazo = 0;
-            let totalAtrasados = 0;
-            let volumeCartoes = 0;
+            let totalNoPrazo = 0, totalAtrasados = 0, volumeCartoes = 0;
 
             filtrados.forEach(lote => {
                 volumeCartoes += (parseInt(lote.qtd) || 0);
-                if (lote.dataConclusao > lote.dataPrevista) {
-                    totalAtrasados++;
-                } else {
-                    totalNoPrazo++;
-                }
+                if (lote.dataConclusao > lote.dataPrevista) totalAtrasados++;
+                else totalNoPrazo++;
             });
 
-            document.getElementById('rel-total-os').innerText = totalOS;
+            document.getElementById('rel-total-os').innerText = filtrados.length;
             document.getElementById('rel-no-prazo').innerText = totalNoPrazo;
             document.getElementById('rel-atrasados').innerText = totalAtrasados;
             document.getElementById('rel-volume-cartoes').innerText = volumeCartoes.toLocaleString('pt-BR');
 
-            if (totalOS === 0) {
-                tabelaRel.innerHTML = `<tr><td colspan="7" class="text-center">Nenhum dado encontrado para o período selecionado.</td></tr>`;
+            // Gerar Produtividade por Operador
+            gerarTabelaProdutividade(anoFiltro, mesFiltro);
+
+            if (filtrados.length === 0) {
+                tabelaRel.innerHTML = `<tr><td colspan="8" class="text-center">Nenhum dado encontrado.</td></tr>`;
                 return;
             }
 
             filtrados.forEach(lote => {
-                let situacaoHTML = "";
-                if (lote.dataConclusao > lote.dataPrevista) {
-                    const prev = new Date(lote.dataPrevista);
-                    const conc = new Date(lote.dataConclusao);
-                    const diffTime = Math.abs(conc - prev);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    situacaoHTML = `<span class="badge-atrasado">🔴 Atrasado (${diffDays}d)</span>`;
-                } else {
-                    situacaoHTML = `<span class="badge-no-prazo">🟢 No Prazo</span>`;
-                }
-
-                let tipoEnvioHTML = lote.parcial ? `<span class="badge-parcial">Parcial</span>` : `<span class="badge-finalizado">Total (100%)</span>`;
-                const qtdExibida = parseInt(lote.qtd).toLocaleString('pt-BR');
-                const operadorNome = lote.operador ? lote.operador.toUpperCase() : '-';
+                let situacaoHTML = (lote.dataConclusao > lote.dataPrevista) 
+                    ? `<span class="badge-atrasado">🔴 Atrasado</span>` 
+                    : `<span class="badge-no-prazo">🟢 No Prazo</span>`;
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${lote.dataConclusao.split('-').reverse().join('/')}</td>
                     <td><strong>${lote.nome}</strong></td>
-                    <td>${qtdExibida}</td>
-                    <td>${lote.dataPrevista.split('-').reverse().join('/')}</td>
+                    <td>${parseInt(lote.qtd).toLocaleString('pt-BR')}</td>
+                    <td>${formatarInfoSetor(lote.setores.gravacao)}</td>
+                    <td>${formatarInfoSetor(lote.setores.idv)}</td>
+                    <td>${formatarInfoSetor(lote.setores.manuseio)}</td>
                     <td>${situacaoHTML}</td>
-                    <td>${tipoEnvioHTML}</td>
-                    <td>${operadorNome}</td>
+                    <td>${lote.parcial ? '<span class="badge-parcial">Parcial</span>' : '<span class="badge-finalizado">Total</span>'}</td>
                 `;
                 tabelaRel.appendChild(tr);
             });
-        }
+        };
 
-        window.verificarEAtualizarStatus = async function(id, nomeArquivo, qtdOriginal, dataPrevista, dataCadastro, selectElement) {
-            const novoStatus = selectElement.value;
-            
-            if (novoStatus === "Finalizado") {
-                if (!operadorAtual) {
-                    alert("Você precisa estar logado para finalizar um lote!");
-                    selectElement.value = "Em Produção";
-                    document.getElementById("modal-login").style.display = "flex";
-                    return;
-                }
+        function gerarTabelaProdutividade(anoFiltro, mesFiltro) {
+            const tabelaProd = document.getElementById('tabela-produtividade-operadores');
+            tabelaProd.innerHTML = "";
 
-                const inputQtd = prompt(`Quantos cartões foram enviados neste lote?\n(Total do lote: ${qtdOriginal})`, qtdOriginal);
-                
-                if (inputQtd === null) {
-                    selectElement.value = "Em Produção";
-                    return;
-                }
+            const contagemOp = {};
 
-                const qtdEnviada = parseInt(inputQtd);
+            listaGeralLotes.forEach(lote => {
+                if (lote.status !== "Finalizado" || !lote.dataConclusao) return;
+                const [anoLote, mesLote] = lote.dataConclusao.split('-');
+                if (anoFiltro && anoLote !== anoFiltro) return;
+                if (mesFiltro && mesLote !== mesFiltro) return;
 
-                if (isNaN(qtdEnviada) || qtdEnviada <= 0) {
-                    alert("Quantidade inválida!");
-                    selectElement.value = "Em Produção";
-                    return;
-                }
-
-                if (qtdEnviada > qtdOriginal) {
-                    alert("A quantidade enviada não pode ser maior que o total do lote original!");
-                    selectElement.value = "Em Produção";
-                    return;
-                }
-
-                const hojeStr = new Date().toISOString().split('T')[0];
-                const loteRef = doc(db, "lotes", id);
-
-                try {
-                    if (qtdEnviada === qtdOriginal) {
-                        await updateDoc(loteRef, {
-                            status: "Finalizado",
-                            dataConclusao: hojeStr,
-                            operador: operadorAtual,
-                            parcial: false
-                        });
-                    } else {
-                        await updateDoc(loteRef, {
-                            qtd: qtdEnviada,
-                            status: "Finalizado",
-                            dataConclusao: hojeStr,
-                            operador: operadorAtual,
-                            parcial: true
-                        });
-
-                        const saldoRestante = qtdOriginal - qtdEnviada;
-                        await addDoc(collection(db, "lotes"), {
-                            nome: nomeArquivo + " (Saldo)",
-                            qtd: saldoRestante,
-                            dataPrevista: dataPrevista,
-                            dataCadastro: dataCadastro || new Date().toISOString(),
-                            status: "Em Produção",
-                            dataConclusao: null,
-                            operador: null
-                        });
+                ['gravacao', 'idv', 'manuseio'].forEach(setorKey => {
+                    const objSetor = lote.setores[setorKey];
+                    if (objSetor && objSetor.status === "Concluído" && objSetor.op) {
+                        const opNome = objSetor.op.toUpperCase();
+                        if (!contagemOp[opNome]) {
+                            contagemOp[opNome] = { gravacao: 0, idv: 0, manuseio: 0 };
+                        }
+                        contagemOp[opNome][setorKey]++;
                     }
+                });
+            });
 
-                    carregarLotes();
-                } catch (error) {
-                    console.error("Erro ao atualizar status:", error);
-                    alert("Erro ao atualizar o lote no servidor.");
-                    selectElement.value = "Em Produção";
-                }
+            const nomesOperadores = Object.keys(contagemOp).sort();
+
+            if (nomesOperadores.length === 0) {
+                tabelaProd.innerHTML = `<tr><td colspan="5" class="text-center">Nenhuma produtividade registrada no período.</td></tr>`;
+                return;
             }
+
+            nomesOperadores.forEach(op => {
+                const dados = contagemOp[op];
+                const totalAcoes = dados.gravacao + dados.idv + dados.manuseio;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>👤 ${op}</strong></td>
+                    <td>${dados.gravacao} OS</td>
+                    <td>${dados.idv} OS</td>
+                    <td>${dados.manuseio} OS</td>
+                    <td><strong>${totalAcoes} Ações</strong></td>
+                `;
+                tabelaProd.appendChild(tr);
+            });
         }
 
         window.deletarLote = async function(id) {
-            if (!operadorAtual) {
-                alert("Você precisa estar logado para excluir um lote!");
-                document.getElementById("modal-login").style.display = "flex";
-                return;
-            }
-
-            // TRAVA DE PERMISSÃO PARA EXCLUSÃO
             if (!eAdministrador()) {
-                alert("Acesso Negado: Apenas os operadores FLÁVIO e ANDRÉ possuem permissão para excluir lotes.");
+                alert("Apenas Flávio e André podem excluir lotes.");
                 return;
             }
 
-            if(confirm("Deseja realmente excluir este lote do sistema?")) {
+            if(confirm("Deseja realmente excluir este lote?")) {
                 try {
                     await deleteDoc(doc(db, "lotes", id));
                     carregarLotes();
-                    setTimeout(() => {
-                        if(document.getElementById('aba-historico').classList.contains('active')) {
-                            atualizarFiltrosDinamicos();
-                            carregarHistorico();
-                        } else if(document.getElementById('aba-relatorios').classList.contains('active')) {
-                            atualizarFiltrosRelatorios();
-                            carregarRelatorios();
-                        }
-                    }, 300);
                 } catch (error) {
-                    console.error("Erro ao excluir:", error);
-                    alert("Erro ao excluir o lote. Verifique suas permissões.");
+                    alert("Erro ao excluir lote.");
                 }
             }
-        }
+        };
     </script>
 </body>
 </html>
