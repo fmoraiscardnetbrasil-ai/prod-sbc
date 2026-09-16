@@ -1226,7 +1226,7 @@
                                      setorPronto(novosSetores.idv) && 
                                      setorPronto(novosSetores.manuseio);
 
-                if (novoValor === "Envio Parcial" || todosProntos) {
+                if (todosProntos) {
                     lotePendenteFinalizacao = { loteId, lote, novosSetores, acao: novoValor };
                     document.getElementById('desc-modal-finalizacao').innerText = `Informe a quantidade enviada para o lote "${lote.nome}" (Total cadastrado: ${lote.qtd}):`;
                     document.getElementById('qtd-finalizacao-input').value = lote.qtd;
