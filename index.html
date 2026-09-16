@@ -336,6 +336,8 @@
         }
         .info-setor-hist .op-nome { font-weight: 600; color: #3b82f6; }
         .info-setor-hist .op-data { color: var(--text-muted); font-size: 10px; }
+        .tag-atraso-setor { color: #ef4444; font-weight: 700; font-size: 10px; }
+        .tag-prazo-setor { color: #10b981; font-weight: 700; font-size: 10px; }
 
         .login-overlay {
             position: fixed;
@@ -566,7 +568,7 @@
             <section class="panel-card">
                 <div class="panel-header space-between">
                     <h3>Monitoramento de Lotes por Setor</h3>
-                    <span class="info-auxiliar">Acompanhe o status de Gravação, IDV e Manuseio</span>
+                    <span class="info-auxiliar">Acompanhe o status e atrasos por setor individual</span>
                 </div>
                 
                 <div class="table-responsive">
@@ -580,7 +582,7 @@
                                 <th>Gravação</th>
                                 <th>IDV</th>
                                 <th>Manuseio</th>
-                                <th>Prazo</th>
+                                <th>Prazo Geral</th>
                                 <th>Última Alt.</th>
                                 <th id="th-acoes-producao" style="display: none;">Ações</th>
                             </tr>
@@ -1126,9 +1128,9 @@
                     
                     const celulaAcoes = eAdministrador() ? `<td><button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button></td>` : '';
 
-                    const selectGravacao = criarSelectSetor(lote.id, 'gravacao', lote.setores.gravacao.status);
-                    const selectIDV = criarSelectSetor(lote.id, 'idv', lote.setores.idv.status);
-                    const selectManuseio = criarSelectSetor(lote.id, 'manuseio', lote.setores.manuseio.status);
+                    const selectGravacao = criarSelectSetor(lote, 'gravacao');
+                    const selectIDV = criarSelectSetor(lote, 'idv');
+                    const selectManuseio = criarSelectSetor(lote, 'manuseio');
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
@@ -1153,19 +1155,36 @@
             }
         }
 
-        function criarSelectSetor(loteId, setorNome, valorAtual) {
+        function criarSelectSetor(lote, setorNome) {
+            const objSetor = lote.setores[setorNome];
+            const valorAtual = objSetor.status;
             let classeCor = "setor-pendente";
             if (valorAtual === "Concluído") classeCor = "setor-concluido";
             else if (valorAtual === "Envio Parcial") classeCor = "setor-parcial";
             else if (valorAtual === "N/A") classeCor = "setor-na";
 
+            let infoAtrasoSetor = "";
+            const hojeStr = new Date().toISOString().split('T')[0];
+
+            if (objSetor.data) {
+                const dataConclusaoSetorStr = objSetor.data.split('T')[0];
+                if (dataConclusaoSetorStr > lote.dataPrevista) {
+                    infoAtrasoSetor = `<br><span class="tag-atraso-setor">🔴 Concluído c/ Atraso</span>`;
+                } else if (valorAtual === "Concluído" || valorAtual === "Envio Parcial") {
+                    infoAtrasoSetor = `<br><span class="tag-prazo-setor">🟢 Concluído no Prazo</span>`;
+                }
+            } else if (valorAtual === "Pendente" && hojeStr > lote.dataPrevista) {
+                infoAtrasoSetor = `<br><span class="tag-atraso-setor">⚠️ Atrasado na Fila</span>`;
+            }
+
             return `
-                <select class="select-setor ${classeCor}" onchange="atualizarSetorLote('${loteId}', '${setorNome}', this.value)">
+                <select class="select-setor ${classeCor}" onchange="atualizarSetorLote('${lote.id}', '${setorNome}', this.value)">
                     <option value="Pendente" ${valorAtual === "Pendente" ? "selected" : ""}>⏳ Pendente</option>
                     <option value="Concluído" ${valorAtual === "Concluído" ? "selected" : ""}>✅ Concluído</option>
                     <option value="Envio Parcial" ${valorAtual === "Envio Parcial" ? "selected" : ""}>🟡 Envio Parcial</option>
                     <option value="N/A" ${valorAtual === "N/A" ? "selected" : ""}>🚫 N/A (Não se aplica)</option>
                 </select>
+                ${infoAtrasoSetor}
             `;
         }
 
@@ -1339,22 +1358,29 @@
             });
         }
 
-        function formatarInfoSetor(objSetor) {
+        function formatarInfoSetor(objSetor, dataPrevista) {
             if (!objSetor || objSetor.status === "Pendente") return `<span style="color:#94a3b8">⏳ Pendente</span>`;
             if (objSetor.status === "N/A") return `<span style="color:#64748b; font-weight:600;">🚫 N/A</span>`;
-            if (objSetor.status === "Envio Parcial") return `<span style="color:#d97706; font-weight:600;">🟡 Parcial</span>`;
             
             let htmlOp = objSetor.op ? `<span class="op-nome">👤 ${objSetor.op}</span>` : `<span class="op-nome">✅ Concluído</span>`;
             let htmlData = "";
-            
+            let htmlAtraso = "";
+
             if (objSetor.data) {
                 const dt = new Date(objSetor.data);
                 if (!isNaN(dt)) {
                     htmlData = `<span class="op-data">🕒 ${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')} ${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}</span>`;
+                    
+                    const dataConclusaoStr = objSetor.data.split('T')[0];
+                    if (dataConclusaoStr > dataPrevista) {
+                        htmlAtraso = `<span class="tag-atraso-setor">🔴 Atrasado</span>`;
+                    } else {
+                        htmlAtraso = `<span class="tag-prazo-setor">🟢 No Prazo</span>`;
+                    }
                 }
             }
 
-            return `<div class="info-setor-hist">${htmlOp}${htmlData}</div>`;
+            return `<div class="info-setor-hist">${htmlOp}${htmlData}${htmlAtraso}</div>`;
         }
 
         window.carregarHistorico = function() {
@@ -1397,9 +1423,9 @@
                     <td>${lote.dataConclusao.split('-').reverse().join('/')}</td>
                     <td><strong>${lote.nome}</strong></td>
                     <td>${parseInt(lote.qtd).toLocaleString('pt-BR')} ${lote.parcial ? '<span class="badge-parcial">Parcial</span>' : ''}</td>
-                    <td>${formatarInfoSetor(lote.setores.gravacao)}</td>
-                    <td>${formatarInfoSetor(lote.setores.idv)}</td>
-                    <td>${formatarInfoSetor(lote.setores.manuseio)}</td>
+                    <td>${formatarInfoSetor(lote.setores.gravacao, lote.dataPrevista)}</td>
+                    <td>${formatarInfoSetor(lote.setores.idv, lote.dataPrevista)}</td>
+                    <td>${formatarInfoSetor(lote.setores.manuseio, lote.dataPrevista)}</td>
                     <td>${situacaoHTML}</td>
                     ${celulaAcoes}
                 `;
@@ -1456,9 +1482,9 @@
                     <td>${lote.dataConclusao.split('-').reverse().join('/')}</td>
                     <td><strong>${lote.nome}</strong></td>
                     <td>${parseInt(lote.qtd).toLocaleString('pt-BR')}</td>
-                    <td>${formatarInfoSetor(lote.setores.gravacao)}</td>
-                    <td>${formatarInfoSetor(lote.setores.idv)}</td>
-                    <td>${formatarInfoSetor(lote.setores.manuseio)}</td>
+                    <td>${formatarInfoSetor(lote.setores.gravacao, lote.dataPrevista)}</td>
+                    <td>${formatarInfoSetor(lote.setores.idv, lote.dataPrevista)}</td>
+                    <td>${formatarInfoSetor(lote.setores.manuseio, lote.dataPrevista)}</td>
                     <td>${situacaoHTML}</td>
                     <td>${lote.parcial ? '<span class="badge-parcial">Parcial</span>' : '<span class="badge-finalizado">Total</span>'}</td>
                 `;
