@@ -395,7 +395,7 @@
     <!-- MODAL DE QUANTIDADE (ENVIO PARCIAL OU FINALIZACAO) -->
     <div id="modal-finalizacao" class="login-overlay" style="display: none;">
         <div class="login-card">
-            <h2>Informe a Quantidade</h2>
+            <h2 id="titulo-modal-finalizacao">Informe a Quantidade</h2>
             <p id="desc-modal-finalizacao">Informe a quantidade a ser enviada nesta remessa:</p>
             
             <div class="login-input-grupo">
@@ -1226,9 +1226,21 @@
                                      setorPronto(novosSetores.idv) && 
                                      setorPronto(novosSetores.manuseio);
 
-                if (todosProntos) {
+                // CORREÇÃO: Abre o modal se for Envio Parcial em qualquer setor OU se todos os setores foram finalizados
+                if (novoValor === "Envio Parcial" || todosProntos) {
                     lotePendenteFinalizacao = { loteId, lote, novosSetores, acao: novoValor };
-                    document.getElementById('desc-modal-finalizacao').innerText = `Informe a quantidade enviada para o lote "${lote.nome}" (Total cadastrado: ${lote.qtd}):`;
+                    
+                    const tituloModal = document.getElementById('titulo-modal-finalizacao');
+                    const descModal = document.getElementById('desc-modal-finalizacao');
+                    
+                    if (novoValor === "Envio Parcial") {
+                        tituloModal.innerText = "Envio Parcial";
+                        descModal.innerText = `Informe a quantidade para o envio parcial no setor de ${setorNome.toUpperCase()} (Total atual do lote: ${lote.qtd}):`;
+                    } else {
+                        tituloModal.innerText = "Finalizar Lote";
+                        descModal.innerText = `Informe a quantidade enviada para finalizar o lote "${lote.nome}" (Total cadastrado: ${lote.qtd}):`;
+                    }
+
                     document.getElementById('qtd-finalizacao-input').value = lote.qtd;
                     document.getElementById('modal-finalizacao').style.display = 'flex';
                 } else {
@@ -1248,7 +1260,7 @@
         window.confirmarFinalizacao = async function() {
             if (!lotePendenteFinalizacao) return;
 
-            const { loteId, lote, novosSetores } = lotePendenteFinalizacao;
+            const { loteId, lote, novosSetores, acao } = lotePendenteFinalizacao;
             const inputQtd = document.getElementById('qtd-finalizacao-input').value;
             const qtdEnviada = parseInt(inputQtd);
 
@@ -1260,15 +1272,13 @@
             const hojeStr = new Date().toISOString().split('T')[0];
 
             try {
-                if (qtdEnviada === lote.qtd) {
-                    await updateDoc(doc(db, "lotes", loteId), {
-                        setores: novosSetores,
-                        status: "Finalizado",
-                        dataConclusao: hojeStr,
-                        operador: operadorAtual,
-                        parcial: false
-                    });
-                } else {
+                const setorPronto = (s) => s.status === "Concluído" || s.status === "N/A" || s.status === "Envio Parcial";
+                const todosProntos = setorPronto(novosSetores.gravacao) && 
+                                     setorPronto(novosSetores.idv) && 
+                                     setorPronto(novosSetores.manuseio);
+
+                // Se for Envio Parcial isolado ou se o lote inteiro foi finalizado mas com quantidade parcial
+                if (acao === "Envio Parcial" || qtdEnviada < lote.qtd) {
                     await updateDoc(doc(db, "lotes", loteId), {
                         qtd: qtdEnviada,
                         setores: novosSetores,
@@ -1292,6 +1302,14 @@
                         },
                         dataConclusao: null,
                         operador: null
+                    });
+                } else {
+                    await updateDoc(doc(db, "lotes", loteId), {
+                        setores: novosSetores,
+                        status: "Finalizado",
+                        dataConclusao: hojeStr,
+                        operador: operadorAtual,
+                        parcial: false
                     });
                 }
 
