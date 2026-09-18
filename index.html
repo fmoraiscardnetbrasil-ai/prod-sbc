@@ -219,7 +219,7 @@
 
         .filtro-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 15px;
             margin-bottom: 20px;
             background: var(--filtro-bg);
@@ -279,6 +279,19 @@
         }
 
         .btn-danger:hover { background-color: #dc2626; }
+
+        .btn-warning {
+            background-color: #d97706;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .btn-warning:hover { background-color: #b45309; }
 
         .table-responsive { overflow-x: auto; }
 
@@ -382,7 +395,7 @@
         .link-acao { display: inline-block; margin-top: 15px; font-size: 13px; color: #38bdf8; cursor: pointer; text-decoration: underline; }
         .links-container { display: flex; justify-content: space-between; margin-top: 10px; }
 
-        #input-operador-login, #cad-operador, #rec-operador { text-transform: uppercase; }
+        #input-operador-login, #cad-operador, #rec-operador, #modal-senha-admin-input-nome { text-transform: uppercase; }
 
         @media (max-width: 768px) {
             .form-grid { grid-template-columns: 1fr; }
@@ -406,6 +419,29 @@
             <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button onclick="cancelarFinalizacao()" class="btn-secondary" style="width: 50%;">Cancelar</button>
                 <button onclick="confirmarFinalizacao()" class="btn-primary" style="width: 50%;">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMAÇÃO DE SENHA DO ADMINISTRADOR PARA REABRIR LOTE -->
+    <div id="modal-senha-admin" class="login-overlay" style="display: none;">
+        <div class="login-card">
+            <h2>Autorização Necessária</h2>
+            <p>Informe a senha do <b>Flávio</b> ou <b>André</b> para reabrir este lote do histórico:</p>
+            
+            <div class="login-input-grupo">
+                <label for="modal-senha-admin-input-nome">Administrador</label>
+                <input type="text" id="modal-senha-admin-input-nome" placeholder="FLÁVIO ou ANDRÉ" autocomplete="off" oninput="this.value = this.value.toUpperCase()">
+            </div>
+
+            <div class="login-input-grupo">
+                <label for="modal-senha-admin-input-senha">Senha</label>
+                <input type="password" id="modal-senha-admin-input-senha" placeholder="Digite sua senha" autocomplete="off">
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button onclick="cancelarReaberturaAdmin()" class="btn-secondary" style="width: 50%;">Cancelar</button>
+                <button onclick="confirmarReaberturaAdmin()" class="btn-primary" style="width: 50%;">Autorizar</button>
             </div>
         </div>
     </div>
@@ -624,13 +660,13 @@
                 <div class="filtro-grid">
                     <div class="input-grupo">
                         <label for="filtro-ano">Ano</label>
-                        <select id="filtro-ano" onchange="carregarHistorico()">
+                        <select id="filtro-ano" onchange="atualizarDiasFiltro(); carregarHistorico();">
                             <option value="">Todos os Anos</option>
                         </select>
                     </div>
                     <div class="input-grupo">
                         <label for="filtro-mes">Mês</label>
-                        <select id="filtro-mes" onchange="carregarHistorico()">
+                        <select id="filtro-mes" onchange="atualizarDiasFiltro(); carregarHistorico();">
                             <option value="">Todos os Meses</option>
                             <option value="01">Janeiro</option>
                             <option value="02">Fevereiro</option>
@@ -644,6 +680,12 @@
                             <option value="10">Outubro</option>
                             <option value="11">Novembro</option>
                             <option value="12">Dezembro</option>
+                        </select>
+                    </div>
+                    <div class="input-grupo">
+                        <label for="filtro-dia">Dia</label>
+                        <select id="filtro-dia" onchange="carregarHistorico()">
+                            <option value="">Todos os Dias</option>
                         </select>
                     </div>
                     <div class="input-grupo">
@@ -665,7 +707,7 @@
                                 <th>IDV</th>
                                 <th>Manuseio</th>
                                 <th>Situação</th>
-                                <th id="th-acoes-historico" style="display: none;">Ações</th>
+                                <th id="th-acoes-historico" style="display: none;">Ações / Reabertura</th>
                             </tr>
                         </thead>
                         <tbody id="tabela-historico">
@@ -743,13 +785,13 @@
                 <div class="filtro-grid">
                     <div class="input-grupo">
                         <label for="rel-filtro-ano">Ano</label>
-                        <select id="rel-filtro-ano" onchange="carregarRelatorios()">
+                        <select id="rel-filtro-ano" onchange="atualizarDiasRelatorio(); carregarRelatorios();">
                             <option value="">Todos os Anos</option>
                         </select>
                     </div>
                     <div class="input-grupo">
                         <label for="rel-filtro-mes">Mês</label>
-                        <select id="rel-filtro-mes" onchange="carregarRelatorios()">
+                        <select id="rel-filtro-mes" onchange="atualizarDiasRelatorio(); carregarRelatorios();">
                             <option value="">Todos os Meses</option>
                             <option value="01">Janeiro</option>
                             <option value="02">Fevereiro</option>
@@ -763,6 +805,12 @@
                             <option value="10">Outubro</option>
                             <option value="11">Novembro</option>
                             <option value="12">Dezembro</option>
+                        </select>
+                    </div>
+                    <div class="input-grupo">
+                        <label for="rel-filtro-dia">Dia</label>
+                        <select id="rel-filtro-dia" onchange="carregarRelatorios()">
+                            <option value="">Todos os Dias</option>
                         </select>
                     </div>
                     <div class="input-grupo">
@@ -820,6 +868,7 @@
         let operadorAtual = "";
         let listaGeralLotes = [];
         let lotePendenteFinalizacao = null;
+        let loteParaReabrirId = null;
 
         function eAdministrador() {
             if (!operadorAtual) return false;
@@ -996,9 +1045,11 @@
 
             if (abaId === 'historico') {
                 atualizarFiltrosDinamicos();
+                atualizarDiasFiltro();
                 carregarHistorico();
             } else if (abaId === 'relatorios') {
                 atualizarFiltrosRelatorios();
+                atualizarDiasRelatorio();
                 carregarRelatorios();
             }
         };
@@ -1178,7 +1229,7 @@
             }
 
             return `
-                <select class="select-setor ${classeCor}" onchange="atualizarSetorLote('${lote.id}', '${setorNome}', this.value)">
+                <select class="select-setor ${classeCor}" onchange="atualizarSetorLote('${lote.id}', '${setorNome}', this)">
                     <option value="Pendente" ${valorAtual === "Pendente" ? "selected" : ""}>⏳ Pendente</option>
                     <option value="Concluído" ${valorAtual === "Concluído" ? "selected" : ""}>✅ Concluído</option>
                     <option value="Envio Parcial" ${valorAtual === "Envio Parcial" ? "selected" : ""}>🟡 Envio Parcial</option>
@@ -1188,7 +1239,9 @@
             `;
         }
 
-        window.atualizarSetorLote = async function(loteId, setorNome, novoValor) {
+        window.atualizarSetorLote = async function(loteId, setorNome, selectElement) {
+            const novoValor = selectElement.value;
+
             if (!operadorAtual) {
                 alert("Faça o login para alterar o status do setor!");
                 carregarLotes();
@@ -1226,7 +1279,6 @@
                                      setorPronto(novosSetores.idv) && 
                                      setorPronto(novosSetores.manuseio);
 
-                // CORREÇÃO: Abre o modal se for Envio Parcial em qualquer setor OU se todos os setores foram finalizados
                 if (novoValor === "Envio Parcial" || todosProntos) {
                     lotePendenteFinalizacao = { loteId, lote, novosSetores, acao: novoValor };
                     
@@ -1246,7 +1298,9 @@
                 } else {
                     await updateDoc(doc(db, "lotes", loteId), {
                         setores: novosSetores,
-                        operador: operadorAtual
+                        operador: operadorAtual,
+                        status: "Em Produção",
+                        dataConclusao: null
                     });
                     carregarLotes();
                 }
@@ -1277,7 +1331,6 @@
                                      setorPronto(novosSetores.idv) && 
                                      setorPronto(novosSetores.manuseio);
 
-                // Se for Envio Parcial isolado ou se o lote inteiro foi finalizado mas com quantidade parcial
                 if (acao === "Envio Parcial" || qtdEnviada < lote.qtd) {
                     await updateDoc(doc(db, "lotes", loteId), {
                         qtd: qtdEnviada,
@@ -1328,6 +1381,64 @@
             carregarLotes();
         };
 
+        // FUNÇÃO PARA SOLICITAR A SENHA DO FLÁVIO OU ANDRÉ ANTES DE REABRIR DO HISTÓRICO
+        window.solicitarReaberturaLote = function(id) {
+            if (!eAdministrador()) {
+                alert("Apenas Flávio e André podem reabrir lotes finalizados.");
+                return;
+            }
+            loteParaReabrirId = id;
+            document.getElementById('modal-senha-admin-input-nome').value = operadorAtual || "";
+            document.getElementById('modal-senha-admin-input-senha').value = "";
+            document.getElementById('modal-senha-admin').style.display = 'flex';
+        };
+
+        window.cancelarReaberturaAdmin = function() {
+            loteParaReabrirId = null;
+            document.getElementById('modal-senha-admin').style.display = 'none';
+        };
+
+        window.confirmarReaberturaAdmin = async function() {
+            const nomeAdmin = document.getElementById('modal-senha-admin-input-nome').value.trim().toUpperCase();
+            const senhaAdmin = document.getElementById('modal-senha-admin-input-senha').value;
+
+            const permitidos = ["FLÁVIO", "FLAVIO", "ANDRÉ", "ANDRE"];
+            if (!permitidos.includes(nomeAdmin)) {
+                alert("Usuário informado não tem permissão administrativa.");
+                return;
+            }
+
+            try {
+                // Valida a senha do admin no banco
+                const querySnapshot = await getDocs(collection(db, "operadores"));
+                let senhaSalva = null;
+                querySnapshot.forEach((d) => {
+                    if (d.id === nomeAdmin) senhaSalva = d.data().senha;
+                });
+
+                if (!senhaSalva || senhaSalva !== senhaAdmin) {
+                    alert("Senha incorreta!");
+                    return;
+                }
+
+                // Senha correta, executa a reabertura do lote (volta para "Em Produção")
+                await updateDoc(doc(db, "lotes", loteParaReabrirId), {
+                    status: "Em Produção",
+                    dataConclusao: null
+                });
+
+                document.getElementById('modal-senha-admin').style.display = 'none';
+                loteParaReabrirId = null;
+                alert("Lote reaberto com sucesso e retornado para a produção!");
+                
+                carregarLotes();
+                carregarHistorico();
+            } catch (error) {
+                console.error("Erro ao reabrir lote:", error);
+                alert("Erro ao processar a reabertura.");
+            }
+        };
+
         function atualizarKPIsProducao(totOS, totCart, nPrazoOS, nPrazoCart, atrOS, atrCart) {
             document.getElementById("kpi-total").innerText = `${totOS} OS`;
             document.getElementById("kpi-total-cartoes").innerText = `${totCart.toLocaleString('pt-BR')} cartões`;
@@ -1350,6 +1461,23 @@
             montarSelect('filtro-operador', operadoresSet, "Todos os Operadores");
         }
 
+        window.atualizarDiasFiltro = function() {
+            const anoSelecionado = document.getElementById('filtro-ano').value;
+            const mesSelecionado = document.getElementById('filtro-mes').value;
+            const diasSet = new Set();
+
+            listaGeralLotes.forEach(l => {
+                if (l.status === "Finalizado" && l.dataConclusao) {
+                    const [anoLote, mesLote, diaLote] = l.dataConclusao.split('-');
+                    if ((!anoSelecionado || anoLote === anoSelecionado) && (!mesSelecionado || mesLote === mesSelecionado)) {
+                        diasSet.add(diaLote);
+                    }
+                }
+            });
+
+            montarSelect('filtro-dia', diasSet, "Todos os Dias");
+        };
+
         function atualizarFiltrosRelatorios() {
             const anosSet = new Set(), operadoresSet = new Set();
             listaGeralLotes.forEach(l => {
@@ -1363,8 +1491,26 @@
             montarSelect('rel-filtro-operador', operadoresSet, "Todos os Operadores");
         }
 
+        window.atualizarDiasRelatorio = function() {
+            const anoSelecionado = document.getElementById('rel-filtro-ano').value;
+            const mesSelecionado = document.getElementById('rel-filtro-mes').value;
+            const diasSet = new Set();
+
+            listaGeralLotes.forEach(l => {
+                if (l.status === "Finalizado" && l.dataConclusao) {
+                    const [anoLote, mesLote, diaLote] = l.dataConclusao.split('-');
+                    if ((!anoSelecionado || anoLote === anoSelecionado) && (!mesSelecionado || mesLote === mesSelecionado)) {
+                        diasSet.add(diaLote);
+                    }
+                }
+            });
+
+            montarSelect('rel-filtro-dia', diasSet, "Todos os Dias");
+        };
+
         function montarSelect(idSelect, conjunto, placeholder) {
             const sel = document.getElementById(idSelect);
+            if (!sel) return;
             const val = sel.value;
             sel.innerHTML = `<option value="">${placeholder}</option>`;
             Array.from(conjunto).sort().reverse().forEach(v => {
@@ -1405,6 +1551,7 @@
             const tabelaHist = document.getElementById('tabela-historico');
             const anoFiltro = document.getElementById('filtro-ano').value;
             const mesFiltro = document.getElementById('filtro-mes').value;
+            const diaFiltro = document.getElementById('filtro-dia').value;
             const opFiltro = document.getElementById('filtro-operador').value;
             const colunasVisiveis = eAdministrador() ? 8 : 7;
 
@@ -1412,9 +1559,10 @@
 
             const filtrados = listaGeralLotes.filter(l => {
                 if (l.status !== "Finalizado" || !l.dataConclusao) return false;
-                const [anoLote, mesLote] = l.dataConclusao.split('-');
+                const [anoLote, mesLote, diaLote] = l.dataConclusao.split('-');
                 if (anoFiltro && anoLote !== anoFiltro) return false;
                 if (mesFiltro && mesLote !== mesFiltro) return false;
+                if (diaFiltro && diaLote !== diaFiltro) return false;
                 if (opFiltro && l.operador && l.operador.toUpperCase() !== opFiltro) return false;
                 return true;
             });
@@ -1434,7 +1582,11 @@
                     ? `<span class="badge-atrasado">⚠️ Atrasado</span>` 
                     : `<span class="badge-finalizado">✅ No Prazo</span>`;
 
-                const celulaAcoes = eAdministrador() ? `<td><button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button></td>` : '';
+                const celulaAcoes = eAdministrador() ? `
+                    <td style="display: flex; gap: 6px;">
+                        <button onclick="solicitarReaberturaLote('${lote.id}')" class="btn-warning" title="Voltar lote para a produção (requer senha do Flávio/André)">🔄 Reabrir</button>
+                        <button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button>
+                    </td>` : '';
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -1455,15 +1607,17 @@
             const tabelaRel = document.getElementById('tabela-relatorio-detalhado');
             const anoFiltro = document.getElementById('rel-filtro-ano').value;
             const mesFiltro = document.getElementById('rel-filtro-mes').value;
+            const diaFiltro = document.getElementById('rel-filtro-dia').value;
             const opFiltro = document.getElementById('rel-filtro-operador').value;
 
             tabelaRel.innerHTML = "";
 
             const filtrados = listaGeralLotes.filter(l => {
                 if (l.status !== "Finalizado" || !l.dataConclusao) return false;
-                const [anoLote, mesLote] = l.dataConclusao.split('-');
+                const [anoLote, mesLote, diaLote] = l.dataConclusao.split('-');
                 if (anoFiltro && anoLote !== anoFiltro) return false;
                 if (mesFiltro && mesLote !== mesFiltro) return false;
+                if (diaFiltro && diaLote !== diaFiltro) return false;
                 if (opFiltro && l.operador && l.operador.toUpperCase() !== opFiltro) return false;
                 return true;
             });
@@ -1483,7 +1637,7 @@
             document.getElementById('rel-atrasados').innerText = totalAtrasados;
             document.getElementById('rel-volume-cartoes').innerText = volumeCartoes.toLocaleString('pt-BR');
 
-            gerarTabelaProdutividade(anoFiltro, mesFiltro);
+            gerarTabelaProdutividade(anoFiltro, mesFiltro, diaFiltro);
 
             if (filtrados.length === 0) {
                 tabelaRel.innerHTML = `<tr><td colspan="8" class="text-center">Nenhum dado encontrado.</td></tr>`;
@@ -1510,7 +1664,7 @@
             });
         };
 
-        function gerarTabelaProdutividade(anoFiltro, mesFiltro) {
+        function gerarTabelaProdutividade(anoFiltro, mesFiltro, diaFiltro) {
             const tabelaProd = document.getElementById('tabela-produtividade-operadores');
             tabelaProd.innerHTML = "";
 
@@ -1518,9 +1672,10 @@
 
             listaGeralLotes.forEach(lote => {
                 if (lote.status !== "Finalizado" || !lote.dataConclusao) return;
-                const [anoLote, mesLote] = lote.dataConclusao.split('-');
+                const [anoLote, mesLote, diaLote] = lote.dataConclusao.split('-');
                 if (anoFiltro && anoLote !== anoFiltro) return;
                 if (mesFiltro && mesLote !== mesFiltro) return;
+                if (diaFiltro && diaLote !== diaLote) return;
 
                 ['gravacao', 'idv', 'manuseio'].forEach(setorKey => {
                     const objSetor = lote.setores[setorKey];
@@ -1567,6 +1722,7 @@
                 try {
                     await deleteDoc(doc(db, "lotes", id));
                     carregarLotes();
+                    carregarHistorico();
                 } catch (error) {
                     alert("Erro ao excluir lote.");
                 }
