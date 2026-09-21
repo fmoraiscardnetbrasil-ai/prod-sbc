@@ -954,42 +954,31 @@
         function iniciarAtualizacaoAutomatica() {
             setInterval(async () => {
                 if (operadorAtual) {
-                    // Executa a busca base dos lotes em background
-                    await carregarLotesSilencioso();
-                    
-                    // Atualiza a tela de acordo com a aba ativa
-                    const abaAtiva = document.querySelector('.secao-aba.active');
-                    if (abaAtiva) {
-                        if (abaAtiva.id === 'aba-historico') {
-                            carregarHistorico();
-                        } else if (abaAtiva.id === 'aba-relatorios') {
-                            carregarRelatorios();
+                    try {
+                        const querySnapshot = await getDocs(collection(db, "lotes"));
+                        listaGeralLotes = [];
+                        querySnapshot.forEach((docSnap) => {
+                            const lote = docSnap.data();
+                            lote.id = docSnap.id;
+                            lote.setores = normalizarSetores(lote.setores, lote.status);
+                            listaGeralLotes.push(lote);
+                        });
+
+                        const abaAtiva = document.querySelector('.secao-aba.active');
+                        if (abaAtiva) {
+                            if (abaAtiva.id === 'aba-producao') {
+                                renderizarTabelaProducao();
+                            } else if (abaAtiva.id === 'aba-historico') {
+                                carregarHistorico();
+                            } else if (abaAtiva.id === 'aba-relatorios') {
+                                carregarRelatorios();
+                            }
                         }
+                    } catch (error) {
+                        console.error("Erro na atualização automática:", error);
                     }
                 }
             }, 30000); // 30000 ms = 30 segundos
-        }
-
-        // Versão de carregar lotes sem travar ou reescrever elementos focados desnecessariamente
-        async function carregarLotesSilencioso() {
-            try {
-                const querySnapshot = await getDocs(collection(db, "lotes"));
-                listaGeralLotes = [];
-                querySnapshot.forEach((docSnap) => {
-                    const lote = docSnap.data();
-                    lote.id = docSnap.id;
-                    lote.setores = normalizarSetores(lote.setores, lote.status);
-                    listaGeralLotes.push(lote);
-                });
-
-                // Se estiver na aba de produção, atualiza a tabela inteira
-                const abaAtiva = document.querySelector('.secao-aba.active');
-                if (abaAtiva && abaAtiva.id === 'aba-producao') {
-                    renderizarTabelaProducao();
-                }
-            } catch (error) {
-                console.error("Erro na atualização automática:", error);
-            }
         }
 
         window.fazerLogin = async function() {
@@ -1019,7 +1008,7 @@
                 
                 atualizarVisibilidadeUI();
                 carregarLotes();
-                iniciarAtualizacaoAutomatica(); // <-- Ativa a atualização automática após o login
+                iniciarAtualizacaoAutomatica();
                 
                 document.getElementById("input-operador-login").value = "";
                 document.getElementById("input-senha-login").value = "";
@@ -1387,7 +1376,7 @@
                 return;
             }
 
-            const hojeStr = new Date().toISOString().split('T')[0];
+            const hojeStr = new Date().toISOString();
 
             try {
                 const setorPronto = (s) => s.status === "Concluído" || s.status === "N/A" || s.status === "Envio Parcial";
@@ -1529,7 +1518,7 @@
 
             listaGeralLotes.forEach(l => {
                 if (l.status === "Finalizado" && l.dataConclusao) {
-                    const [anoLote, mesLote, diaLote] = l.dataConclusao.split('-');
+                    const [anoLote, mesLote, diaLote] = l.dataConclusao.split('T')[0].split('-');
                     if ((!anoSelecionado || anoLote === anoSelecionado) && (!mesSelecionado || mesLote === mesSelecionado)) {
                         diasSet.add(diaLote);
                     }
@@ -1559,7 +1548,7 @@
 
             listaGeralLotes.forEach(l => {
                 if (l.status === "Finalizado" && l.dataConclusao) {
-                    const [anoLote, mesLote, diaLote] = l.dataConclusao.split('-');
+                    const [anoLote, mesLote, diaLote] = l.dataConclusao.split('T')[0].split('-');
                     if ((!anoSelecionado || anoLote === anoSelecionado) && (!mesSelecionado || mesLote === mesSelecionado)) {
                         diasSet.add(diaLote);
                     }
@@ -1596,8 +1585,8 @@
                 if (!isNaN(dt)) {
                     htmlData = `<span class="op-data">🕒 ${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')} ${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}</span>`;
                     
-                    const dataConclusaoStr = objSetor.data.split('T')[0];
-                    if (dataConclusaoStr > dataPrevista) {
+                    const dataConclusaoSetorStr = objSetor.data.split('T')[0];
+                    if (dataConclusaoSetorStr > dataPrevista) {
                         htmlAtraso = `<span class="tag-atraso-setor">🔴 Atrasado</span>`;
                     } else {
                         htmlAtraso = `<span class="tag-prazo-setor">🟢 No Prazo</span>`;
@@ -1621,20 +1610,21 @@
 
             const filtrados = listaGeralLotes.filter(l => {
                 if (l.status !== "Finalizado" || !l.dataConclusao) return false;
-                const [anoLote, mesLote, diaLote] = l.dataConclusao.split('-');
+                const dataConclusaoStr = l.dataConclusao.split('T')[0];
+                const [anoLote, mesLote, diaLote] = dataConclusaoStr.split('-');
                 if (anoFiltro && anoLote !== anoFiltro) return false;
                 if (mesFiltro && mesLote !== mesFiltro) return false;
                 if (diaFiltro && diaLote !== diaFiltro) return false;
                 if (opFiltro && l.operador && l.operador.toUpperCase() !== opFiltro) return false;
                 
-                const ehAtrasado = l.dataConclusao > l.dataPrevista;
+                const ehAtrasado = dataConclusaoStr > l.dataPrevista;
                 if (prazoFiltro === "no-prazo" && ehAtrasado) return false;
                 if (prazoFiltro === "atrasado" && !ehAtrasado) return false;
 
                 return true;
             });
 
-            // Organizado por data de finalização
+            // Ordenado para o mais recente ficar no topo (crescente decrescente por data/hora real de conclusão)
             filtrados.sort((a, b) => (b.dataConclusao || "").localeCompare(a.dataConclusao || ""));
 
             document.getElementById('hist-total-lotes').innerText = filtrados.length;
@@ -1646,7 +1636,8 @@
             }
 
             filtrados.forEach(lote => {
-                let situacaoHTML = (lote.dataConclusao > lote.dataPrevista) 
+                const dataConclusaoStr = lote.dataConclusao.split('T')[0];
+                let situacaoHTML = (dataConclusaoStr > lote.dataPrevista) 
                     ? `<span class="badge-atrasado">⚠️ Atrasado</span>` 
                     : `<span class="badge-finalizado">✅ No Prazo</span>`;
 
@@ -1658,7 +1649,7 @@
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${lote.dataConclusao.split('-').reverse().join('/')}</td>
+                    <td>${dataConclusaoStr.split('-').reverse().join('/')}</td>
                     <td><strong>${lote.nome}</strong></td>
                     <td>${parseInt(lote.qtd).toLocaleString('pt-BR')} ${lote.parcial ? '<span class="badge-parcial">Parcial</span>' : ''}</td>
                     <td>${formatarInfoSetor(lote.setores.gravacao, lote.dataPrevista)}</td>
@@ -1683,27 +1674,29 @@
 
             const filtrados = listaGeralLotes.filter(l => {
                 if (l.status !== "Finalizado" || !l.dataConclusao) return false;
-                const [anoLote, mesLote, diaLote] = l.dataConclusao.split('-');
+                const dataConclusaoStr = l.dataConclusao.split('T')[0];
+                const [anoLote, mesLote, diaLote] = dataConclusaoStr.split('-');
                 if (anoFiltro && anoLote !== anoFiltro) return false;
                 if (mesFiltro && mesLote !== mesFiltro) return false;
                 if (diaFiltro && diaLote !== diaFiltro) return false;
                 if (opFiltro && l.operador && l.operador.toUpperCase() !== opFiltro) return false;
 
-                const ehAtrasado = l.dataConclusao > l.dataPrevista;
+                const ehAtrasado = dataConclusaoStr > l.dataPrevista;
                 if (prazoFiltro === "no-prazo" && ehAtrasado) return false;
                 if (prazoFiltro === "atrasado" && !ehAtrasado) return false;
 
                 return true;
             });
 
-            // Organizado por data de finalização
+            // Ordenado para o mais recente ficar no topo
             filtrados.sort((a, b) => (b.dataConclusao || "").localeCompare(a.dataConclusao || ""));
 
             let totalNoPrazo = 0, totalAtrasados = 0, volumeCartoes = 0;
 
             filtrados.forEach(lote => {
+                const dataConclusaoStr = lote.dataConclusao.split('T')[0];
                 volumeCartoes += (parseInt(lote.qtd) || 0);
-                if (lote.dataConclusao > lote.dataPrevista) totalAtrasados++;
+                if (dataConclusaoStr > lote.dataPrevista) totalAtrasados++;
                 else totalNoPrazo++;
             });
 
@@ -1720,13 +1713,14 @@
             }
 
             filtrados.forEach(lote => {
-                let situacaoHTML = (lote.dataConclusao > lote.dataPrevista) 
+                const dataConclusaoStr = lote.dataConclusao.split('T')[0];
+                let situacaoHTML = (dataConclusaoStr > lote.dataPrevista) 
                     ? `<span class="badge-atrasado">🔴 Atrasado</span>` 
                     : `<span class="badge-no-prazo">🟢 No Prazo</span>`;
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${lote.dataConclusao.split('-').reverse().join('/')}</td>
+                    <td>${dataConclusaoStr.split('-').reverse().join('/')}</td>
                     <td><strong>${lote.nome}</strong></td>
                     <td>${parseInt(lote.qtd).toLocaleString('pt-BR')}</td>
                     <td>${formatarInfoSetor(lote.setores.gravacao, lote.dataPrevista)}</td>
@@ -1747,7 +1741,7 @@
 
             listaGeralLotes.forEach(lote => {
                 if (lote.status !== "Finalizado" || !lote.dataConclusao) return;
-                const [anoLote, mesLote, diaLote] = lote.dataConclusao.split('-');
+                const [anoLote, mesLote, diaLote] = lote.dataConclusao.split('T')[0].split('-');
                 if (anoFiltro && anoLote !== anoFiltro) return;
                 if (mesFiltro && mesLote !== mesFiltro) return;
                 if (diaFiltro && diaLote !== diaFiltro) return;
