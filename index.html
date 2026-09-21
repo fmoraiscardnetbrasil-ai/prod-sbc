@@ -1170,12 +1170,15 @@
             if (confirm("Deseja sair do sistema?")) location.reload();
         };
 
-        window.mudarAba = function(abaId, elementoBtn) {
+        window.mudarAba = async function(abaId, elementoBtn) {
             document.querySelectorAll('.secao-aba').forEach(sec => sec.classList.remove('active'));
             document.querySelectorAll('.btn-aba').forEach(btn => btn.classList.remove('active'));
 
             document.getElementById('aba-' + abaId).classList.add('active');
             elementoBtn.classList.add('active');
+
+            // Atualiza os dados no banco de dados
+            await carregarLotes();
 
             if (abaId === 'historico') {
                 atualizarFiltrosDinamicos();
@@ -1185,8 +1188,6 @@
                 atualizarFiltrosRelatorios();
                 atualizarDiasRelatorio();
                 carregarRelatorios();
-            } else if (abaId === 'producao') {
-                carregarLotes();
             }
         };
 
@@ -1257,7 +1258,9 @@
 
         async function carregarLotes() {
             const colunasVisiveis = eAdministrador() ? 10 : 9;
-            tabelaLotes.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center">Carregando dados...</td></tr>`;
+            if (document.querySelector('#aba-producao.active')) {
+                tabelaLotes.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center">Carregando dados...</td></tr>`;
+            }
             
             try {
                 const querySnapshot = await getDocs(collection(db, "lotes"));
@@ -1269,7 +1272,9 @@
                     listaGeralLotes.push(lote);
                 });
 
-                renderizarTabelaProducao();
+                if (document.querySelector('#aba-producao.active')) {
+                    renderizarTabelaProducao();
+                }
             } catch (error) {
                 console.error("Erro ao carregar lotes:", error);
             }
@@ -1282,9 +1287,7 @@
 
             const ativos = listaGeralLotes.filter(l => l.status === "Em Produção");
             
-            // Ordenação Priorizada:
-            // 1º: Prazos mais urgentes (Atrasados e Vence Hoje no topo)
-            // 2º: Data de Cadastro (ordem cronológica para os de mesma prioridade de data)
+            // Ordenação Priorizada: Atrasados e Vence Hoje no topo
             ativos.sort((a, b) => {
                 if (a.dataPrevista !== b.dataPrevista) {
                     return a.dataPrevista.localeCompare(b.dataPrevista);
