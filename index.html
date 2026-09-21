@@ -952,7 +952,7 @@
     <!-- JS & FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCVPh1U7jH0WLuPWLWtZDvAgEfPLROqxcA",
@@ -971,6 +971,7 @@
         let listaGeralLotes = [];
         let lotePendenteFinalizacao = null;
         let loteParaReabrirId = null;
+        let unsubscribeLotes = null;
 
         function eAdministrador() {
             if (!operadorAtual) return false;
@@ -1033,38 +1034,37 @@
 
             await verificarInicializacaoOperadores();
             document.getElementById("modal-login").style.display = "flex";
-            carregarLotes();
+            escutarLotesEmTempoReal();
         };
 
-        // Rotina de atualização automática a cada 30 segundos
-        function iniciarAtualizacaoAutomatica() {
-            setInterval(async () => {
-                if (operadorAtual) {
-                    try {
-                        const querySnapshot = await getDocs(collection(db, "lotes"));
-                        listaGeralLotes = [];
-                        querySnapshot.forEach((docSnap) => {
-                            const lote = docSnap.data();
-                            lote.id = docSnap.id;
-                            lote.setores = normalizarSetores(lote.setores, lote.status);
-                            listaGeralLotes.push(lote);
-                        });
+        // Escutador em tempo real nativo do Firestore (Resolve o F5 e atualiza automaticamente)
+        function escutarLotesEmTempoReal() {
+            if (unsubscribeLotes) unsubscribeLotes();
 
-                        const abaAtiva = document.querySelector('.secao-aba.active');
-                        if (abaAtiva) {
-                            if (abaAtiva.id === 'aba-producao') {
-                                renderizarTabelaProducao();
-                            } else if (abaAtiva.id === 'aba-historico') {
-                                carregarHistorico();
-                            } else if (abaAtiva.id === 'aba-relatorios') {
-                                carregarRelatorios();
-                            }
-                        }
-                    } catch (error) {
-                        console.error("Erro na atualização automática:", error);
+            unsubscribeLotes = onSnapshot(collection(db, "lotes"), (querySnapshot) => {
+                listaGeralLotes = [];
+                querySnapshot.forEach((docSnap) => {
+                    const lote = docSnap.data();
+                    lote.id = docSnap.id;
+                    lote.setores = normalizarSetores(lote.setores, lote.status);
+                    listaGeralLotes.push(lote);
+                });
+
+                const abaAtiva = document.querySelector('.secao-aba.active');
+                if (abaAtiva) {
+                    if (abaAtiva.id === 'aba-producao') {
+                        renderizarTabelaProducao();
+                    } else if (abaAtiva.id === 'aba-historico') {
+                        atualizarFiltrosDinamicos();
+                        carregarHistorico();
+                    } else if (abaAtiva.id === 'aba-relatorios') {
+                        atualizarFiltrosRelatorios();
+                        carregarRelatorios();
                     }
                 }
-            }, 30000); // 30000 ms = 30 segundos
+            }, (error) => {
+                console.error("Erro na escuta em tempo real do Firestore:", error);
+            });
         }
 
         window.fazerLogin = async function() {
@@ -1093,9 +1093,13 @@
                 document.getElementById("display-usuario").innerText = "👤 Operador: " + operadorAtual;
                 
                 atualizarVisibilidadeUI();
-                carregarLotes();
-                iniciarAtualizacaoAutomatica();
                 
+                // Re-renderiza a aba ativa no login
+                const abaAtiva = document.querySelector('.secao-aba.active');
+                if (abaAtiva && abaAtiva.id === 'aba-producao') {
+                    renderizarTabelaProducao();
+                }
+
                 document.getElementById("input-operador-login").value = "";
                 document.getElementById("input-senha-login").value = "";
             } catch (error) {
@@ -1170,17 +1174,16 @@
             if (confirm("Deseja sair do sistema?")) location.reload();
         };
 
-        window.mudarAba = async function(abaId, elementoBtn) {
+        window.mudarAba = function(abaId, elementoBtn) {
             document.querySelectorAll('.secao-aba').forEach(sec => sec.classList.remove('active'));
             document.querySelectorAll('.btn-aba').forEach(btn => btn.classList.remove('active'));
 
             document.getElementById('aba-' + abaId).classList.add('active');
             elementoBtn.classList.add('active');
 
-            // Atualiza os dados no banco de dados
-            await carregarLotes();
-
-            if (abaId === 'historico') {
+            if (abaId === 'producao') {
+                renderizarTabelaProducao();
+            } else if (abaId === 'historico') {
                 atualizarFiltrosDinamicos();
                 atualizarDiasFiltro();
                 carregarHistorico();
@@ -1227,7 +1230,6 @@
                     operador: null
                 });
                 form.reset();
-                carregarLotes();
             } catch (error) {
                 alert("Erro ao cadastrar lote.");
             }
@@ -1254,30 +1256,6 @@
                 }
             });
             return resultado;
-        }
-
-        async function carregarLotes() {
-            const colunasVisiveis = eAdministrador() ? 10 : 9;
-            if (document.querySelector('#aba-producao.active')) {
-                tabelaLotes.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center">Carregando dados...</td></tr>`;
-            }
-            
-            try {
-                const querySnapshot = await getDocs(collection(db, "lotes"));
-                listaGeralLotes = [];
-                querySnapshot.forEach((docSnap) => {
-                    const lote = docSnap.data();
-                    lote.id = docSnap.id;
-                    lote.setores = normalizarSetores(lote.setores, lote.status);
-                    listaGeralLotes.push(lote);
-                });
-
-                if (document.querySelector('#aba-producao.active')) {
-                    renderizarTabelaProducao();
-                }
-            } catch (error) {
-                console.error("Erro ao carregar lotes:", error);
-            }
         }
 
         function renderizarTabelaProducao() {
@@ -1417,7 +1395,7 @@
 
             if (!operadorAtual) {
                 alert("Faça o login para alterar o status do setor!");
-                carregarLotes();
+                renderizarTabelaProducao();
                 return;
             }
 
@@ -1475,7 +1453,6 @@
                         status: "Em Produção",
                         dataConclusao: null
                     });
-                    carregarLotes();
                 }
 
             } catch (error) {
@@ -1541,7 +1518,6 @@
 
                 document.getElementById('modal-finalizacao').style.display = 'none';
                 lotePendenteFinalizacao = null;
-                carregarLotes();
             } catch (error) {
                 console.error("Erro ao finalizar lote:", error);
                 alert("Erro ao salvar a finalização.");
@@ -1551,7 +1527,7 @@
         window.cancelarFinalizacao = function() {
             document.getElementById('modal-finalizacao').style.display = 'none';
             lotePendenteFinalizacao = null;
-            carregarLotes();
+            renderizarTabelaProducao();
         };
 
         window.solicitarReaberturaLote = function(id) {
@@ -1600,9 +1576,6 @@
                 document.getElementById('modal-senha-admin').style.display = 'none';
                 loteParaReabrirId = null;
                 alert("Lote reaberto com sucesso e retornado para a produção!");
-                
-                carregarLotes();
-                carregarHistorico();
             } catch (error) {
                 console.error("Erro ao reabrir lote:", error);
                 alert("Erro ao processar a reabertura.");
@@ -1912,8 +1885,6 @@
             if(confirm("Deseja realmente excluir este lote?")) {
                 try {
                     await deleteDoc(doc(db, "lotes", id));
-                    carregarLotes();
-                    carregarHistorico();
                 } catch (error) {
                     alert("Erro ao excluir lote.");
                 }
