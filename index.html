@@ -275,6 +275,13 @@
             align-items: flex-end;
         }
 
+        .form-grid-rejeito {
+            display: grid;
+            grid-template-columns: 2fr 1.5fr auto;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
         .filtro-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -477,7 +484,7 @@
         @media (max-width: 768px) {
             .app-layout { flex-direction: column; }
             .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border-color); }
-            .form-grid { grid-template-columns: 1fr; }
+            .form-grid, .form-grid-rejeito { grid-template-columns: 1fr; }
             .btn-primary { width: 100%; }
         }
     </style>
@@ -623,7 +630,9 @@
                 <button class="btn-aba active" onclick="mudarAba('producao', this)">📦 Produção Atual</button>
                 <button class="btn-aba" onclick="mudarAba('historico', this)">📊 Histórico Concluídos</button>
                 <button class="btn-aba" onclick="mudarAba('relatorios', this)">📈 Relatórios & Controle</button>
-                <!-- ABA EXCLUSIVA PARA FLÁVIO E ANDRÉ GERENCIAREM USUÁRIOS -->
+                <!-- NOVA ABA: CONTROLE DE REJEITOS -->
+                <button class="btn-aba" onclick="mudarAba('rejeitos', this)">⚠️ Controle de Rejeitos</button>
+                <!-- ABA EXCLUSIVA PARA FLÁVIO ANDRÉ GERENCIAREM USUÁRIOS -->
                 <button class="btn-aba" id="btn-aba-usuarios" onclick="mudarAba('usuarios', this)" style="display: none;">👥 Gerenciar Usuários</button>
             </div>
         </aside>
@@ -965,7 +974,105 @@
                 </section>
             </div>
 
-            <!-- ABA 4: GERENCIAR USUÁRIOS (EXCLUSIVA FLÁVIO ANDRÉ) -->
+            <!-- ABA 4: CONTROLE DE REJEITOS -->
+            <div id="aba-rejeitos" class="secao-aba">
+                <section class="panel-card" id="secao-form-rejeito" style="display: none;">
+                    <div class="panel-header">
+                        <h3>⚠️ Registrar Novo Rejeito</h3>
+                    </div>
+                    <form id="form-rejeito" class="form-grid-rejeito" onsubmit="salvarRejeito(event)">
+                        <div class="input-grupo">
+                            <label for="rejeito-data">Data do Rejeito</label>
+                            <input type="date" id="rejeito-data" onclick="this.showPicker && this.showPicker()" required>
+                        </div>
+                        <div class="input-grupo">
+                            <label for="rejeito-qtd">Quantidade</label>
+                            <input type="number" id="rejeito-qtd" min="1" placeholder="Ex: 15" required>
+                        </div>
+                        <div class="input-grupo">
+                            <button type="submit" class="btn-primary">+ Salvar Rejeito</button>
+                        </div>
+                    </form>
+                </section>
+
+                <div id="aviso-permissao-rejeito" class="banner-alerta-prazos" style="display: none; background-color: #fef2f2; border-color: #ef4444; color: #991b1b;">
+                    <div class="icone-alerta">🔒</div>
+                    <div>
+                        <h4>Acesso Restrito</h4>
+                        <p>Apenas os operadores <b>FLÁVIO</b> ou <b>ANDRÉ</b> têm permissão para cadastrar novos rejeitos no sistema[cite: 1].</p>
+                    </div>
+                </div>
+
+                <section class="kpi-grid" style="margin-top: 20px;">
+                    <div class="kpi-card">
+                        <div class="kpi-icon red">⚠️</div>
+                        <div class="kpi-info">
+                            <span class="kpi-title">Total Rejeitado (Período)</span>
+                            <h2 id="kpi-total-rejeito">0</h2>
+                            <div class="kpi-sub">Unidades no filtro selecionado</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel-card">
+                    <div class="panel-header">
+                        <h3>Histórico e Controle de Rejeitos (Dia, Mês e Ano)[cite: 1]</h3>
+                    </div>
+
+                    <div class="filtro-grid">
+                        <div class="input-grupo">
+                            <label for="rej-filtro-ano">Ano</label>
+                            <select id="rej-filtro-ano" onchange="atualizarDiasRejeitoFiltro(); carregarRejeitos();">
+                                <option value="">Todos os Anos</option>
+                            </select>
+                        </div>
+                        <div class="input-grupo">
+                            <label for="rej-filtro-mes">Mês</label>
+                            <select id="rej-filtro-mes" onchange="atualizarDiasRejeitoFiltro(); carregarRejeitos();">
+                                <option value="">Todos os Meses</option>
+                                <option value="01">Janeiro</option>
+                                <option value="02">Fevereiro</option>
+                                <option value="03">Março</option>
+                                <option value="04">Abril</option>
+                                <option value="05">Maio</option>
+                                <option value="06">Junho</option>
+                                <option value="07">Julho</option>
+                                <option value="08">Agosto</option>
+                                <option value="09">Setembro</option>
+                                <option value="10">Outubro</option>
+                                <option value="11">Novembro</option>
+                                <option value="12">Dezembro</option>
+                            </select>
+                        </div>
+                        <div class="input-grupo">
+                            <label for="rej-filtro-dia">Dia</label>
+                            <select id="rej-filtro-dia" onchange="carregarRejeitos()">
+                                <option value="">Todos os Dias</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Quantidade</th>
+                                    <th>Registrado por</th>
+                                    <th id="th-acoes-rejeito" style="display: none;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-rejeitos">
+                                <tr>
+                                    <td colspan="4" class="text-center">Carregando rejeitos...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- ABA 5: GERENCIAR USUÁRIOS (EXCLUSIVA FLÁVIO ANDRÉ) -->
             <div id="aba-usuarios" class="secao-aba">
                 <section class="panel-card">
                     <div class="panel-header space-between">
@@ -1014,12 +1121,13 @@
 
         let operadorAtual = "";
         let listaGeralLotes = [];
+        let listaGeralRejeitos = [];
         let lotePendenteFinalizacao = null;
         let loteParaReabrirId = null;
         let unsubscribeLotes = null;
+        let unsubscribeRejeitos = null;
         let unsubscribeOperadores = null;
 
-        // Função ajustada para calcular apenas dias úteis (ignorando sábados e domingos)
         function calcularDiasAtraso(dataPrevistaStr, dataReferenciaStr) {
             if (!dataPrevistaStr || !dataReferenciaStr) return 0;
             const dPrev = new Date(dataPrevistaStr + 'T00:00:00');
@@ -1029,10 +1137,10 @@
 
             let diasUteis = 0;
             let atual = new Date(dPrev);
-            atual.setDate(atual.getDate() + 1); // Começa a contar a partir do dia seguinte ao prazo
+            atual.setDate(atual.getDate() + 1);
 
             while (atual <= dRef) {
-                const diaSemana = atual.getDay(); // 0 = Domingo, 6 = Sábado
+                const diaSemana = atual.getDay();
                 if (diaSemana !== 0 && diaSemana !== 6) {
                     diasUteis++;
                 }
@@ -1063,6 +1171,15 @@
 
             const btnAbaUsuarios = document.getElementById('btn-aba-usuarios');
             if (btnAbaUsuarios) btnAbaUsuarios.style.display = admin ? 'flex' : 'none';
+
+            // Visibilidade de Rejeitos para Admin
+            const secaoFormRejeito = document.getElementById('secao-form-rejeito');
+            const avisoPermRejeito = document.getElementById('aviso-permissao-rejeito');
+            const thAcoesRejeito = document.getElementById('th-acoes-rejeito');
+
+            if (secaoFormRejeito) secaoFormRejeito.style.display = admin ? 'block' : 'none';
+            if (avisoPermRejeito) avisoPermRejeito.style.display = admin ? 'none' : 'flex';
+            if (thAcoesRejeito) thAcoesRejeito.style.display = admin ? 'table-cell' : 'none';
         }
 
         window.alternarTema = function() {
@@ -1106,7 +1223,15 @@
 
             await verificarInicializacaoOperadores();
             document.getElementById("modal-login").style.display = "flex";
+            
+            // Definir data de hoje por defeito no input de rejeitos
+            const inputDataRejeito = document.getElementById("rejeito-data");
+            if (inputDataRejeito) {
+                inputDataRejeito.value = new Date().toISOString().split('T')[0];
+            }
+
             escutarLotesEmTempoReal();
+            escutarRejeitosEmTempoReal();
             escutarOperadoresEmTempoReal();
         };
 
@@ -1136,6 +1261,27 @@
                 }
             }, (error) => {
                 console.error("Erro na escuta de lotes:", error);
+            });
+        }
+
+        function escutarRejeitosEmTempoReal() {
+            if (unsubscribeRejeitos) unsubscribeRejeitos();
+
+            unsubscribeRejeitos = onSnapshot(collection(db, "rejeitos"), (querySnapshot) => {
+                listaGeralRejeitos = [];
+                querySnapshot.forEach((docSnap) => {
+                    const rej = docSnap.data();
+                    rej.id = docSnap.id;
+                    listaGeralRejeitos.push(rej);
+                });
+
+                const abaAtiva = document.querySelector('.secao-aba.active');
+                if (abaAtiva && abaAtiva.id === 'aba-rejeitos') {
+                    atualizarFiltrosRejeitoDinamicos();
+                    carregarRejeitos();
+                }
+            }, (error) => {
+                console.error("Erro na escuta de rejeitos:", error);
             });
         }
 
@@ -1263,7 +1409,7 @@
             document.querySelectorAll('.btn-aba').forEach(btn => btn.classList.remove('active'));
 
             document.getElementById('aba-' + abaId).classList.add('active');
-            elementoBtn.classList.add('active');
+            if (elementoBtn) elementoBtn.classList.add('active');
 
             if (abaId === 'producao') {
                 renderizarTabelaProducao();
@@ -1275,6 +1421,10 @@
                 atualizarFiltrosRelatorios();
                 atualizarDiasRelatorio();
                 carregarRelatorios();
+            } else if (abaId === 'rejeitos') {
+                atualizarFiltrosRejeitoDinamicos();
+                atualizarDiasRejeitoFiltro();
+                carregarRejeitos();
             } else if (abaId === 'usuarios') {
                 if (!eAdministrador()) {
                     alert("Acesso restrito a Flávio e André.");
@@ -1282,6 +1432,127 @@
                 }
                 const querySnapshot = await getDocs(collection(db, "operadores"));
                 renderizarTabelaUsuarios(querySnapshot);
+            }
+        };
+
+        // FUNÇÕES DO MÓDULO DE REJEITOS
+        window.salvarRejeito = async function(e) {
+            e.preventDefault();
+
+            if (!eAdministrador()) {
+                alert("Acesso negado! Apenas Flávio e André podem registrar rejeitos.");
+                return;
+            }
+
+            const dataStr = document.getElementById('rejeito-data').value;
+            const qtd = parseInt(document.getElementById('rejeito-qtd').value);
+
+            if (!dataStr || isNaN(qtd) || qtd <= 0) {
+                alert("Preencha uma data válida e uma quantidade maior que zero.");
+                return;
+            }
+
+            const [ano, mes, dia] = dataStr.split('-');
+
+            try {
+                await addDoc(collection(db, "rejeitos"), {
+                    data: dataStr,
+                    ano: ano,
+                    mes: mes,
+                    dia: dia,
+                    quantidade: qtd,
+                    operador: operadorAtual,
+                    criadoEm: new Date().toISOString()
+                });
+
+                document.getElementById('rejeito-qtd').value = "";
+                alert("Rejeito registrado com sucesso!");
+            } catch (error) {
+                console.error("Erro ao salvar rejeito:", error);
+                alert("Erro ao salvar o registro de rejeito.");
+            }
+        };
+
+        function atualizarFiltrosRejeitoDinamicos() {
+            const anosSet = new Set();
+            listaGeralRejeitos.forEach(r => {
+                if (r.ano) anosSet.add(r.ano);
+            });
+            montarSelect('rej-filtro-ano', anosSet, "Todos os Anos");
+        }
+
+        window.atualizarDiasRejeitoFiltro = function() {
+            const anoSelecionado = document.getElementById('rej-filtro-ano').value;
+            const mesSelecionado = document.getElementById('rej-filtro-mes').value;
+            const diasSet = new Set();
+
+            listaGeralRejeitos.forEach(r => {
+                if ((!anoSelecionado || r.ano === anoSelecionado) && (!mesSelecionado || r.mes === mesSelecionado)) {
+                    if (r.dia) diasSet.add(r.dia);
+                }
+            });
+
+            montarSelect('rej-filtro-dia', diasSet, "Todos os Dias");
+        };
+
+        window.carregarRejeitos = function() {
+            const tabelaRej = document.getElementById('tabela-rejeitos');
+            const anoFiltro = document.getElementById('rej-filtro-ano').value;
+            const mesFiltro = document.getElementById('rej-filtro-mes').value;
+            const diaFiltro = document.getElementById('rej-filtro-dia').value;
+            const colunasVisiveis = eAdministrador() ? 4 : 3;
+
+            tabelaRej.innerHTML = "";
+
+            const filtrados = listaGeralRejeitos.filter(r => {
+                if (anoFiltro && r.ano !== anoFiltro) return false;
+                if (mesFiltro && r.mes !== mesFiltro) return false;
+                if (diaFiltro && r.dia !== diaFiltro) return false;
+                return true;
+            });
+
+            filtrados.sort((a, b) => (b.data || "").localeCompare(a.data || ""));
+
+            let totalRejeitosCount = 0;
+            filtrados.forEach(r => {
+                totalRejeitosCount += (parseInt(r.quantidade) || 0);
+            });
+
+            document.getElementById('kpi-total-rejeito').innerText = totalRejeitosCount.toLocaleString('pt-BR');
+
+            if (filtrados.length === 0) {
+                tabelaRej.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center">Nenhum registro de rejeito encontrado.</td></tr>`;
+                return;
+            }
+
+            filtrados.forEach(r => {
+                const dataFormatada = r.data ? r.data.split('-').reverse().join('/') : '-';
+                const celulaAcoes = eAdministrador() ? `<td><button onclick="deletarRejeito('${r.id}')" class="btn-danger">Excluir</button></td>` : '';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${dataFormatada}</strong></td>
+                    <td>${parseInt(r.quantidade).toLocaleString('pt-BR')} unidades</td>
+                    <td>👤 ${r.operador || 'Desconhecido'}</td>
+                    ${celulaAcoes}
+                `;
+                tabelaRej.appendChild(tr);
+            });
+        };
+
+        window.deletarRejeito = async function(id) {
+            if (!eAdministrador()) {
+                alert("Apenas Flávio e André podem excluir registros de rejeitos.");
+                return;
+            }
+
+            if (confirm("Deseja realmente excluir este registro de rejeito?")) {
+                try {
+                    await deleteDoc(doc(db, "rejeitos", id));
+                } catch (error) {
+                    console.error("Erro ao excluir rejeito:", error);
+                    alert("Erro ao excluir o registro.");
+                }
             }
         };
 
