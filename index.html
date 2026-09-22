@@ -130,7 +130,6 @@
         .btn-sair-nav { border-color: #ef4444; color: #ef4444; }
         .btn-sair-nav:hover { background: #ef4444; color: white; }
 
-        /* Estrutura Principal com Sidebar */
         .app-layout {
             display: flex;
             flex: 1;
@@ -189,7 +188,6 @@
         .secao-aba { display: none; }
         .secao-aba.active { display: block; }
 
-        /* Banner de Aviso */
         .banner-alerta-prazos {
             background-color: #fef3c7;
             border: 1px solid #f59e0b;
@@ -299,6 +297,11 @@
             outline: none;
             background-color: var(--input-bg);
             color: var(--input-text);
+        }
+
+        /* Garante que o input de data permita clique em toda a extensão para abrir o calendário */
+        input[type="date"] {
+            cursor: pointer;
         }
 
         .btn-primary {
@@ -607,6 +610,8 @@
                 <button class="btn-aba active" onclick="mudarAba('producao', this)">📦 Produção Atual</button>
                 <button class="btn-aba" onclick="mudarAba('historico', this)">📊 Histórico Concluídos</button>
                 <button class="btn-aba" onclick="mudarAba('relatorios', this)">📈 Relatórios & Controle</button>
+                <!-- ABA EXCLUSIVA PARA FLÁVIO E ANDRÉ GERENCIAREM USUÁRIOS -->
+                <button class="btn-aba" id="btn-aba-usuarios" onclick="mudarAba('usuarios', this)" style="display: none;">👥 Gerenciar Usuários</button>
             </div>
         </aside>
 
@@ -677,7 +682,8 @@
 
                         <div class="input-grupo">
                             <label for="data-prevista">Data Prevista de Coleta</label>
-                            <input type="date" id="data-prevista" required>
+                            <!-- Clicar na caixa abre o calendário nativo instantaneamente -->
+                            <input type="date" id="data-prevista" onclick="this.showPicker && this.showPicker()" required>
                         </div>
 
                         <div class="input-grupo">
@@ -946,6 +952,32 @@
                 </section>
             </div>
 
+            <!-- ABA 4: GERENCIAR USUÁRIOS (EXCLUSIVA FLÁVIO E ANDRÉ) -->
+            <div id="aba-usuarios" class="secao-aba">
+                <section class="panel-card">
+                    <div class="panel-header space-between">
+                        <h3>👥 Lista de Usuários Cadastrados</h3>
+                        <span class="info-auxiliar">Painel administrativo de controle de operadores</span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome do Operador</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-usuarios-cadastrados">
+                                <tr>
+                                    <td colspan="2" class="text-center">Carregando usuários...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
         </main>
     </div>
 
@@ -972,6 +1004,7 @@
         let lotePendenteFinalizacao = null;
         let loteParaReabrirId = null;
         let unsubscribeLotes = null;
+        let unsubscribeOperadores = null;
 
         function eAdministrador() {
             if (!operadorAtual) return false;
@@ -991,6 +1024,9 @@
 
             const thHistorico = document.getElementById('th-acoes-historico');
             if (thHistorico) thHistorico.style.display = admin ? 'table-cell' : 'none';
+
+            const btnAbaUsuarios = document.getElementById('btn-aba-usuarios');
+            if (btnAbaUsuarios) btnAbaUsuarios.style.display = admin ? 'flex' : 'none';
         }
 
         window.alternarTema = function() {
@@ -1035,9 +1071,9 @@
             await verificarInicializacaoOperadores();
             document.getElementById("modal-login").style.display = "flex";
             escutarLotesEmTempoReal();
+            escutarOperadoresEmTempoReal();
         };
 
-        // Escutador em tempo real nativo do Firestore (Resolve o F5 e atualiza automaticamente)
         function escutarLotesEmTempoReal() {
             if (unsubscribeLotes) unsubscribeLotes();
 
@@ -1063,7 +1099,20 @@
                     }
                 }
             }, (error) => {
-                console.error("Erro na escuta em tempo real do Firestore:", error);
+                console.error("Erro na escuta de lotes:", error);
+            });
+        }
+
+        function escutarOperadoresEmTempoReal() {
+            if (unsubscribeOperadores) unsubscribeOperadores();
+
+            unsubscribeOperadores = onSnapshot(collection(db, "operadores"), (querySnapshot) => {
+                const abaAtiva = document.querySelector('.secao-aba.active');
+                if (abaAtiva && abaAtiva.id === 'aba-usuarios') {
+                    renderizarTabelaUsuarios(querySnapshot);
+                }
+            }, (error) => {
+                console.error("Erro na escuta de operadores:", error);
             });
         }
 
@@ -1094,7 +1143,6 @@
                 
                 atualizarVisibilidadeUI();
                 
-                // Re-renderiza a aba ativa no login
                 const abaAtiva = document.querySelector('.secao-aba.active');
                 if (abaAtiva && abaAtiva.id === 'aba-producao') {
                     renderizarTabelaProducao();
@@ -1174,7 +1222,7 @@
             if (confirm("Deseja sair do sistema?")) location.reload();
         };
 
-        window.mudarAba = function(abaId, elementoBtn) {
+        window.mudarAba = async function(abaId, elementoBtn) {
             document.querySelectorAll('.secao-aba').forEach(sec => sec.classList.remove('active'));
             document.querySelectorAll('.btn-aba').forEach(btn => btn.classList.remove('active'));
 
@@ -1191,6 +1239,69 @@
                 atualizarFiltrosRelatorios();
                 atualizarDiasRelatorio();
                 carregarRelatorios();
+            } else if (abaId === 'usuarios') {
+                if (!eAdministrador()) {
+                    alert("Acesso restrito a Flávio e André.");
+                    return;
+                }
+                const querySnapshot = await getDocs(collection(db, "operadores"));
+                renderizarTabelaUsuarios(querySnapshot);
+            }
+        };
+
+        async function renderizarTabelaUsuarios(querySnapshot) {
+            const tbody = document.getElementById('tabela-usuarios-cadastrados');
+            if (!tbody) return;
+            tbody.innerHTML = "";
+
+            let operadoresList = [];
+            querySnapshot.forEach(docSnap => {
+                operadoresList.push({ nome: docSnap.id });
+            });
+
+            operadoresList.sort((a, b) => a.nome.localeCompare(b.nome));
+
+            if (operadoresList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" class="text-center">Nenhum usuário cadastrado.</td></tr>`;
+                return;
+            }
+
+            operadoresList.forEach(op => {
+                const ehVoce = (op.nome === operadorAtual.trim().toUpperCase());
+                const btnAcao = ehVoce 
+                    ? `<span class="info-auxiliar">Usuário atual (sessão ativa)</span>` 
+                    : `<button onclick="deletarOperador('${op.nome}')" class="btn-danger">Excluir Operador</button>`;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>👤 ${op.nome}</strong></td>
+                    <td>${btnAcao}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.deletarOperador = async function(nomeOperador) {
+            if (!eAdministrador()) {
+                alert("Apenas Flávio e André podem excluir usuários.");
+                return;
+            }
+
+            if (nomeOperador === operadorAtual.trim().toUpperCase()) {
+                alert("Você não pode excluir o usuário que está logado no momento.");
+                return;
+            }
+
+            if (confirm(`Tem certeza que deseja excluir o operador ${nomeOperador}? Ele perderá o acesso ao sistema.`)) {
+                try {
+                    await deleteDoc(doc(db, "operadores", nomeOperador));
+                    alert("Operador excluído com sucesso!");
+                    const querySnapshot = await getDocs(collection(db, "operadores"));
+                    renderizarTabelaUsuarios(querySnapshot);
+                } catch (error) {
+                    console.error("Erro ao excluir operador:", error);
+                    alert("Erro ao excluir operador.");
+                }
             }
         };
 
@@ -1265,7 +1376,6 @@
 
             const ativos = listaGeralLotes.filter(l => l.status === "Em Produção");
             
-            // Ordenação Priorizada: Atrasados e Vence Hoje no topo
             ativos.sort((a, b) => {
                 if (a.dataPrevista !== b.dataPrevista) {
                     return a.dataPrevista.localeCompare(b.dataPrevista);
@@ -1339,7 +1449,6 @@
                 tabelaLotes.appendChild(tr);
             });
 
-            // Atualiza aviso de atenção
             const banner = document.getElementById('banner-alerta-prazos');
             const textoAlerta = document.getElementById('texto-alerta-prazos');
             if (venceBreveCount > 0 || atrasadoCount > 0) {
@@ -1719,7 +1828,6 @@
                 return true;
             });
 
-            // Ordenado para o mais recente ficar no topo
             filtrados.sort((a, b) => (b.dataConclusao || "").localeCompare(a.dataConclusao || ""));
 
             document.getElementById('hist-total-lotes').innerText = filtrados.length;
@@ -1783,7 +1891,6 @@
                 return true;
             });
 
-            // Ordenado para o mais recente ficar no topo
             filtrados.sort((a, b) => (b.dataConclusao || "").localeCompare(a.dataConclusao || ""));
 
             let totalNoPrazo = 0, totalAtrasados = 0, volumeCartoes = 0;
