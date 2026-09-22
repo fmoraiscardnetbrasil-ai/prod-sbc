@@ -707,7 +707,7 @@
                 <section class="panel-card">
                     <div class="panel-header space-between">
                         <h3>Monitoramento de Lotes por Setor</h3>
-                        <span class="info-auxiliar">Acompanhe o status e atrasos por setor individual</span>
+                        <span class="info-auxiliar">Acompanhe o status e atrasos por setor individual (dias úteis)</span>
                     </div>
                     
                     <div class="table-responsive">
@@ -1019,13 +1019,27 @@
         let unsubscribeLotes = null;
         let unsubscribeOperadores = null;
 
+        // Função ajustada para calcular apenas dias úteis (ignorando sábados e domingos)
         function calcularDiasAtraso(dataPrevistaStr, dataReferenciaStr) {
             if (!dataPrevistaStr || !dataReferenciaStr) return 0;
             const dPrev = new Date(dataPrevistaStr + 'T00:00:00');
             const dRef = new Date(dataReferenciaStr + 'T00:00:00');
-            const diffTime = dRef - dPrev;
-            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-            return diffDays > 0 ? diffDays : 0;
+            
+            if (dRef <= dPrev) return 0;
+
+            let diasUteis = 0;
+            let atual = new Date(dPrev);
+            atual.setDate(atual.getDate() + 1); // Começa a contar a partir do dia seguinte ao prazo
+
+            while (atual <= dRef) {
+                const diaSemana = atual.getDay(); // 0 = Domingo, 6 = Sábado
+                if (diaSemana !== 0 && diaSemana !== 6) {
+                    diasUteis++;
+                }
+                atual.setDate(atual.getDate() + 1);
+            }
+
+            return diasUteis;
         }
 
         function eAdministrador() {
@@ -1424,10 +1438,10 @@
                 totalAtivoCartoes += qtdLote;
 
                 let situacaoHTML = "";
+                const diasAtraso = calcularDiasAtraso(lote.dataPrevista, hojeStr);
 
-                if (lote.dataPrevista < hojeStr) {
-                    const diasAtraso = calcularDiasAtraso(lote.dataPrevista, hojeStr);
-                    situacaoHTML = `<span class="badge-atrasado">🔴 ATRASADO (${diasAtraso} ${diasAtraso === 1 ? 'dia' : 'dias'})</span>`;
+                if (diasAtraso > 0) {
+                    situacaoHTML = `<span class="badge-atrasado">🔴 ATRASADO (${diasAtraso} ${diasAtraso === 1 ? 'dia útil' : 'dias úteis'})</span>`;
                     atrasadoCount++;
                     atrasadoCartoes += qtdLote;
                 } else if (lote.dataPrevista === hojeStr) {
@@ -1501,17 +1515,19 @@
 
             if (objSetor.data) {
                 const dataConclusaoSetorStr = objSetor.data.split('T')[0];
-                if (dataConclusaoSetorStr > lote.dataPrevista) {
-                    const diasSetor = calcularDiasAtraso(lote.dataPrevista, dataConclusaoSetorStr);
-                    infoAtrasoSetor = `<br><span class="tag-atraso-setor">🔴 Atrasado (${diasSetor}d)</span>`;
+                const diasSetor = calcularDiasAtraso(lote.dataPrevista, dataConclusaoSetorStr);
+                if (diasSetor > 0) {
+                    infoAtrasoSetor = `<br><span class="tag-atraso-setor">🔴 Atrasado (${diasSetor}d úteis)</span>`;
                 } else if (valorAtual === "Concluído" || valorAtual === "Envio Parcial") {
                     infoAtrasoSetor = `<br><span class="tag-prazo-setor">🟢 Concluído no Prazo</span>`;
                 }
-            } else if (valorAtual === "Pendente" && hojeStr > lote.dataPrevista) {
+            } else if (valorAtual === "Pendente") {
                 const diasFila = calcularDiasAtraso(lote.dataPrevista, hojeStr);
-                infoAtrasoSetor = `<br><span class="tag-atraso-setor">⚠️ Atrasado (${diasFila}d)</span>`;
-            } else if (valorAtual === "Pendente" && hojeStr === lote.dataPrevista) {
-                infoAtrasoSetor = `<br><span style="color:#b45309; font-weight:700; font-size:10px;">🟡 Vence Hoje</span>`;
+                if (diasFila > 0) {
+                    infoAtrasoSetor = `<br><span class="tag-atraso-setor">⚠️ Atrasado (${diasFila}d úteis)</span>`;
+                } else if (hojeStr === lote.dataPrevista) {
+                    infoAtrasoSetor = `<br><span style="color:#b45309; font-weight:700; font-size:10px;">🟡 Vence Hoje</span>`;
+                }
             }
 
             return `
@@ -1817,9 +1833,9 @@
                     htmlData = `<span class="op-data">🕒 ${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')} ${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}</span>`;
                     
                     const dataConclusaoSetorStr = objSetor.data.split('T')[0];
-                    if (dataConclusaoSetorStr > dataPrevista) {
-                        const diasAtrasoSetor = calcularDiasAtraso(dataPrevista, dataConclusaoSetorStr);
-                        htmlAtraso = `<span class="tag-atraso-setor">🔴 Atrasado (${diasAtrasoSetor}d)</span>`;
+                    const diasAtrasoSetor = calcularDiasAtraso(dataPrevista, dataConclusaoSetorStr);
+                    if (diasAtrasoSetor > 0) {
+                        htmlAtraso = `<span class="tag-atraso-setor">🔴 Atrasado (${diasAtrasoSetor}d úteis)</span>`;
                     } else {
                         htmlAtraso = `<span class="tag-prazo-setor">🟢 No Prazo</span>`;
                     }
@@ -1849,7 +1865,8 @@
                 if (diaFiltro && diaLote !== diaFiltro) return false;
                 if (opFiltro && l.operador && l.operador.toUpperCase() !== opFiltro) return false;
                 
-                const ehAtrasado = dataConclusaoStr > l.dataPrevista;
+                const diasAtraso = calcularDiasAtraso(l.dataPrevista, dataConclusaoStr);
+                const ehAtrasado = diasAtraso > 0;
                 if (prazoFiltro === "no-prazo" && ehAtrasado) return false;
                 if (prazoFiltro === "atrasado" && !ehAtrasado) return false;
 
@@ -1868,12 +1885,12 @@
 
             filtrados.forEach(lote => {
                 const dataConclusaoStr = lote.dataConclusao.split('T')[0];
-                const ehAtrasado = dataConclusaoStr > lote.dataPrevista;
+                const diasAtraso = calcularDiasAtraso(lote.dataPrevista, dataConclusaoStr);
+                const ehAtrasado = diasAtraso > 0;
                 let situacaoHTML = "";
                 
                 if (ehAtrasado) {
-                    const diasAtraso = calcularDiasAtraso(lote.dataPrevista, dataConclusaoStr);
-                    situacaoHTML = `<span class="badge-atrasado">⚠️ Atrasado (${diasAtraso} ${diasAtraso === 1 ? 'dia' : 'dias'})</span>`;
+                    situacaoHTML = `<span class="badge-atrasado">⚠️ Atrasado (${diasAtraso} ${diasAtraso === 1 ? 'dia útil' : 'dias úteis'})</span>`;
                 } else {
                     situacaoHTML = `<span class="badge-finalizado">✅ No Prazo</span>`;
                 }
@@ -1918,7 +1935,8 @@
                 if (diaFiltro && diaLote !== diaFiltro) return false;
                 if (opFiltro && l.operador && l.operador.toUpperCase() !== opFiltro) return false;
 
-                const ehAtrasado = dataConclusaoStr > l.dataPrevista;
+                const diasAtraso = calcularDiasAtraso(l.dataPrevista, dataConclusaoStr);
+                const ehAtrasado = diasAtraso > 0;
                 if (prazoFiltro === "no-prazo" && ehAtrasado) return false;
                 if (prazoFiltro === "atrasado" && !ehAtrasado) return false;
 
@@ -1932,7 +1950,8 @@
             filtrados.forEach(lote => {
                 const dataConclusaoStr = lote.dataConclusao.split('T')[0];
                 volumeCartoes += (parseInt(lote.qtd) || 0);
-                if (dataConclusaoStr > lote.dataPrevista) totalAtrasados++;
+                const diasAtraso = calcularDiasAtraso(lote.dataPrevista, dataConclusaoStr);
+                if (diasAtraso > 0) totalAtrasados++;
                 else totalNoPrazo++;
             });
 
@@ -1950,12 +1969,12 @@
 
             filtrados.forEach(lote => {
                 const dataConclusaoStr = lote.dataConclusao.split('T')[0];
-                const ehAtrasado = dataConclusaoStr > lote.dataPrevista;
+                const diasAtraso = calcularDiasAtraso(lote.dataPrevista, dataConclusaoStr);
+                const ehAtrasado = diasAtraso > 0;
                 let situacaoHTML = "";
 
                 if (ehAtrasado) {
-                    const diasAtraso = calcularDiasAtraso(lote.dataPrevista, dataConclusaoStr);
-                    situacaoHTML = `<span class="badge-atrasado">🔴 Atrasado (${diasAtraso} ${diasAtraso === 1 ? 'dia' : 'dias'})</span>`;
+                    situacaoHTML = `<span class="badge-atrasado">🔴 Atrasado (${diasAtraso} ${diasAtraso === 1 ? 'dia útil' : 'dias úteis'})</span>`;
                 } else {
                     situacaoHTML = `<span class="badge-no-prazo">🟢 No Prazo</span>`;
                 }
@@ -2013,7 +2032,7 @@
                 if (lote.status !== "Finalizado" || !lote.dataConclusao) return;
                 const [anoLote, mesLote, diaLote] = lote.dataConclusao.split('T')[0].split('-');
                 if (anoFiltro && anoLote !== anoFiltro) return;
-                if (mesFiltro && mesLote !== mesFiltro) return;
+                if (mesFiltro && mesLote !== mesLote) return;
                 if (diaFiltro && diaLote !== diaFiltro) return;
 
                 ['gravacao', 'idv', 'manuseio'].forEach(setorKey => {
