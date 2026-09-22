@@ -289,7 +289,7 @@
         .input-grupo { display: flex; flex-direction: column; gap: 6px; }
         .input-grupo label { font-size: 13px; font-weight: 500; color: var(--text-muted); }
         
-        .input-grupo input, .input-grupo select {
+        .input-grupo input, .input-grupo select, .input-grupo textarea {
             padding: 10px 14px;
             border: 1px solid var(--input-border);
             border-radius: 8px;
@@ -299,7 +299,6 @@
             color: var(--input-text);
         }
 
-        /* Garante que o input de data permita clique em toda a extensão para abrir o calendário */
         input[type="date"] {
             cursor: pointer;
         }
@@ -415,6 +414,20 @@
         .info-setor-hist .op-data { color: var(--text-muted); font-size: 10px; }
         .tag-atraso-setor { color: #ef4444; font-weight: 700; font-size: 10px; }
         .tag-prazo-setor { color: #10b981; font-weight: 700; font-size: 10px; }
+
+        .textarea-justificativa {
+            width: 100%;
+            min-width: 180px;
+            max-width: 280px;
+            height: 60px;
+            padding: 6px 8px;
+            border: 1px solid var(--input-border);
+            border-radius: 6px;
+            font-size: 12px;
+            background-color: var(--input-bg);
+            color: var(--input-text);
+            resize: vertical;
+        }
 
         .login-overlay {
             position: fixed;
@@ -682,7 +695,6 @@
 
                         <div class="input-grupo">
                             <label for="data-prevista">Data Prevista de Coleta</label>
-                            <!-- Clicar na caixa abre o calendário nativo instantaneamente -->
                             <input type="date" id="data-prevista" onclick="this.showPicker && this.showPicker()" required>
                         </div>
 
@@ -878,7 +890,7 @@
 
                 <section class="panel-card">
                     <div class="panel-header space-between">
-                        <h3>Detalhamento e Controle de Entregas por Período</h3>
+                        <h3>Detalhamento e Controle de Entregas por Período (Com Justificativas de Atraso)</h3>
                     </div>
 
                     <div class="filtro-grid">
@@ -940,11 +952,12 @@
                                     <th>Manuseio</th>
                                     <th>Status do Prazo</th>
                                     <th>Tipo Envio</th>
+                                    <th>Justificativa de Atraso <br><small style="font-weight:normal; color:var(--text-muted);">(Flávio / André)</small></th>
                                 </tr>
                             </thead>
                             <tbody id="tabela-relatorio-detalhado">
                                 <tr>
-                                    <td colspan="8" class="text-center">Carregando dados do relatório...</td>
+                                    <td colspan="9" class="text-center">Carregando dados do relatório...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1338,7 +1351,8 @@
                         manuseio: { status: "Pendente", op: null, data: null }
                     },
                     dataConclusao: null,
-                    operador: null
+                    operador: null,
+                    justificativa: ""
                 });
                 form.reset();
             } catch (error) {
@@ -1613,7 +1627,8 @@
                             manuseio: { status: "Pendente", op: null, data: null }
                         },
                         dataConclusao: null,
-                        operador: null
+                        operador: null,
+                        justificativa: ""
                     });
                 } else {
                     await updateDoc(doc(db, "lotes", loteId), {
@@ -1910,15 +1925,27 @@
             gerarTabelaProdutividade(anoFiltro, mesFiltro, diaFiltro);
 
             if (filtrados.length === 0) {
-                tabelaRel.innerHTML = `<tr><td colspan="8" class="text-center">Nenhum dado encontrado.</td></tr>`;
+                tabelaRel.innerHTML = `<tr><td colspan="9" class="text-center">Nenhum dado encontrado.</td></tr>`;
                 return;
             }
 
             filtrados.forEach(lote => {
                 const dataConclusaoStr = lote.dataConclusao.split('T')[0];
-                let situacaoHTML = (dataConclusaoStr > lote.dataPrevista) 
+                const ehAtrasado = dataConclusaoStr > lote.dataPrevista;
+                let situacaoHTML = ehAtrasado 
                     ? `<span class="badge-atrasado">🔴 Atrasado</span>` 
                     : `<span class="badge-no-prazo">🟢 No Prazo</span>`;
+
+                let htmlJustificativa = `<span style="color:var(--text-muted); font-size:12px;">Não aplicável</span>`;
+                
+                if (ehAtrasado) {
+                    const textoJust = lote.justificativa || "";
+                    if (eAdministrador()) {
+                        htmlJustificativa = `<textarea class="textarea-justificativa" placeholder="Digite a justificativa do atraso..." onblur="salvarJustificativa('${lote.id}', this.value)">${textoJust}</textarea>`;
+                    } else {
+                        htmlJustificativa = textoJust ? `<span style="font-size:12px;">${textoJust}</span>` : `<span style="color:#ef4444; font-size:12px;">Pendente de justificativa</span>`;
+                    }
+                }
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -1930,9 +1957,26 @@
                     <td>${formatarInfoSetor(lote.setores.manuseio, lote.dataPrevista)}</td>
                     <td>${situacaoHTML}</td>
                     <td>${lote.parcial ? '<span class="badge-parcial">Parcial</span>' : '<span class="badge-finalizado">Total</span>'}</td>
+                    <td>${htmlJustificativa}</td>
                 `;
                 tabelaRel.appendChild(tr);
             });
+        };
+
+        window.salvarJustificativa = async function(loteId, novaJustificativa) {
+            if (!eAdministrador()) {
+                alert("Apenas Flávio e André podem alterar justificativas.");
+                return;
+            }
+
+            try {
+                await updateDoc(doc(db, "lotes", loteId), {
+                    justificativa: novaJustificativa.trim()
+                });
+            } catch (error) {
+                console.error("Erro ao salvar justificativa:", error);
+                alert("Erro ao salvar justificativa no servidor.");
+            }
         };
 
         function gerarTabelaProdutividade(anoFiltro, mesFiltro, diaFiltro) {
