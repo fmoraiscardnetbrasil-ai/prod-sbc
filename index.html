@@ -391,7 +391,6 @@
         .badge-vence-breve { color: #b45309; font-weight: 600; background: #fffbeb; padding: 4px 8px; border-radius: 20px; font-size: 12px; display: inline-block;}
         .badge-atrasado { color: #dc2626; font-weight: 600; background: #fef2f2; padding: 4px 8px; border-radius: 20px; font-size: 12px; display: inline-block;}
 
-        /* Caixinhas de Status por Setor no Relatório e Histórico */
         .box-setor-relatorio {
             padding: 8px 10px;
             border-radius: 6px;
@@ -903,6 +902,12 @@
             return ["FLÁVIO", "FLAVIO", "ANDRÉ", "ANDRE"].includes(op);
         }
 
+        function ePermitidoEditarProducao() {
+            if (!operadorAtual) return false;
+            const op = operadorAtual.trim().toUpperCase();
+            return ["FLÁVIO", "FLAVIO", "ANDRÉ", "ANDRE"].includes(op);
+        }
+
         function atualizarVisibilidadeUI() {
             const admin = eAdministrador();
             const secaoCadastro = document.getElementById('secao-cadastro-lote');
@@ -1324,9 +1329,17 @@
                 const operadorTexto = lote.operador ? lote.operador.toUpperCase() : '<span style="color:#94a3b8">Pendente</span>';
                 const celulaAcoes = eAdministrador() ? `<td><button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button></td>` : '';
 
+                // Nome do arquivo com botão de edição se for admin
+                let nomeArquivoHTML = `<strong>${lote.nome}</strong>`;
+                let qtdHTML = `${qtdLote.toLocaleString('pt-BR')}`;
+                if (eAdministrador()) {
+                    nomeArquivoHTML += ` <button onclick="editarNomeArquivo('${lote.id}', '${lote.nome}')" style="background:transparent; border:none; cursor:pointer; font-size:12px;" title="Editar Nome do Arquivo">✏️</button>`;
+                    qtdHTML += ` <button onclick="editarQtdCartoes('${lote.id}', ${qtdLote})" style="background:transparent; border:none; cursor:pointer; font-size:12px;" title="Editar Quantidade">✏️</button>`;
+                }
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${dataHoraExibida}</td><td><strong>${lote.nome}</strong></td><td>${qtdLote.toLocaleString('pt-BR')}</td>
+                    <td>${dataHoraExibida}</td><td>${nomeArquivoHTML}</td><td>${qtdHTML}</td>
                     <td>${lote.dataPrevista.split('-').reverse().join('/')}</td>
                     <td>${criarSelectSetor(lote, 'gravacao')}</td><td>${criarSelectSetor(lote, 'idv')}</td><td>${criarSelectSetor(lote, 'manuseio')}</td>
                     <td>${situacaoHTML}</td><td>${operadorTexto}</td>${celulaAcoes}
@@ -1338,12 +1351,47 @@
             atualizarKPIsProducao(totalAtivoCount, totalAtivoCartoes, noPrazoCount, noPrazoCartoes, venceBreveCount, venceBreveCartoes, atrasadoCount, atrasadoCartoes);
         }
 
+        window.editarNomeArquivo = async function(loteId, nomeAtual) {
+            if (!eAdministrador()) return;
+            const novoNome = prompt("Digite o novo nome para o arquivo / lote:", nomeAtual);
+            if (novoNome !== null && novoNome.trim() !== "") {
+                try {
+                    await updateDoc(doc(db, "lotes", loteId), { nome: novoNome.trim() });
+                    alert("Nome do arquivo atualizado com sucesso!");
+                } catch (e) {
+                    alert("Erro ao atualizar o nome do arquivo.");
+                }
+            }
+        };
+
+        window.editarQtdCartoes = async function(loteId, qtdAtual) {
+            if (!eAdministrador()) return;
+            const novaQtdStr = prompt("Digite a nova quantidade de cartões:", qtdAtual);
+            if (novaQtdStr !== null) {
+                const novaQtd = parseInt(novaQtdStr);
+                if (!isNaN(novaQtd) && novaQtd > 0) {
+                    try {
+                        await updateDoc(doc(db, "lotes", loteId), { qtd: novaQtd });
+                        alert("Quantidade atualizada com sucesso!");
+                    } catch (e) {
+                        alert("Erro ao atualizar a quantidade.");
+                    }
+                } else {
+                    alert("Por favor, digite um número válido maior que zero.");
+                }
+            }
+        };
+
         function criarSelectSetor(lote, setorNome) {
             const objSetor = lote.setores[setorNome];
             const valorAtual = objSetor.status;
             let classeCor = valorAtual === "Concluído" ? "setor-concluido" : (valorAtual === "Envio Parcial" ? "setor-parcial" : (valorAtual === "N/A" ? "setor-na" : "setor-pendente"));
+            
+            const permitido = ePermitidoEditarProducao();
+            const disabledAttr = permitido ? "" : "disabled title='Apenas FLÁVIO ou ANDRÉ podem editar a produção'";
+
             return `
-                <select class="select-setor ${classeCor}" onchange="atualizarSetorLote('${lote.id}', '${setorNome}', this)">
+                <select class="select-setor ${classeCor}" onchange="atualizarSetorLote('${lote.id}', '${setorNome}', this)" ${disabledAttr}>
                     <option value="Pendente" ${valorAtual === "Pendente" ? "selected" : ""}>⏳ Pendente</option>
                     <option value="Concluído" ${valorAtual === "Concluído" ? "selected" : ""}>✅ Concluído</option>
                     <option value="Envio Parcial" ${valorAtual === "Envio Parcial" ? "selected" : ""}>🟡 Envio Parcial</option>
@@ -1353,6 +1401,12 @@
         }
 
         window.atualizarSetorLote = async function(loteId, setorNome, selectElement) {
+            if (!ePermitidoEditarProducao()) {
+                alert("Apenas os usuários FLÁVIO e ANDRÉ têm permissão para alterar a produção atual!");
+                renderizarTabelaProducao();
+                return;
+            }
+
             const novoValor = selectElement.value;
             if (!operadorAtual) { alert("Faça o login!"); renderizarTabelaProducao(); return; }
 
