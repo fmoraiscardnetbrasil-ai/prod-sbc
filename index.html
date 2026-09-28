@@ -232,6 +232,7 @@
         .kpi-card:nth-child(2) { border-left-color: #10b981; }
         .kpi-card:nth-child(3) { border-left-color: #f59e0b; }
         .kpi-card:nth-child(4) { border-left-color: #ef4444; }
+        .kpi-card:nth-child(5) { border-left-color: #8b5cf6; }
 
         .kpi-icon {
             font-size: 28px;
@@ -306,9 +307,7 @@
             color: var(--input-text);
         }
 
-        input[type="date"] {
-            cursor: pointer;
-        }
+        input[type="date"] { cursor: pointer; }
 
         .btn-primary {
             background-color: #2563eb;
@@ -323,7 +322,6 @@
         }
 
         .btn-primary:hover { background-color: #1d4ed8; }
-
         .btn-secondary {
             background-color: #64748b;
             color: white;
@@ -346,21 +344,7 @@
             font-size: 13px;
             font-weight: 500;
         }
-
         .btn-danger:hover { background-color: #dc2626; }
-
-        .btn-warning {
-            background-color: #d97706;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .btn-warning:hover { background-color: #b45309; }
 
         .table-responsive { overflow-x: auto; }
 
@@ -394,8 +378,6 @@
         .badge-no-prazo { color: #059669; font-weight: 600; background: #ecfdf5; padding: 4px 8px; border-radius: 20px; font-size: 12px; display: inline-block;}
         .badge-vence-breve { color: #b45309; font-weight: 600; background: #fffbeb; padding: 4px 8px; border-radius: 20px; font-size: 12px; display: inline-block;}
         .badge-atrasado { color: #dc2626; font-weight: 600; background: #fef2f2; padding: 4px 8px; border-radius: 20px; font-size: 12px; display: inline-block;}
-        .badge-finalizado { color: #2563eb; font-weight: 600; background: #eff6ff; padding: 4px 8px; border-radius: 20px; font-size: 12px; display: inline-block;}
-        .badge-parcial { color: #d97706; font-weight: 600; background: #fffbeb; padding: 4px 8px; border-radius: 20px; font-size: 12px; display: inline-block;}
 
         .select-setor {
             padding: 5px 8px;
@@ -421,20 +403,6 @@
         .info-setor-hist .op-data { color: var(--text-muted); font-size: 10px; }
         .tag-atraso-setor { color: #ef4444; font-weight: 700; font-size: 10px; }
         .tag-prazo-setor { color: #10b981; font-weight: 700; font-size: 10px; }
-
-        .textarea-justificativa {
-            width: 100%;
-            min-width: 180px;
-            max-width: 280px;
-            height: 60px;
-            padding: 6px 8px;
-            border: 1px solid var(--input-border);
-            border-radius: 6px;
-            font-size: 12px;
-            background-color: var(--input-bg);
-            color: var(--input-text);
-            resize: vertical;
-        }
 
         .login-overlay {
             position: fixed;
@@ -491,17 +459,15 @@
 </head>
 <body data-theme="dark">
 
-    <!-- MODAL DE QUANTIDADE (ENVIO PARCIAL OU FINALIZACAO) -->
+    <!-- MODAL DE QUANTIDADE -->
     <div id="modal-finalizacao" class="login-overlay" style="display: none;">
         <div class="login-card">
             <h2 id="titulo-modal-finalizacao">Informe a Quantidade</h2>
             <p id="desc-modal-finalizacao">Informe a quantidade a ser enviada nesta remessa:</p>
-            
             <div class="login-input-grupo">
                 <label for="qtd-finalizacao-input">Qtd. Enviada nesta remessa</label>
                 <input type="number" id="qtd-finalizacao-input" min="1">
             </div>
-
             <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button onclick="cancelarFinalizacao()" class="btn-secondary" style="width: 50%;">Cancelar</button>
                 <button onclick="confirmarFinalizacao()" class="btn-primary" style="width: 50%;">Confirmar</button>
@@ -509,22 +475,19 @@
         </div>
     </div>
 
-    <!-- MODAL DE CONFIRMAÇÃO DE SENHA DO ADMINISTRADOR PARA REABRIR LOTE -->
+    <!-- MODAL DE SENHA ADMIN -->
     <div id="modal-senha-admin" class="login-overlay" style="display: none;">
         <div class="login-card">
             <h2>Autorização Necessária</h2>
-            <p>Informe a senha do <b>Flávio</b> ou <b>André</b> para reabrir este lote do histórico:</p>
-            
+            <p>Informe a senha do <b>Flávio</b> ou <b>André</b> para reabrir este lote:</p>
             <div class="login-input-grupo">
                 <label for="modal-senha-admin-input-nome">Administrador</label>
                 <input type="text" id="modal-senha-admin-input-nome" placeholder="FLÁVIO ou ANDRÉ" autocomplete="off" oninput="this.value = this.value.toUpperCase()">
             </div>
-
             <div class="login-input-grupo">
                 <label for="modal-senha-admin-input-senha">Senha</label>
                 <input type="password" id="modal-senha-admin-input-senha" placeholder="Digite sua senha" autocomplete="off">
             </div>
-
             <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button onclick="cancelarReaberturaAdmin()" class="btn-secondary" style="width: 50%;">Cancelar</button>
                 <button onclick="confirmarReaberturaAdmin()" class="btn-primary" style="width: 50%;">Autorizar</button>
@@ -537,19 +500,15 @@
         <div class="login-card">
             <h2>Acesso Restrito</h2>
             <p>Informe suas credenciais para continuar:</p>
-            
             <div class="login-input-grupo">
                 <label for="input-operador-login">Nome do Operador</label>
                 <input type="text" id="input-operador-login" placeholder="Ex: FLÁVIO ou ANDRÉ" autocomplete="off" oninput="this.value = this.value.toUpperCase()">
             </div>
-
             <div class="login-input-grupo">
                 <label for="input-senha-login">Senha de Acesso</label>
                 <input type="password" id="input-senha-login" placeholder="Digite sua senha" autocomplete="off">
             </div>
-
             <button onclick="fazerLogin()" class="btn-primary" style="width:100%; margin-top: 5px;">Entrar no Sistema</button>
-            
             <div class="links-container">
                 <span class="link-acao" onclick="mostrarTelaCadastro()">Cadastrar Operador</span>
                 <span class="link-acao" onclick="mostrarTelaRecuperacao()">Esqueci a senha</span>
@@ -557,22 +516,19 @@
         </div>
     </div>
 
-    <!-- TELA 2: CADASTRO DE NOVO OPERADOR -->
+    <!-- TELA 2: CADASTRO -->
     <div id="modal-cadastro" class="login-overlay" style="display: none;">
         <div class="login-card">
             <h2>Novo Operador</h2>
-            <p>Cadastre um novo nome e senha para acesso ao sistema:</p>
-            
+            <p>Cadastre um novo nome e senha:</p>
             <div class="login-input-grupo">
                 <label for="cad-operador">Nome do Operador</label>
                 <input type="text" id="cad-operador" placeholder="Ex: CARLOS" autocomplete="off" oninput="this.value = this.value.toUpperCase()">
             </div>
-
             <div class="login-input-grupo">
                 <label for="cad-senha">Senha de Acesso</label>
                 <input type="password" id="cad-senha" placeholder="Crie uma senha" autocomplete="off">
             </div>
-
             <div style="display: flex; gap: 10px; margin-top: 5px;">
                 <button onclick="voltarParaLogin('cadastro')" class="btn-secondary" style="width: 50%;">Voltar</button>
                 <button onclick="salvarNovoOperador()" class="btn-primary" style="width: 50%;">Cadastrar</button>
@@ -580,27 +536,23 @@
         </div>
     </div>
 
-    <!-- TELA 3: REDEFINIÇÃO DE SENHA -->
+    <!-- TELA 3: RECUPERAÇÃO -->
     <div id="modal-recuperacao" class="login-overlay" style="display: none;">
         <div class="login-card">
             <h2>Redefinir Senha</h2>
-            <p>Insira o operador e a <b>Senha Mestra</b> para criar uma nova senha:</p>
-            
+            <p>Insira o operador e a <b>Senha Mestra</b>:</p>
             <div class="login-input-grupo">
                 <label for="rec-operador">Nome do Operador</label>
                 <input type="text" id="rec-operador" placeholder="Ex: FLÁVIO" autocomplete="off" oninput="this.value = this.value.toUpperCase()">
             </div>
-
             <div class="login-input-grupo">
                 <label for="rec-senha-mestra">Senha Mestra (Administrador)</label>
-                <input type="password" id="rec-senha-mestra" placeholder="Senha mestre de liberação" autocomplete="off">
+                <input type="password" id="rec-senha-mestra" placeholder="Senha mestre" autocomplete="off">
             </div>
-
             <div class="login-input-grupo">
                 <label for="rec-nova-senha">Nova Senha</label>
-                <input type="password" id="rec-nova-senha" placeholder="Digite a nova senha" autocomplete="off">
+                <input type="password" id="rec-nova-senha" placeholder="Nova senha" autocomplete="off">
             </div>
-
             <div style="display: flex; gap: 10px; margin-top: 5px;">
                 <button onclick="voltarParaLogin('recuperacao')" class="btn-secondary" style="width: 50%;">Voltar</button>
                 <button onclick="salvarNovaSenha()" class="btn-primary" style="width: 50%;">Salvar</button>
@@ -617,129 +569,76 @@
             <div class="user-info">
                 <button class="btn-theme" id="btn-alternar-tema" onclick="alternarTema()" title="Alternar Tema Claro/Escuro">🌙</button>
                 <span id="display-usuario" class="badge-user">👤 Operador: -</span>
-                <button class="btn-acao-nav" onclick="trocarUsuario()" title="Voltar para a tela de login com outro usuário">🔄 Trocar Usuário</button>
-                <button class="btn-sair-nav" onclick="sairSistema()" title="Sair do sistema e limpar sessão">🚪 Sair</button>
+                <button class="btn-acao-nav" onclick="trocarUsuario()" title="Trocar Usuário">🔄 Trocar Usuário</button>
+                <button class="btn-sair-nav" onclick="sairSistema()" title="Sair">🚪 Sair</button>
             </div>
         </div>
     </header>
 
     <div class="app-layout">
-        <!-- MENU LATERAL (SIDEBAR) -->
         <aside class="sidebar">
             <div class="abas-container">
                 <button class="btn-aba active" onclick="mudarAba('producao', this)">📦 Produção Atual</button>
                 <button class="btn-aba" onclick="mudarAba('historico', this)">📊 Histórico Concluídos</button>
                 <button class="btn-aba" onclick="mudarAba('relatorios', this)">📈 Relatórios & Controle</button>
-                <!-- NOVA ABA: CONTROLE DE REJEITOS -->
                 <button class="btn-aba" onclick="mudarAba('rejeitos', this)">⚠️ Controle de Rejeitos</button>
-                <!-- ABA EXCLUSIVA PARA FLÁVIO ANDRÉ GERENCIAREM USUÁRIOS -->
                 <button class="btn-aba" id="btn-aba-usuarios" onclick="mudarAba('usuarios', this)" style="display: none;">👥 Gerenciar Usuários</button>
             </div>
         </aside>
 
-        <!-- ÁREA CENTRAL DE CONTEÚDO -->
         <main class="main-container">
-
             <!-- ABA 1: PRODUÇÃO -->
             <div id="aba-producao" class="secao-aba active">
-                
-                <!-- BANNER DE AVISO DE PRAZOS -->
                 <div id="banner-alerta-prazos" class="banner-alerta-prazos" style="display: none;">
                     <div class="icone-alerta">⚠️</div>
                     <div>
                         <h4>AVISO DE ATENÇÃO AOS PRAZOS!</h4>
-                        <p id="texto-alerta-prazos">Existem lotes com vencimento próximo ou atrasados. Fiquem atentos às pendências do dia para evitar atrasos nas entregas!</p>
+                        <p id="texto-alerta-prazos">Existem lotes com vencimento próximo ou atrasados.</p>
                     </div>
                 </div>
 
                 <section class="kpi-grid">
                     <div class="kpi-card">
                         <div class="kpi-icon blue">📦</div>
-                        <div class="kpi-info">
-                            <span class="kpi-title">Total Ativo</span>
-                            <h2 id="kpi-total">0</h2>
-                            <div class="kpi-sub" id="kpi-total-cartoes">0 cartões</div>
-                        </div>
+                        <div class="kpi-info"><span class="kpi-title">Total Ativo</span><h2 id="kpi-total">0</h2><div class="kpi-sub" id="kpi-total-cartoes">0 cartões</div></div>
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-icon green">🟢</div>
-                        <div class="kpi-info">
-                            <span class="kpi-title">No Prazo</span>
-                            <h2 id="kpi-noprazo">0</h2>
-                            <div class="kpi-sub" id="kpi-noprazo-cartoes">0 cartões</div>
-                        </div>
+                        <div class="kpi-info"><span class="kpi-title">No Prazo</span><h2 id="kpi-noprazo">0</h2><div class="kpi-sub" id="kpi-noprazo-cartoes">0 cartões</div></div>
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-icon yellow">🟡</div>
-                        <div class="kpi-info">
-                            <span class="kpi-title">Vence em Breve</span>
-                            <h2 id="kpi-vencebreve">0</h2>
-                            <div class="kpi-sub" id="kpi-vencebreve-cartoes">0 cartões</div>
-                        </div>
+                        <div class="kpi-info"><span class="kpi-title">Vence em Breve</span><h2 id="kpi-vencebreve">0</h2><div class="kpi-sub" id="kpi-vencebreve-cartoes">0 cartões</div></div>
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-icon red">🔴</div>
-                        <div class="kpi-info">
-                            <span class="kpi-title">Atrasados</span>
-                            <h2 id="kpi-atrasado">0</h2>
-                            <div class="kpi-sub" id="kpi-atrasado-cartoes">0 cartões</div>
-                        </div>
+                        <div class="kpi-info"><span class="kpi-title">Atrasados</span><h2 id="kpi-atrasado">0</h2><div class="kpi-sub" id="kpi-atrasado-cartoes">0 cartões</div></div>
                     </div>
                 </section>
 
                 <section class="panel-card" id="secao-cadastro-lote" style="display: none;">
-                    <div class="panel-header">
-                        <h3>Cadastrar Novo Arquivo</h3>
-                    </div>
+                    <div class="panel-header"><h3>Cadastrar Novo Arquivo</h3></div>
                     <form id="form-lote" class="form-grid">
-                        <div class="input-grupo">
-                            <label for="nome-arquivo">Nome do Arquivo</label>
-                            <input type="text" id="nome-arquivo" placeholder="Ex: 260910_NORMAL" required>
-                        </div>
-
-                        <div class="input-grupo">
-                            <label for="qtd-cartoes">Qtd. Cartões</label>
-                            <input type="number" id="qtd-cartoes" placeholder="Ex: 1000" required>
-                        </div>
-
-                        <div class="input-grupo">
-                            <label for="data-prevista">Data Prevista de Coleta</label>
-                            <input type="date" id="data-prevista" onclick="this.showPicker && this.showPicker()" required>
-                        </div>
-
-                        <div class="input-grupo">
-                            <button type="submit" class="btn-primary">+ Cadastrar Lote</button>
-                        </div>
+                        <div class="input-grupo"><label for="nome-arquivo">Nome do Arquivo</label><input type="text" id="nome-arquivo" placeholder="Ex: 260910_NORMAL" required></div>
+                        <div class="input-grupo"><label for="qtd-cartoes">Qtd. Cartões</label><input type="number" id="qtd-cartoes" placeholder="Ex: 1000" required></div>
+                        <div class="input-grupo"><label for="data-prevista">Data Prevista de Coleta</label><input type="date" id="data-prevista" onclick="this.showPicker && this.showPicker()" required></div>
+                        <div class="input-grupo"><button type="submit" class="btn-primary">+ Cadastrar Lote</button></div>
                     </form>
                 </section>
 
                 <section class="panel-card">
                     <div class="panel-header space-between">
                         <h3>Monitoramento de Lotes por Setor</h3>
-                        <span class="info-auxiliar">Acompanhe o status e atrasos por setor individual (dias úteis)</span>
+                        <span class="info-auxiliar">Acompanhe o status e atrasos por setor individual</span>
                     </div>
-                    
                     <div class="table-responsive">
                         <table class="styled-table">
                             <thead>
                                 <tr>
-                                    <th>Data Cadastro</th>
-                                    <th>Arquivo</th>
-                                    <th>Qtd</th>
-                                    <th>Previsão</th>
-                                    <th>Gravação</th>
-                                    <th>IDV</th>
-                                    <th>Manuseio</th>
-                                    <th>Prazo Geral</th>
-                                    <th>Última Alt.</th>
-                                    <th id="th-acoes-producao" style="display: none;">Ações</th>
+                                    <th>Data Cadastro</th><th>Arquivo</th><th>Qtd</th><th>Previsão</th><th>Gravação</th><th>IDV</th><th>Manuseio</th><th>Prazo Geral</th><th>Última Alt.</th><th id="th-acoes-producao" style="display: none;">Ações</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabela-lotes">
-                                <tr>
-                                    <td colspan="10" class="text-center">Carregando dados...</td>
-                                </tr>
-                            </tbody>
+                            <tbody id="tabela-lotes"><tr><td colspan="10" class="text-center">Carregando dados...</td></tr></tbody>
                         </table>
                     </div>
                 </section>
@@ -750,225 +649,91 @@
                 <section class="kpi-grid">
                     <div class="kpi-card">
                         <div class="kpi-icon blue">📁</div>
-                        <div class="kpi-info">
-                            <span class="kpi-title">Lotes Concluídos</span>
-                            <h2 id="hist-total-lotes">0</h2>
-                        </div>
+                        <div class="kpi-info"><span class="kpi-title">Lotes Concluídos</span><h2 id="hist-total-lotes">0</h2></div>
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-icon green">💳</div>
-                        <div class="kpi-info">
-                            <span class="kpi-title">Total de Cartões</span>
-                            <h2 id="hist-total-cartoes">0</h2>
-                        </div>
+                        <div class="kpi-info"><span class="kpi-title">Total de Cartões</span><h2 id="hist-total-cartoes">0</h2></div>
                     </div>
                 </section>
 
                 <section class="panel-card">
-                    <div class="panel-header">
-                        <h3>Histórico de Lotes Finalizados</h3>
-                    </div>
-
+                    <div class="panel-header"><h3>Histórico de Lotes Finalizados</h3></div>
                     <div class="filtro-grid">
-                        <div class="input-grupo">
-                            <label for="filtro-ano">Ano</label>
-                            <select id="filtro-ano" onchange="atualizarDiasFiltro(); carregarHistorico();">
-                                <option value="">Todos os Anos</option>
-                            </select>
-                        </div>
-                        <div class="input-grupo">
-                            <label for="filtro-mes">Mês</label>
-                            <select id="filtro-mes" onchange="atualizarDiasFiltro(); carregarHistorico();">
-                                <option value="">Todos os Meses</option>
-                                <option value="01">Janeiro</option>
-                                <option value="02">Fevereiro</option>
-                                <option value="03">Março</option>
-                                <option value="04">Abril</option>
-                                <option value="05">Maio</option>
-                                <option value="06">Junho</option>
-                                <option value="07">Julho</option>
-                                <option value="08">Agosto</option>
-                                <option value="09">Setembro</option>
-                                <option value="10">Outubro</option>
-                                <option value="11">Novembro</option>
-                                <option value="12">Dezembro</option>
-                            </select>
-                        </div>
-                        <div class="input-grupo">
-                            <label for="filtro-dia">Dia</label>
-                            <select id="filtro-dia" onchange="carregarHistorico()">
-                                <option value="">Todos os Dias</option>
-                            </select>
-                        </div>
-                        <div class="input-grupo">
-                            <label for="filtro-prazo">Status do Prazo</label>
-                            <select id="filtro-prazo" onchange="carregarHistorico()">
-                                <option value="">Todos os Status</option>
-                                <option value="no-prazo">No Prazo</option>
-                                <option value="atrasado">Atrasado</option>
-                            </select>
-                        </div>
-                        <div class="input-grupo">
-                            <label for="filtro-operador">Operador Finalizador</label>
-                            <select id="filtro-operador" onchange="carregarHistorico()">
-                                <option value="">Todos os Operadores</option>
-                            </select>
-                        </div>
+                        <div class="input-grupo"><label for="filtro-ano">Ano</label><select id="filtro-ano" onchange="atualizarDiasFiltro(); carregarHistorico();"><option value="">Todos os Anos</option></select></div>
+                        <div class="input-grupo"><label for="filtro-mes">Mês</label><select id="filtro-mes" onchange="atualizarDiasFiltro(); carregarHistorico();"><option value="">Todos os Meses</option><option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option><option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option><option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select></div>
+                        <div class="input-grupo"><label for="filtro-dia">Dia</label><select id="filtro-dia" onchange="carregarHistorico()"><option value="">Todos os Dias</option></select></div>
+                        <div class="input-grupo"><label for="filtro-prazo">Status do Prazo</label><select id="filtro-prazo" onchange="carregarHistorico()"><option value="">Todos os Status</option><option value="no-prazo">No Prazo</option><option value="atrasado">Atrasado</option></select></div>
+                        <div class="input-grupo"><label for="filtro-operador">Operador Finalizador</label><select id="filtro-operador" onchange="carregarHistorico()"><option value="">Todos os Operadores</option></select></div>
                     </div>
-
                     <div class="table-responsive">
                         <table class="styled-table">
                             <thead>
-                                <tr>
-                                    <th>Data Conclusão</th>
-                                    <th>Arquivo</th>
-                                    <th>Qtd</th>
-                                    <th>Gravação</th>
-                                    <th>IDV</th>
-                                    <th>Manuseio</th>
-                                    <th>Situação</th>
-                                    <th id="th-acoes-historico" style="display: none;">Ações / Reabertura</th>
-                                </tr>
+                                <tr><th>Data Conclusão</th><th>Arquivo</th><th>Qtd</th><th>Gravação</th><th>IDV</th><th>Manuseio</th><th>Situação</th><th id="th-acoes-historico" style="display: none;">Ações / Reabertura</th></tr>
                             </thead>
-                            <tbody id="tabela-historico">
-                                <tr>
-                                    <td colspan="8" class="text-center">Aguarde...</td>
-                                </tr>
-                            </tbody>
+                            <tbody id="tabela-historico"><tr><td colspan="8" class="text-center">Aguarde...</td></tr></tbody>
                         </table>
                     </div>
                 </section>
             </div>
 
-            <!-- ABA 3: RELATÓRIOS -->
+            <!-- ABA 3: RELATÓRIOS & CONTROLE -->
             <div id="aba-relatorios" class="secao-aba">
                 <section class="kpi-grid">
                     <div class="kpi-card">
                         <div class="kpi-icon blue">📋</div>
-                        <div class="kpi-info">
-                            <span class="kpi-title">Total OS Entregues</span>
-                            <h2 id="rel-total-os">0</h2>
-                        </div>
+                        <div class="kpi-info"><span class="kpi-title">Total OS Entregues</span><h2 id="rel-total-os">0</h2></div>
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-icon green">🟢</div>
-                        <div class="kpi-info">
-                            <span class="kpi-title">Entregues no Prazo</span>
-                            <h2 id="rel-no-prazo">0</h2>
-                        </div>
+                        <div class="kpi-info"><span class="kpi-title">Entregues no Prazo</span><h2 id="rel-no-prazo">0</h2></div>
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-icon red">🔴</div>
-                        <div class="kpi-info">
-                            <span class="kpi-title">Entregues com Atraso</span>
-                            <h2 id="rel-atrasados">0</h2>
-                        </div>
+                        <div class="kpi-info"><span class="kpi-title">Entregues com Atraso</span><h2 id="rel-atrasados">0</h2></div>
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-icon yellow">💳</div>
+                        <div class="kpi-info"><span class="kpi-title">Volume Total Cartões</span><h2 id="rel-volume-cartoes">0</h2></div>
+                    </div>
+                    <!-- NOVO KPI DE REJEITO E PORCENTAGEM DE PERDA -->
+                    <div class="kpi-card">
+                        <div class="kpi-icon red">⚠️</div>
                         <div class="kpi-info">
-                            <span class="kpi-title">Volume Total Cartões</span>
-                            <h2 id="rel-volume-cartoes">0</h2>
+                            <span class="kpi-title">Qtd. Rejeitos / Perda</span>
+                            <h2 id="rel-kpi-rejeito-porc">0 un (0.00%)</h2>
+                            <div class="kpi-sub" id="rel-kpi-rejeito-detalhe">0 rejeitos no período</div>
                         </div>
                     </div>
                 </section>
 
                 <section class="panel-card" style="margin-bottom: 25px;">
-                    <div class="panel-header">
-                        <h3>📊 Resumo de Produção por Operador (Trabalho Realizado)</h3>
-                    </div>
+                    <div class="panel-header"><h3>📊 Resumo de Produção por Operador</h3></div>
                     <div class="table-responsive">
                         <table class="styled-table">
                             <thead>
-                                <tr>
-                                    <th>Operador</th>
-                                    <th>OS Gravadas</th>
-                                    <th>OS com IDV</th>
-                                    <th>OS com Manuseio</th>
-                                    <th>Total Ações em Etapas</th>
-                                </tr>
+                                <tr><th>Operador</th><th>OS Gravadas</th><th>OS com IDV</th><th>OS com Manuseio</th><th>Total Ações em Etapas</th></tr>
                             </thead>
-                            <tbody id="tabela-produtividade-operadores">
-                                <tr>
-                                    <td colspan="5" class="text-center">Carregando contagem...</td>
-                                </tr>
-                            </tbody>
+                            <tbody id="tabela-produtividade-operadores"><tr><td colspan="5" class="text-center">Carregando contagem...</td></tr></tbody>
                         </table>
                     </div>
                 </section>
 
                 <section class="panel-card">
-                    <div class="panel-header space-between">
-                        <h3>Detalhamento e Controle de Entregas por Período (Com Justificativas de Atraso)</h3>
-                    </div>
-
+                    <div class="panel-header space-between"><h3>Detalhamento e Controle de Entregas por Período</h3></div>
                     <div class="filtro-grid">
-                        <div class="input-grupo">
-                            <label for="rel-filtro-ano">Ano</label>
-                            <select id="rel-filtro-ano" onchange="atualizarDiasRelatorio(); carregarRelatorios();">
-                                <option value="">Todos os Anos</option>
-                            </select>
-                        </div>
-                        <div class="input-grupo">
-                            <label for="rel-filtro-mes">Mês</label>
-                            <select id="rel-filtro-mes" onchange="atualizarDiasRelatorio(); carregarRelatorios();">
-                                <option value="">Todos os Meses</option>
-                                <option value="01">Janeiro</option>
-                                <option value="02">Fevereiro</option>
-                                <option value="03">Março</option>
-                                <option value="04">Abril</option>
-                                <option value="05">Maio</option>
-                                <option value="06">Junho</option>
-                                <option value="07">Julho</option>
-                                <option value="08">Agosto</option>
-                                <option value="09">Setembro</option>
-                                <option value="10">Outubro</option>
-                                <option value="11">Novembro</option>
-                                <option value="12">Dezembro</option>
-                            </select>
-                        </div>
-                        <div class="input-grupo">
-                            <label for="rel-filtro-dia">Dia</label>
-                            <select id="rel-filtro-dia" onchange="carregarRelatorios()">
-                                <option value="">Todos os Dias</option>
-                            </select>
-                        </div>
-                        <div class="input-grupo">
-                            <label for="rel-filtro-prazo">Status do Prazo</label>
-                            <select id="rel-filtro-prazo" onchange="carregarRelatorios()">
-                                <option value="">Todos os Status</option>
-                                <option value="no-prazo">No Prazo</option>
-                                <option value="atrasado">Atrasado</option>
-                            </select>
-                        </div>
-                        <div class="input-grupo">
-                            <label for="rel-filtro-operador">Operador Responsável</label>
-                            <select id="rel-filtro-operador" onchange="carregarRelatorios()">
-                                <option value="">Todos os Operadores</option>
-                            </select>
-                        </div>
+                        <div class="input-grupo"><label for="rel-filtro-ano">Ano</label><select id="rel-filtro-ano" onchange="atualizarDiasRelatorio(); carregarRelatorios();"><option value="">Todos os Anos</option></select></div>
+                        <div class="input-grupo"><label for="rel-filtro-mes">Mês</label><select id="rel-filtro-mes" onchange="atualizarDiasRelatorio(); carregarRelatorios();"><option value="">Todos os Meses</option><option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option><option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option><option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select></div>
+                        <div class="input-grupo"><label for="rel-filtro-dia">Dia</label><select id="rel-filtro-dia" onchange="carregarRelatorios()"><option value="">Todos os Dias</option></select></div>
+                        <div class="input-grupo"><label for="rel-filtro-prazo">Status do Prazo</label><select id="rel-filtro-prazo" onchange="carregarRelatorios()"><option value="">Todos os Status</option><option value="no-prazo">No Prazo</option><option value="atrasado">Atrasado</option></select></div>
+                        <div class="input-grupo"><label for="rel-filtro-operador">Operador Responsável</label><select id="rel-filtro-operador" onchange="carregarRelatorios()"><option value="">Todos os Operadores</option></select></div>
                     </div>
-
                     <div class="table-responsive">
                         <table class="styled-table">
                             <thead>
-                                <tr>
-                                    <th>Data Conclusão</th>
-                                    <th>Nome do Arquivo / OS</th>
-                                    <th>Qtd Cartões</th>
-                                    <th>Gravação</th>
-                                    <th>IDV</th>
-                                    <th>Manuseio</th>
-                                    <th>Status do Prazo</th>
-                                    <th>Tipo Envio</th>
-                                    <th>Justificativa de Atraso <br><small style="font-weight:normal; color:var(--text-muted);">(Flávio / André)</small></th>
-                                </tr>
+                                <tr><th>Data Conclusão</th><th>Nome do Arquivo / OS</th><th>Qtd Cartões</th><th>Gravação</th><th>IDV</th><th>Manuseio</th><th>Status do Prazo</th><th>Tipo Envio</th><th>Justificativa</th></tr>
                             </thead>
-                            <tbody id="tabela-relatorio-detalhado">
-                                <tr>
-                                    <td colspan="9" class="text-center">Carregando dados do relatório...</td>
-                                </tr>
-                            </tbody>
+                            <tbody id="tabela-relatorio-detalhado"><tr><td colspan="9" class="text-center">Carregando dados...</td></tr></tbody>
                         </table>
                     </div>
                 </section>
@@ -977,21 +742,11 @@
             <!-- ABA 4: CONTROLE DE REJEITOS -->
             <div id="aba-rejeitos" class="secao-aba">
                 <section class="panel-card" id="secao-form-rejeito" style="display: none;">
-                    <div class="panel-header">
-                        <h3>⚠️ Registrar Novo Rejeito</h3>
-                    </div>
+                    <div class="panel-header"><h3>⚠️ Registrar Novo Rejeito</h3></div>
                     <form id="form-rejeito" class="form-grid-rejeito" onsubmit="salvarRejeito(event)">
-                        <div class="input-grupo">
-                            <label for="rejeito-data">Data do Rejeito</label>
-                            <input type="date" id="rejeito-data" onclick="this.showPicker && this.showPicker()" required>
-                        </div>
-                        <div class="input-grupo">
-                            <label for="rejeito-qtd">Quantidade</label>
-                            <input type="number" id="rejeito-qtd" min="1" placeholder="Ex: 15" required>
-                        </div>
-                        <div class="input-grupo">
-                            <button type="submit" class="btn-primary">+ Salvar Rejeito</button>
-                        </div>
+                        <div class="input-grupo"><label for="rejeito-data">Data do Rejeito</label><input type="date" id="rejeito-data" onclick="this.showPicker && this.showPicker()" required></div>
+                        <div class="input-grupo"><label for="rejeito-qtd">Quantidade</label><input type="number" id="rejeito-qtd" min="1" placeholder="Ex: 15" required></div>
+                        <div class="input-grupo"><button type="submit" class="btn-primary">+ Salvar Rejeito</button></div>
                     </form>
                 </section>
 
@@ -1015,89 +770,38 @@
                 </section>
 
                 <section class="panel-card">
-                    <div class="panel-header">
-                        <h3>Histórico e Controle de Rejeitos (Dia, Mês e Ano)</h3>
-                    </div>
-
+                    <div class="panel-header"><h3>Histórico e Controle de Rejeitos</h3></div>
                     <div class="filtro-grid">
-                        <div class="input-grupo">
-                            <label for="rej-filtro-ano">Ano</label>
-                            <select id="rej-filtro-ano" onchange="atualizarDiasRejeitoFiltro(); carregarRejeitos();">
-                                <option value="">Todos os Anos</option>
-                            </select>
-                        </div>
-                        <div class="input-grupo">
-                            <label for="rej-filtro-mes">Mês</label>
-                            <select id="rej-filtro-mes" onchange="atualizarDiasRejeitoFiltro(); carregarRejeitos();">
-                                <option value="">Todos os Meses</option>
-                                <option value="01">Janeiro</option>
-                                <option value="02">Fevereiro</option>
-                                <option value="03">Março</option>
-                                <option value="04">Abril</option>
-                                <option value="05">Maio</option>
-                                <option value="06">Junho</option>
-                                <option value="07">Julho</option>
-                                <option value="08">Agosto</option>
-                                <option value="09">Setembro</option>
-                                <option value="10">Outubro</option>
-                                <option value="11">Novembro</option>
-                                <option value="12">Dezembro</option>
-                            </select>
-                        </div>
-                        <div class="input-grupo">
-                            <label for="rej-filtro-dia">Dia</label>
-                            <select id="rej-filtro-dia" onchange="carregarRejeitos()">
-                                <option value="">Todos os Dias</option>
-                            </select>
-                        </div>
+                        <div class="input-grupo"><label for="rej-filtro-ano">Ano</label><select id="rej-filtro-ano" onchange="atualizarDiasRejeitoFiltro(); carregarRejeitos();"><option value="">Todos os Anos</option></select></div>
+                        <div class="input-grupo"><label for="rej-filtro-mes">Mês</label><select id="rej-filtro-mes" onchange="atualizarDiasRejeitoFiltro(); carregarRejeitos();"><option value="">Todos os Meses</option><option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option><option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option><option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select></div>
+                        <div class="input-grupo"><label for="rej-filtro-dia">Dia</label><select id="rej-filtro-dia" onchange="carregarRejeitos()"><option value="">Todos os Dias</option></select></div>
                     </div>
-
                     <div class="table-responsive">
                         <table class="styled-table">
                             <thead>
-                                <tr>
-                                    <th>Data</th>
-                                    <th>Quantidade</th>
-                                    <th>Registrado por</th>
-                                    <th id="th-acoes-rejeito" style="display: none;">Ações</th>
-                                </tr>
+                                <tr><th>Data</th><th>Quantidade</th><th>Registrado por</th><th id="th-acoes-rejeito" style="display: none;">Ações</th></tr>
                             </thead>
-                            <tbody id="tabela-rejeitos">
-                                <tr>
-                                    <td colspan="4" class="text-center">Carregando rejeitos...</td>
-                                </tr>
-                            </tbody>
+                            <tbody id="tabela-rejeitos"><tr><td colspan="4" class="text-center">Carregando rejeitos...</td></tr></tbody>
                         </table>
                     </div>
                 </section>
             </div>
 
-            <!-- ABA 5: GERENCIAR USUÁRIOS (EXCLUSIVA FLÁVIO ANDRÉ) -->
+            <!-- ABA 5: GERENCIAR USUÁRIOS -->
             <div id="aba-usuarios" class="secao-aba">
                 <section class="panel-card">
                     <div class="panel-header space-between">
                         <h3>👥 Lista de Usuários Cadastrados</h3>
-                        <span class="info-auxiliar">Painel administrativo de controle de operadores</span>
+                        <span class="info-auxiliar">Painel administrativo</span>
                     </div>
-
                     <div class="table-responsive">
                         <table class="styled-table">
-                            <thead>
-                                <tr>
-                                    <th>Nome do Operador</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-usuarios-cadastrados">
-                                <tr>
-                                    <td colspan="2" class="text-center">Carregando usuários...</td>
-                                </tr>
-                            </tbody>
+                            <thead><tr><th>Nome do Operador</th><th>Ações</th></tr></thead>
+                            <tbody id="tabela-usuarios-cadastrados"><tr><td colspan="2" class="text-center">Carregando usuários...</td></tr></tbody>
                         </table>
                     </div>
                 </section>
             </div>
-
         </main>
     </div>
 
@@ -1132,7 +836,6 @@
             if (!dataPrevistaStr || !dataReferenciaStr) return 0;
             const dPrev = new Date(dataPrevistaStr + 'T00:00:00');
             const dRef = new Date(dataReferenciaStr + 'T00:00:00');
-            
             if (dRef <= dPrev) return 0;
 
             let diasUteis = 0;
@@ -1141,25 +844,20 @@
 
             while (atual <= dRef) {
                 const diaSemana = atual.getDay();
-                if (diaSemana !== 0 && diaSemana !== 6) {
-                    diasUteis++;
-                }
+                if (diaSemana !== 0 && diaSemana !== 6) diasUteis++;
                 atual.setDate(atual.getDate() + 1);
             }
-
             return diasUteis;
         }
 
         function eAdministrador() {
             if (!operadorAtual) return false;
             const op = operadorAtual.trim().toUpperCase();
-            const permitidos = ["FLÁVIO", "FLAVIO", "ANDRÉ", "ANDRE"];
-            return permitidos.includes(op);
+            return ["FLÁVIO", "FLAVIO", "ANDRÉ", "ANDRE"].includes(op);
         }
 
         function atualizarVisibilidadeUI() {
             const admin = eAdministrador();
-            
             const secaoCadastro = document.getElementById('secao-cadastro-lote');
             if (secaoCadastro) secaoCadastro.style.display = admin ? 'block' : 'none';
 
@@ -1172,7 +870,6 @@
             const btnAbaUsuarios = document.getElementById('btn-aba-usuarios');
             if (btnAbaUsuarios) btnAbaUsuarios.style.display = admin ? 'flex' : 'none';
 
-            // Visibilidade de Rejeitos para Admin
             const secaoFormRejeito = document.getElementById('secao-form-rejeito');
             const avisoPermRejeito = document.getElementById('aviso-permissao-rejeito');
             const thAcoesRejeito = document.getElementById('th-acoes-rejeito');
@@ -1205,9 +902,7 @@
                         await setDoc(doc(db, "operadores", nome), { senha: senha });
                     }
                 }
-            } catch (e) {
-                console.error("Erro ao verificar operadores:", e);
-            }
+            } catch (e) { console.error(e); }
         }
 
         window.onload = async function() {
@@ -1224,11 +919,8 @@
             await verificarInicializacaoOperadores();
             document.getElementById("modal-login").style.display = "flex";
             
-            // Definir data de hoje por defeito no input de rejeitos
             const inputDataRejeito = document.getElementById("rejeito-data");
-            if (inputDataRejeito) {
-                inputDataRejeito.value = new Date().toISOString().split('T')[0];
-            }
+            if (inputDataRejeito) inputDataRejeito.value = new Date().toISOString().split('T')[0];
 
             escutarLotesEmTempoReal();
             escutarRejeitosEmTempoReal();
@@ -1237,7 +929,6 @@
 
         function escutarLotesEmTempoReal() {
             if (unsubscribeLotes) unsubscribeLotes();
-
             unsubscribeLotes = onSnapshot(collection(db, "lotes"), (querySnapshot) => {
                 listaGeralLotes = [];
                 querySnapshot.forEach((docSnap) => {
@@ -1249,24 +940,15 @@
 
                 const abaAtiva = document.querySelector('.secao-aba.active');
                 if (abaAtiva) {
-                    if (abaAtiva.id === 'aba-producao') {
-                        renderizarTabelaProducao();
-                    } else if (abaAtiva.id === 'aba-historico') {
-                        atualizarFiltrosDinamicos();
-                        carregarHistorico();
-                    } else if (abaAtiva.id === 'aba-relatorios') {
-                        atualizarFiltrosRelatorios();
-                        carregarRelatorios();
-                    }
+                    if (abaAtiva.id === 'aba-producao') renderizarTabelaProducao();
+                    else if (abaAtiva.id === 'aba-historico') { atualizarFiltrosDinamicos(); carregarHistorico(); }
+                    else if (abaAtiva.id === 'aba-relatorios') { atualizarFiltrosRelatorios(); carregarRelatorios(); }
                 }
-            }, (error) => {
-                console.error("Erro na escuta de lotes:", error);
             });
         }
 
         function escutarRejeitosEmTempoReal() {
             if (unsubscribeRejeitos) unsubscribeRejeitos();
-
             unsubscribeRejeitos = onSnapshot(collection(db, "rejeitos"), (querySnapshot) => {
                 listaGeralRejeitos = [];
                 querySnapshot.forEach((docSnap) => {
@@ -1276,66 +958,44 @@
                 });
 
                 const abaAtiva = document.querySelector('.secao-aba.active');
-                if (abaAtiva && abaAtiva.id === 'aba-rejeitos') {
-                    atualizarFiltrosRejeitoDinamicos();
-                    carregarRejeitos();
+                if (abaAtiva) {
+                    if (abaAtiva.id === 'aba-rejeitos') { atualizarFiltrosRejeitoDinamicos(); carregarRejeitos(); }
+                    else if (abaAtiva.id === 'aba-relatorios') { carregarRelatorios(); }
                 }
-            }, (error) => {
-                console.error("Erro na escuta de rejeitos:", error);
             });
         }
 
         function escutarOperadoresEmTempoReal() {
             if (unsubscribeOperadores) unsubscribeOperadores();
-
             unsubscribeOperadores = onSnapshot(collection(db, "operadores"), (querySnapshot) => {
                 const abaAtiva = document.querySelector('.secao-aba.active');
-                if (abaAtiva && abaAtiva.id === 'aba-usuarios') {
-                    renderizarTabelaUsuarios(querySnapshot);
-                }
-            }, (error) => {
-                console.error("Erro na escuta de operadores:", error);
+                if (abaAtiva && abaAtiva.id === 'aba-usuarios') renderizarTabelaUsuarios(querySnapshot);
             });
         }
 
         window.fazerLogin = async function() {
             const nome = document.getElementById("input-operador-login").value.trim().toUpperCase();
             const senha = document.getElementById("input-senha-login").value;
-
-            if (!nome || !senha) {
-                alert("Preencha nome e senha!");
-                return;
-            }
+            if (!nome || !senha) { alert("Preencha nome e senha!"); return; }
 
             try {
                 const querySnapshot = await getDocs(collection(db, "operadores"));
                 let senhaSalva = null;
-                querySnapshot.forEach((d) => {
-                    if (d.id === nome) senhaSalva = d.data().senha;
-                });
+                querySnapshot.forEach((d) => { if (d.id === nome) senhaSalva = d.data().senha; });
 
-                if (!senhaSalva || senhaSalva !== senha) {
-                    alert("Acesso negado! Usuário ou senha incorretos.");
-                    return;
-                }
+                if (!senhaSalva || senhaSalva !== senha) { alert("Acesso negado! Usuário ou senha incorretos."); return; }
 
                 operadorAtual = nome;
                 document.getElementById("modal-login").style.display = "none";
                 document.getElementById("display-usuario").innerText = "👤 Operador: " + operadorAtual;
-                
                 atualizarVisibilidadeUI();
                 
                 const abaAtiva = document.querySelector('.secao-aba.active');
-                if (abaAtiva && abaAtiva.id === 'aba-producao') {
-                    renderizarTabelaProducao();
-                }
+                if (abaAtiva && abaAtiva.id === 'aba-producao') renderizarTabelaProducao();
 
                 document.getElementById("input-operador-login").value = "";
                 document.getElementById("input-senha-login").value = "";
-            } catch (error) {
-                console.error("Erro no login:", error);
-                alert("Erro ao conectar ao servidor.");
-            }
+            } catch (error) { alert("Erro ao conectar ao servidor."); }
         };
 
         window.mostrarTelaCadastro = function() {
@@ -1346,21 +1006,14 @@
         window.salvarNovoOperador = async function() {
             const nome = document.getElementById("cad-operador").value.trim().toUpperCase();
             const senha = document.getElementById("cad-senha").value;
-
-            if (!nome || !senha) {
-                alert("Preencha todos os campos!");
-                return;
-            }
-
+            if (!nome || !senha) { alert("Preencha todos os campos!"); return; }
             try {
                 await setDoc(doc(db, "operadores", nome), { senha: senha });
                 alert("Operador cadastrado com sucesso!");
                 document.getElementById("cad-operador").value = "";
                 document.getElementById("cad-senha").value = "";
                 voltarParaLogin('cadastro');
-            } catch (error) {
-                alert("Erro ao salvar operador.");
-            }
+            } catch (e) { alert("Erro ao salvar operador."); }
         };
 
         window.mostrarTelaRecuperacao = function() {
@@ -1378,19 +1031,12 @@
             const nome = document.getElementById("rec-operador").value.trim().toUpperCase();
             const senhaMestra = document.getElementById("rec-senha-mestra").value;
             const novaSenha = document.getElementById("rec-nova-senha").value;
-
-            if (senhaMestra !== "admin") {
-                alert("Senha mestra incorreta!");
-                return;
-            }
-
+            if (senhaMestra !== "admin") { alert("Senha mestra incorreta!"); return; }
             try {
                 await setDoc(doc(db, "operadores", nome), { senha: novaSenha });
                 alert("Senha redefinida com sucesso!");
                 voltarParaLogin('recuperacao');
-            } catch (error) {
-                alert("Erro ao redefinir senha.");
-            }
+            } catch (e) { alert("Erro ao redefinir senha."); }
         };
 
         window.trocarUsuario = function() {
@@ -1400,9 +1046,7 @@
             document.getElementById("modal-login").style.display = "flex";
         };
 
-        window.sairSistema = function() {
-            if (confirm("Deseja sair do sistema?")) location.reload();
-        };
+        window.sairSistema = function() { if (confirm("Deseja sair do sistema?")) location.reload(); };
 
         window.mudarAba = async function(abaId, elementoBtn) {
             document.querySelectorAll('.secao-aba').forEach(sec => sec.classList.remove('active'));
@@ -1426,58 +1070,32 @@
                 atualizarDiasRejeitoFiltro();
                 carregarRejeitos();
             } else if (abaId === 'usuarios') {
-                if (!eAdministrador()) {
-                    alert("Acesso restrito a Flávio e André.");
-                    return;
-                }
+                if (!eAdministrador()) { alert("Acesso restrito a Flávio e André."); return; }
                 const querySnapshot = await getDocs(collection(db, "operadores"));
                 renderizarTabelaUsuarios(querySnapshot);
             }
         };
 
-        // FUNÇÕES DO MÓDULO DE REJEITOS
+        // REJEITOS
         window.salvarRejeito = async function(e) {
             e.preventDefault();
-
-            if (!eAdministrador()) {
-                alert("Acesso negado! Apenas Flávio e André podem registrar rejeitos.");
-                return;
-            }
-
+            if (!eAdministrador()) { alert("Acesso negado!"); return; }
             const dataStr = document.getElementById('rejeito-data').value;
             const qtd = parseInt(document.getElementById('rejeito-qtd').value);
-
-            if (!dataStr || isNaN(qtd) || qtd <= 0) {
-                alert("Preencha uma data válida e uma quantidade maior que zero.");
-                return;
-            }
-
+            if (!dataStr || isNaN(qtd) || qtd <= 0) { alert("Preencha dados válidos."); return; }
             const [ano, mes, dia] = dataStr.split('-');
-
             try {
                 await addDoc(collection(db, "rejeitos"), {
-                    data: dataStr,
-                    ano: ano,
-                    mes: mes,
-                    dia: dia,
-                    quantidade: qtd,
-                    operador: operadorAtual,
-                    criadoEm: new Date().toISOString()
+                    data: dataStr, ano, mes, dia, quantidade: qtd, operador: operadorAtual, criadoEm: new Date().toISOString()
                 });
-
                 document.getElementById('rejeito-qtd').value = "";
                 alert("Rejeito registrado com sucesso!");
-            } catch (error) {
-                console.error("Erro ao salvar rejeito:", error);
-                alert("Erro ao salvar o registro de rejeito.");
-            }
+            } catch (e) { alert("Erro ao salvar rejeito."); }
         };
 
         function atualizarFiltrosRejeitoDinamicos() {
             const anosSet = new Set();
-            listaGeralRejeitos.forEach(r => {
-                if (r.ano) anosSet.add(r.ano);
-            });
+            listaGeralRejeitos.forEach(r => { if (r.ano) anosSet.add(r.ano); });
             montarSelect('rej-filtro-ano', anosSet, "Todos os Anos");
         }
 
@@ -1485,13 +1103,11 @@
             const anoSelecionado = document.getElementById('rej-filtro-ano').value;
             const mesSelecionado = document.getElementById('rej-filtro-mes').value;
             const diasSet = new Set();
-
             listaGeralRejeitos.forEach(r => {
                 if ((!anoSelecionado || r.ano === anoSelecionado) && (!mesSelecionado || r.mes === mesSelecionado)) {
                     if (r.dia) diasSet.add(r.dia);
                 }
             });
-
             montarSelect('rej-filtro-dia', diasSet, "Todos os Dias");
         };
 
@@ -1503,7 +1119,6 @@
             const colunasVisiveis = eAdministrador() ? 4 : 3;
 
             tabelaRej.innerHTML = "";
-
             const filtrados = listaGeralRejeitos.filter(r => {
                 if (anoFiltro && r.ano !== anoFiltro) return false;
                 if (mesFiltro && r.mes !== mesFiltro) return false;
@@ -1512,47 +1127,28 @@
             });
 
             filtrados.sort((a, b) => (b.data || "").localeCompare(a.data || ""));
-
             let totalRejeitosCount = 0;
-            filtrados.forEach(r => {
-                totalRejeitosCount += (parseInt(r.quantidade) || 0);
-            });
-
+            filtrados.forEach(r => { totalRejeitosCount += (parseInt(r.quantidade) || 0); });
             document.getElementById('kpi-total-rejeito').innerText = totalRejeitosCount.toLocaleString('pt-BR');
 
             if (filtrados.length === 0) {
-                tabelaRej.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center">Nenhum registro de rejeito encontrado.</td></tr>`;
+                tabelaRej.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center">Nenhum registro encontrado.</td></tr>`;
                 return;
             }
 
             filtrados.forEach(r => {
                 const dataFormatada = r.data ? r.data.split('-').reverse().join('/') : '-';
                 const celulaAcoes = eAdministrador() ? `<td><button onclick="deletarRejeito('${r.id}')" class="btn-danger">Excluir</button></td>` : '';
-
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${dataFormatada}</strong></td>
-                    <td>${parseInt(r.quantidade).toLocaleString('pt-BR')} unidades</td>
-                    <td>👤 ${r.operador || 'Desconhecido'}</td>
-                    ${celulaAcoes}
-                `;
+                tr.innerHTML = `<td><strong>${dataFormatada}</strong></td><td>${parseInt(r.quantidade).toLocaleString('pt-BR')} unidades</td><td>👤 ${r.operador || 'Desconhecido'}</td>${celulaAcoes}`;
                 tabelaRej.appendChild(tr);
             });
         };
 
         window.deletarRejeito = async function(id) {
-            if (!eAdministrador()) {
-                alert("Apenas Flávio e André podem excluir registros de rejeitos.");
-                return;
-            }
-
-            if (confirm("Deseja realmente excluir este registro de rejeito?")) {
-                try {
-                    await deleteDoc(doc(db, "rejeitos", id));
-                } catch (error) {
-                    console.error("Erro ao excluir rejeito:", error);
-                    alert("Erro ao excluir o registro.");
-                }
+            if (!eAdministrador()) return;
+            if (confirm("Deseja realmente excluir este registro?")) {
+                try { await deleteDoc(doc(db, "rejeitos", id)); } catch (e) { alert("Erro ao excluir."); }
             }
         };
 
@@ -1560,12 +1156,8 @@
             const tbody = document.getElementById('tabela-usuarios-cadastrados');
             if (!tbody) return;
             tbody.innerHTML = "";
-
             let operadoresList = [];
-            querySnapshot.forEach(docSnap => {
-                operadoresList.push({ nome: docSnap.id });
-            });
-
+            querySnapshot.forEach(docSnap => operadoresList.push({ nome: docSnap.id }));
             operadoresList.sort((a, b) => a.nome.localeCompare(b.nome));
 
             if (operadoresList.length === 0) {
@@ -1575,40 +1167,23 @@
 
             operadoresList.forEach(op => {
                 const ehVoce = (op.nome === operadorAtual.trim().toUpperCase());
-                const btnAcao = ehVoce 
-                    ? `<span class="info-auxiliar">Usuário atual (sessão ativa)</span>` 
-                    : `<button onclick="deletarOperador('${op.nome}')" class="btn-danger">Excluir Operador</button>`;
-
+                const btnAcao = ehVoce ? `<span class="info-auxiliar">Usuário atual</span>` : `<button onclick="deletarOperador('${op.nome}')" class="btn-danger">Excluir</button>`;
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>👤 ${op.nome}</strong></td>
-                    <td>${btnAcao}</td>
-                `;
+                tr.innerHTML = `<td><strong>👤 ${op.nome}</strong></td><td>${btnAcao}</td>`;
                 tbody.appendChild(tr);
             });
         }
 
         window.deletarOperador = async function(nomeOperador) {
-            if (!eAdministrador()) {
-                alert("Apenas Flávio e André podem excluir usuários.");
-                return;
-            }
-
-            if (nomeOperador === operadorAtual.trim().toUpperCase()) {
-                alert("Você não pode excluir o usuário que está logado no momento.");
-                return;
-            }
-
-            if (confirm(`Tem certeza que deseja excluir o operador ${nomeOperador}? Ele perderá o acesso ao sistema.`)) {
+            if (!eAdministrador()) return;
+            if (nomeOperador === operadorAtual.trim().toUpperCase()) { alert("Não pode excluir o usuário atual."); return; }
+            if (confirm(`Excluir operador ${nomeOperador}?`)) {
                 try {
                     await deleteDoc(doc(db, "operadores", nomeOperador));
-                    alert("Operador excluído com sucesso!");
+                    alert("Excluído com sucesso!");
                     const querySnapshot = await getDocs(collection(db, "operadores"));
                     renderizarTabelaUsuarios(querySnapshot);
-                } catch (error) {
-                    console.error("Erro ao excluir operador:", error);
-                    alert("Erro ao excluir operador.");
-                }
+                } catch (e) { alert("Erro ao excluir."); }
             }
         };
 
@@ -1617,16 +1192,7 @@
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            if (!operadorAtual) {
-                alert("Identifique-se no login primeiro!");
-                return;
-            }
-
-            if (!eAdministrador()) {
-                alert("Apenas Flávio e André podem cadastrar lotes.");
-                return;
-            }
+            if (!operadorAtual || !eAdministrador()) { alert("Acesso negado!"); return; }
             
             const nome = document.getElementById('nome-arquivo').value.trim();
             const qtd = document.getElementById('qtd-cartoes').value;
@@ -1634,24 +1200,16 @@
 
             try {
                 await addDoc(collection(db, "lotes"), {
-                    nome: nome,
-                    qtd: parseInt(qtd),
-                    dataPrevista: dataPrevista,
-                    dataCadastro: new Date().toISOString(),
-                    status: "Em Produção",
+                    nome, qtd: parseInt(qtd), dataPrevista, dataCadastro: new Date().toISOString(), status: "Em Produção",
                     setores: {
                         gravacao: { status: "Pendente", op: null, data: null },
                         idv: { status: "Pendente", op: null, data: null },
                         manuseio: { status: "Pendente", op: null, data: null }
                     },
-                    dataConclusao: null,
-                    operador: null,
-                    justificativa: ""
+                    dataConclusao: null, operador: null, justificativa: ""
                 });
                 form.reset();
-            } catch (error) {
-                alert("Erro ao cadastrar lote.");
-            }
+            } catch (e) { alert("Erro ao cadastrar lote."); }
         });
 
         function normalizarSetores(setores, statusGeral) {
@@ -1663,16 +1221,11 @@
                     manuseio: { status: baseStatus, op: null, data: null }
                 };
             }
-
             const resultado = {};
             ['gravacao', 'idv', 'manuseio'].forEach(sec => {
-                if (typeof setores[sec] === 'string') {
-                    resultado[sec] = { status: setores[sec], op: null, data: null };
-                } else if (setores[sec]) {
-                    resultado[sec] = setores[sec];
-                } else {
-                    resultado[sec] = { status: "Pendente", op: null, data: null };
-                }
+                if (typeof setores[sec] === 'string') resultado[sec] = { status: setores[sec], op: null, data: null };
+                else if (setores[sec]) resultado[sec] = setores[sec];
+                else resultado[sec] = { status: "Pendente", op: null, data: null };
             });
             return resultado;
         }
@@ -1681,20 +1234,14 @@
             const colunasVisiveis = eAdministrador() ? 10 : 9;
             tabelaLotes.innerHTML = "";
             const hojeStr = new Date().toISOString().split('T')[0];
-
             const ativos = listaGeralLotes.filter(l => l.status === "Em Produção");
-            
+
             ativos.sort((a, b) => {
-                if (a.dataPrevista !== b.dataPrevista) {
-                    return a.dataPrevista.localeCompare(b.dataPrevista);
-                }
+                if (a.dataPrevista !== b.dataPrevista) return a.dataPrevista.localeCompare(b.dataPrevista);
                 return (a.dataCadastro || "").localeCompare(b.dataCadastro || "");
             });
 
-            let totalAtivoCount = 0, totalAtivoCartoes = 0;
-            let noPrazoCount = 0, noPrazoCartoes = 0;
-            let venceBreveCount = 0, venceBreveCartoes = 0;
-            let atrasadoCount = 0, atrasadoCartoes = 0;
+            let totalAtivoCount = 0, totalAtivoCartoes = 0, noPrazoCount = 0, noPrazoCartoes = 0, venceBreveCount = 0, venceBreveCartoes = 0, atrasadoCount = 0, atrasadoCartoes = 0;
 
             if (ativos.length === 0) {
                 tabelaLotes.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center">Nenhum lote em produção.</td></tr>`;
@@ -1710,241 +1257,108 @@
 
                 let situacaoHTML = "";
                 const diasAtraso = calcularDiasAtraso(lote.dataPrevista, hojeStr);
-
                 if (diasAtraso > 0) {
-                    situacaoHTML = `<span class="badge-atrasado">🔴 ATRASADO (${diasAtraso} ${diasAtraso === 1 ? 'dia útil' : 'dias úteis'})</span>`;
-                    atrasadoCount++;
-                    atrasadoCartoes += qtdLote;
+                    situacaoHTML = `<span class="badge-atrasado">🔴 ATRASADO (${diasAtraso}d)</span>`;
+                    atrasadoCount++; atrasadoCartoes += qtdLote;
                 } else if (lote.dataPrevista === hojeStr) {
                     situacaoHTML = `<span class="badge-vence-breve">🟡 Vence Hoje</span>`;
-                    venceBreveCount++;
-                    venceBreveCartoes += qtdLote;
+                    venceBreveCount++; venceBreveCartoes += qtdLote;
                 } else {
                     situacaoHTML = `<span class="badge-no-prazo">🟢 No Prazo</span>`;
-                    noPrazoCount++;
-                    noPrazoCartoes += qtdLote;
+                    noPrazoCount++; noPrazoCartoes += qtdLote;
                 }
 
                 let dataHoraExibida = '-';
                 if (lote.dataCadastro) {
                     const dtObj = new Date(lote.dataCadastro);
-                    if (!isNaN(dtObj)) {
-                        dataHoraExibida = `${String(dtObj.getDate()).padStart(2, '0')}/${String(dtObj.getMonth() + 1).padStart(2, '0')} ${String(dtObj.getHours()).padStart(2, '0')}:${String(dtObj.getMinutes()).padStart(2, '0')}`;
-                    }
+                    if (!isNaN(dtObj)) dataHoraExibida = `${String(dtObj.getDate()).padStart(2, '0')}/${String(dtObj.getMonth() + 1).padStart(2, '0')} ${String(dtObj.getHours()).padStart(2, '0')}:${String(dtObj.getMinutes()).padStart(2, '0')}`;
                 }
 
                 const operadorTexto = lote.operador ? lote.operador.toUpperCase() : '<span style="color:#94a3b8">Pendente</span>';
-                const qtdFormatada = qtdLote.toLocaleString('pt-BR');
-                
                 const celulaAcoes = eAdministrador() ? `<td><button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button></td>` : '';
-
-                const selectGravacao = criarSelectSetor(lote, 'gravacao');
-                const selectIDV = criarSelectSetor(lote, 'idv');
-                const selectManuseio = criarSelectSetor(lote, 'manuseio');
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${dataHoraExibida}</td>
-                    <td><strong>${lote.nome}</strong></td>
-                    <td>${qtdFormatada}</td>
+                    <td>${dataHoraExibida}</td><td><strong>${lote.nome}</strong></td><td>${qtdLote.toLocaleString('pt-BR')}</td>
                     <td>${lote.dataPrevista.split('-').reverse().join('/')}</td>
-                    <td>${selectGravacao}</td>
-                    <td>${selectIDV}</td>
-                    <td>${selectManuseio}</td>
-                    <td>${situacaoHTML}</td>
-                    <td>${operadorTexto}</td>
-                    ${celulaAcoes}
+                    <td>${criarSelectSetor(lote, 'gravacao')}</td><td>${criarSelectSetor(lote, 'idv')}</td><td>${criarSelectSetor(lote, 'manuseio')}</td>
+                    <td>${situacaoHTML}</td><td>${operadorTexto}</td>${celulaAcoes}
                 `;
                 tabelaLotes.appendChild(tr);
             });
 
-            const banner = document.getElementById('banner-alerta-prazos');
-            const textoAlerta = document.getElementById('texto-alerta-prazos');
-            if (venceBreveCount > 0 || atrasadoCount > 0) {
-                banner.style.display = 'flex';
-                let msgs = [];
-                if (atrasadoCount > 0) msgs.push(`<b>${atrasadoCount} OS</b> atrasada(s)`);
-                if (venceBreveCount > 0) msgs.push(`<b>${venceBreveCount} OS</b> com vencimento para hoje`);
-                textoAlerta.innerHTML = `Atenção equipe! Atualmente temos ${msgs.join(' e ')}. Verifiquem e priorizem essas demandas para evitarmos gargalos na entrega.`;
-            } else {
-                banner.style.display = 'none';
-            }
-
+            document.getElementById('banner-alerta-prazos').style.display = (venceBreveCount > 0 || atrasadoCount > 0) ? 'flex' : 'none';
             atualizarKPIsProducao(totalAtivoCount, totalAtivoCartoes, noPrazoCount, noPrazoCartoes, venceBreveCount, venceBreveCartoes, atrasadoCount, atrasadoCartoes);
         }
 
         function criarSelectSetor(lote, setorNome) {
             const objSetor = lote.setores[setorNome];
             const valorAtual = objSetor.status;
-            let classeCor = "setor-pendente";
-            if (valorAtual === "Concluído") classeCor = "setor-concluido";
-            else if (valorAtual === "Envio Parcial") classeCor = "setor-parcial";
-            else if (valorAtual === "N/A") classeCor = "setor-na";
-
-            let infoAtrasoSetor = "";
-            const hojeStr = new Date().toISOString().split('T')[0];
-
-            if (objSetor.data) {
-                const dataConclusaoSetorStr = objSetor.data.split('T')[0];
-                const diasSetor = calcularDiasAtraso(lote.dataPrevista, dataConclusaoSetorStr);
-                if (diasSetor > 0) {
-                    infoAtrasoSetor = `<br><span class="tag-atraso-setor">🔴 Atrasado (${diasSetor}d úteis)</span>`;
-                } else if (valorAtual === "Concluído" || valorAtual === "Envio Parcial") {
-                    infoAtrasoSetor = `<br><span class="tag-prazo-setor">🟢 Concluído no Prazo</span>`;
-                }
-            } else if (valorAtual === "Pendente") {
-                const diasFila = calcularDiasAtraso(lote.dataPrevista, hojeStr);
-                if (diasFila > 0) {
-                    infoAtrasoSetor = `<br><span class="tag-atraso-setor">⚠️ Atrasado (${diasFila}d úteis)</span>`;
-                } else if (hojeStr === lote.dataPrevista) {
-                    infoAtrasoSetor = `<br><span style="color:#b45309; font-weight:700; font-size:10px;">🟡 Vence Hoje</span>`;
-                }
-            }
-
+            let classeCor = valorAtual === "Concluído" ? "setor-concluido" : (valorAtual === "Envio Parcial" ? "setor-parcial" : (valorAtual === "N/A" ? "setor-na" : "setor-pendente"));
             return `
                 <select class="select-setor ${classeCor}" onchange="atualizarSetorLote('${lote.id}', '${setorNome}', this)">
                     <option value="Pendente" ${valorAtual === "Pendente" ? "selected" : ""}>⏳ Pendente</option>
                     <option value="Concluído" ${valorAtual === "Concluído" ? "selected" : ""}>✅ Concluído</option>
                     <option value="Envio Parcial" ${valorAtual === "Envio Parcial" ? "selected" : ""}>🟡 Envio Parcial</option>
-                    <option value="N/A" ${valorAtual === "N/A" ? "selected" : ""}>🚫 N/A (Não se aplica)</option>
+                    <option value="N/A" ${valorAtual === "N/A" ? "selected" : ""}>🚫 N/A</option>
                 </select>
-                ${infoAtrasoSetor}
             `;
         }
 
         window.atualizarSetorLote = async function(loteId, setorNome, selectElement) {
             const novoValor = selectElement.value;
-
-            if (!operadorAtual) {
-                alert("Faça o login para alterar o status do setor!");
-                renderizarTabelaProducao();
-                return;
-            }
+            if (!operadorAtual) { alert("Faça o login!"); renderizarTabelaProducao(); return; }
 
             try {
                 const lote = listaGeralLotes.find(l => l.id === loteId);
                 if (!lote) return;
-
                 const novosSetores = { ...lote.setores };
                 
                 if (novoValor === "Concluído" || novoValor === "Envio Parcial") {
-                    novosSetores[setorNome] = {
-                        status: novoValor,
-                        op: operadorAtual,
-                        data: new Date().toISOString()
-                    };
+                    novosSetores[setorNome] = { status: novoValor, op: operadorAtual, data: new Date().toISOString() };
                 } else if (novoValor === "N/A") {
-                    novosSetores[setorNome] = {
-                        status: "N/A",
-                        op: null,
-                        data: new Date().toISOString()
-                    };
+                    novosSetores[setorNome] = { status: "N/A", op: null, data: new Date().toISOString() };
                 } else {
-                    novosSetores[setorNome] = {
-                        status: "Pendente",
-                        op: null,
-                        data: null
-                    };
+                    novosSetores[setorNome] = { status: "Pendente", op: null, data: null };
                 }
                 
                 const setorPronto = (s) => s.status === "Concluído" || s.status === "N/A" || s.status === "Envio Parcial";
-                const todosProntos = setorPronto(novosSetores.gravacao) && 
-                                     setorPronto(novosSetores.idv) && 
-                                     setorPronto(novosSetores.manuseio);
+                const todosProntos = setorPronto(novosSetores.gravacao) && setorPronto(novosSetores.idv) && setorPronto(novosSetores.manuseio);
 
                 if (novoValor === "Envio Parcial" || todosProntos) {
                     lotePendenteFinalizacao = { loteId, lote, novosSetores, acao: novoValor };
-                    
-                    const tituloModal = document.getElementById('titulo-modal-finalizacao');
-                    const descModal = document.getElementById('desc-modal-finalizacao');
-                    
-                    if (novoValor === "Envio Parcial") {
-                        tituloModal.innerText = "Envio Parcial";
-                        descModal.innerText = `Informe a quantidade para o envio parcial no setor de ${setorNome.toUpperCase()} (Total atual do lote: ${lote.qtd}):`;
-                    } else {
-                        tituloModal.innerText = "Finalizar Lote";
-                        descModal.innerText = `Informe a quantidade enviada para finalizar o lote "${lote.nome}" (Total cadastrado: ${lote.qtd}):`;
-                    }
-
+                    document.getElementById('titulo-modal-finalizacao').innerText = novoValor === "Envio Parcial" ? "Envio Parcial" : "Finalizar Lote";
                     document.getElementById('qtd-finalizacao-input').value = lote.qtd;
                     document.getElementById('modal-finalizacao').style.display = 'flex';
                 } else {
-                    await updateDoc(doc(db, "lotes", loteId), {
-                        setores: novosSetores,
-                        operador: operadorAtual,
-                        status: "Em Produção",
-                        dataConclusao: null
-                    });
+                    await updateDoc(doc(db, "lotes", loteId), { setores: novosSetores, operador: operadorAtual, status: "Em Produção", dataConclusao: null });
                 }
-
-            } catch (error) {
-                console.error("Erro ao atualizar setor:", error);
-                alert("Erro ao salvar atualização do setor.");
-            }
+            } catch (e) { alert("Erro ao atualizar setor."); }
         };
 
         window.confirmarFinalizacao = async function() {
             if (!lotePendenteFinalizacao) return;
-
             const { loteId, lote, novosSetores, acao } = lotePendenteFinalizacao;
-            const inputQtd = document.getElementById('qtd-finalizacao-input').value;
-            const qtdEnviada = parseInt(inputQtd);
+            const qtdEnviada = parseInt(document.getElementById('qtd-finalizacao-input').value);
 
-            if (isNaN(qtdEnviada) || qtdEnviada <= 0 || qtdEnviada > lote.qtd) {
-                alert("Quantidade inválida! Informe um número maior que zero e menor ou igual ao cadastrado.");
-                return;
-            }
-
+            if (isNaN(qtdEnviada) || qtdEnviada <= 0 || qtdEnviada > lote.qtd) { alert("Quantidade inválida!"); return; }
             const hojeStr = new Date().toISOString();
 
             try {
-                const setorPronto = (s) => s.status === "Concluído" || s.status === "N/A" || s.status === "Envio Parcial";
-                const todosProntos = setorPronto(novosSetores.gravacao) && 
-                                     setorPronto(novosSetores.idv) && 
-                                     setorPronto(novosSetores.manuseio);
-
                 if (acao === "Envio Parcial" || qtdEnviada < lote.qtd) {
-                    await updateDoc(doc(db, "lotes", loteId), {
-                        qtd: qtdEnviada,
-                        setores: novosSetores,
-                        status: "Finalizado",
-                        dataConclusao: hojeStr,
-                        operador: operadorAtual,
-                        parcial: true
-                    });
-
+                    await updateDoc(doc(db, "lotes", loteId), { qtd: qtdEnviada, setores: novosSetores, status: "Finalizado", dataConclusao: hojeStr, operador: operadorAtual, parcial: true });
                     const saldo = lote.qtd - qtdEnviada;
                     await addDoc(collection(db, "lotes"), {
-                        nome: lote.nome + " (Saldo)",
-                        qtd: saldo,
-                        dataPrevista: lote.dataPrevista,
-                        dataCadastro: new Date().toISOString(),
-                        status: "Em Produção",
-                        setores: {
-                            gravacao: { status: "Pendente", op: null, data: null },
-                            idv: { status: "Pendente", op: null, data: null },
-                            manuseio: { status: "Pendente", op: null, data: null }
-                        },
-                        dataConclusao: null,
-                        operador: null,
-                        justificativa: ""
+                        nome: lote.nome + " (Saldo)", qtd: saldo, dataPrevista: lote.dataPrevista, dataCadastro: new Date().toISOString(), status: "Em Produção",
+                        setores: { gravacao: { status: "Pendente", op: null, data: null }, idv: { status: "Pendente", op: null, data: null }, manuseio: { status: "Pendente", op: null, data: null } },
+                        dataConclusao: null, operador: null, justificativa: ""
                     });
                 } else {
-                    await updateDoc(doc(db, "lotes", loteId), {
-                        setores: novosSetores,
-                        status: "Finalizado",
-                        dataConclusao: hojeStr,
-                        operador: operadorAtual,
-                        parcial: false
-                    });
+                    await updateDoc(doc(db, "lotes", loteId), { setores: novosSetores, status: "Finalizado", dataConclusao: hojeStr, operador: operadorAtual, parcial: false });
                 }
-
                 document.getElementById('modal-finalizacao').style.display = 'none';
                 lotePendenteFinalizacao = null;
-            } catch (error) {
-                console.error("Erro ao finalizar lote:", error);
-                alert("Erro ao salvar a finalização.");
-            }
+            } catch (e) { alert("Erro ao finalizar."); }
         };
 
         window.cancelarFinalizacao = function() {
@@ -1953,11 +1367,106 @@
             renderizarTabelaProducao();
         };
 
-        window.solicitarReaberturaLote = function(id) {
-            if (!eAdministrador()) {
-                alert("Apenas Flávio e André podem reabrir lotes finalizados.");
+        function atualizarKPIsProducao(totOS, totCart, nPrazoOS, nPrazoCart, vbOS, vbCart, atrOS, atrCart) {
+            document.getElementById("kpi-total").innerText = `${totOS} OS`;
+            document.getElementById("kpi-total-cartoes").innerText = `${totCart.toLocaleString('pt-BR')} cartões`;
+            document.getElementById("kpi-noprazo").innerText = `${nPrazoOS} OS`;
+            document.getElementById("kpi-noprazo-cartoes").innerText = `${nPrazoCart.toLocaleString('pt-BR')} cartões`;
+            document.getElementById("kpi-vencebreve").innerText = `${vbOS} OS`;
+            document.getElementById("kpi-vencebreve-cartoes").innerText = `${vbCart.toLocaleString('pt-BR')} cartões`;
+            document.getElementById("kpi-atrasado").innerText = `${atrOS} OS`;
+            document.getElementById("kpi-atrasado-cartoes").innerText = `${atrCart.toLocaleString('pt-BR')} cartões`;
+        }
+
+        // HISTÓRICO
+        function atualizarFiltrosDinamicos() {
+            const anosSet = new Set(), operadoresSet = new Set();
+            listaGeralLotes.forEach(l => {
+                if (l.status === "Finalizado" && l.dataConclusao) {
+                    anosSet.add(l.dataConclusao.split('-')[0]);
+                    if (l.operador) operadoresSet.add(l.operador.toUpperCase());
+                }
+            });
+            montarSelect('filtro-ano', anosSet, "Todos os Anos");
+            montarSelect('filtro-operador', operadoresSet, "Todos os Operadores");
+        }
+
+        window.atualizarDiasFiltro = function() {
+            const anoSel = document.getElementById('filtro-ano').value;
+            const mesSel = document.getElementById('filtro-mes').value;
+            const diasSet = new Set();
+            listaGeralLotes.forEach(l => {
+                if (l.status === "Finalizado" && l.dataConclusao) {
+                    const [ano, mes, dia] = l.dataConclusao.split('T')[0].split('-');
+                    if ((!anoSel || ano === anoSel) && (!mesSel || mes === mesSel)) diasSet.add(dia);
+                }
+            });
+            montarSelect('filtro-dia', diasSet, "Todos os Dias");
+        };
+
+        window.carregarHistorico = function() {
+            const tbody = document.getElementById('tabela-historico');
+            const anoSel = document.getElementById('filtro-ano').value;
+            const mesSel = document.getElementById('filtro-mes').value;
+            const diaSel = document.getElementById('filtro-dia').value;
+            const prazoSel = document.getElementById('filtro-prazo').value;
+            const opSel = document.getElementById('filtro-operador').value;
+            const colVis = eAdministrador() ? 8 : 7;
+
+            tbody.innerHTML = "";
+            let finalizados = listaGeralLotes.filter(l => {
+                if (l.status !== "Finalizado" || !l.dataConclusao) return false;
+                const [ano, mes, dia] = l.dataConclusao.split('T')[0].split('-');
+                if (anoSel && ano !== anoSel) return false;
+                if (mesSel && mes !== mesSel) return false;
+                if (diaSel && dia !== diaSel) return false;
+                if (opSel && (!l.operador || l.operador.toUpperCase() !== opSel)) return false;
+
+                const dataConcStr = l.dataConclusao.split('T')[0];
+                const diasAtraso = calcularDiasAtraso(l.dataPrevista, dataConcStr);
+                const statusPrazo = diasAtraso > 0 ? "atrasado" : "no-prazo";
+                if (prazoSel && statusPrazo !== prazoSel) return false;
+                return true;
+            });
+
+            finalizados.sort((a, b) => b.dataConclusao.localeCompare(a.dataConclusao));
+            let totalCartoesHist = 0;
+            finalizados.forEach(l => { totalCartoesHist += (parseInt(l.qtd) || 0); });
+
+            document.getElementById('hist-total-lotes').innerText = finalizados.length;
+            document.getElementById('hist-total-cartoes').innerText = totalCartoesHist.toLocaleString('pt-BR');
+
+            if (finalizados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${colVis}" class="text-center">Nenhum lote no histórico.</td></tr>`;
                 return;
             }
+
+            finalizados.forEach(l => {
+                const dt = new Date(l.dataConclusao);
+                const dtFmt = !isNaN(dt) ? `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}` : '-';
+                const dataConcStr = l.dataConclusao.split('T')[0];
+                const diasAtraso = calcularDiasAtraso(l.dataPrevista, dataConcStr);
+                const sitHTML = diasAtraso > 0 ? `<span class="badge-atrasado">🔴 Atrasado (${diasAtraso}d)</span>` : `<span class="badge-no-prazo">🟢 No Prazo</span>`;
+                const celAcao = eAdministrador() ? `<td><button onclick="solicitarReaberturaLote('${l.id}')" class="btn-warning">Reabrir</button></td>` : '';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${dtFmt}</strong></td><td>${l.nome}</td><td>${parseInt(l.qtd).toLocaleString('pt-BR')}</td>
+                    <td>${formatarMiniSetorHist(l.setores.gravacao)}</td><td>${formatarMiniSetorHist(l.setores.idv)}</td><td>${formatarMiniSetorHist(l.setores.manuseio)}</td>
+                    <td>${sitHTML}</td>${celAcao}
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        function formatarMiniSetorHist(setor) {
+            if (!setor || setor.status === "Pendente") return `<span style="color:#94a3b8">-</span>`;
+            if (setor.status === "N/A") return `<span style="color:#64748b">N/A</span>`;
+            return `<span style="color:#10b981; font-weight:600;">✅ ${setor.op || 'OK'}</span>`;
+        }
+
+        window.solicitarReaberturaLote = function(id) {
+            if (!eAdministrador()) return;
             loteParaReabrirId = id;
             document.getElementById('modal-senha-admin-input-nome').value = operadorAtual || "";
             document.getElementById('modal-senha-admin-input-senha').value = "";
@@ -1972,80 +1481,22 @@
         window.confirmarReaberturaAdmin = async function() {
             const nomeAdmin = document.getElementById('modal-senha-admin-input-nome').value.trim().toUpperCase();
             const senhaAdmin = document.getElementById('modal-senha-admin-input-senha').value;
-
-            const permitidos = ["FLÁVIO", "FLAVIO", "ANDRÉ", "ANDRE"];
-            if (!permitidos.includes(nomeAdmin)) {
-                alert("Usuário informado não tem permissão administrativa.");
-                return;
-            }
+            if (!["FLÁVIO", "FLAVIO", "ANDRÉ", "ANDRE"].includes(nomeAdmin)) { alert("Permissão negada."); return; }
 
             try {
-                const querySnapshot = await getDocs(collection(db, "operadores"));
+                const snap = await getDocs(collection(db, "operadores"));
                 let senhaSalva = null;
-                querySnapshot.forEach((d) => {
-                    if (d.id === nomeAdmin) senhaSalva = d.data().senha;
-                });
+                snap.forEach(d => { if (d.id === nomeAdmin) senhaSalva = d.data().senha; });
+                if (!senhaSalva || senhaSalva !== senhaAdmin) { alert("Senha incorreta!"); return; }
 
-                if (!senhaSalva || senhaSalva !== senhaAdmin) {
-                    alert("Senha incorreta!");
-                    return;
-                }
-
-                await updateDoc(doc(db, "lotes", loteParaReabrirId), {
-                    status: "Em Produção",
-                    dataConclusao: null
-                });
-
+                await updateDoc(doc(db, "lotes", loteParaReabrirId), { status: "Em Produção", dataConclusao: null });
                 document.getElementById('modal-senha-admin').style.display = 'none';
                 loteParaReabrirId = null;
-                alert("Lote reaberto com sucesso e retornado para a produção!");
-            } catch (error) {
-                console.error("Erro ao reabrir lote:", error);
-                alert("Erro ao processar a reabertura.");
-            }
+                alert("Lote reaberto com sucesso!");
+            } catch (e) { alert("Erro ao reabrir."); }
         };
 
-        function atualizarKPIsProducao(totOS, totCart, nPrazoOS, nPrazoCart, vbOS, vbCart, atrOS, atrCart) {
-            document.getElementById("kpi-total").innerText = `${totOS} OS`;
-            document.getElementById("kpi-total-cartoes").innerText = `${totCart.toLocaleString('pt-BR')} cartões`;
-            document.getElementById("kpi-noprazo").innerText = `${nPrazoOS} OS`;
-            document.getElementById("kpi-noprazo-cartoes").innerText = `${nPrazoCart.toLocaleString('pt-BR')} cartões`;
-            document.getElementById("kpi-vencebreve").innerText = `${vbOS} OS`;
-            document.getElementById("kpi-vencebreve-cartoes").innerText = `${vbCart.toLocaleString('pt-BR')} cartões`;
-            document.getElementById("kpi-atrasado").innerText = `${atrOS} OS`;
-            document.getElementById("kpi-atrasado-cartoes").innerText = `${atrCart.toLocaleString('pt-BR')} cartões`;
-        }
-
-        function atualizarFiltrosDinamicos() {
-            const anosSet = new Set(), operadoresSet = new Set();
-            listaGeralLotes.forEach(l => {
-                if (l.status === "Finalizado" && l.dataConclusao) {
-                    anosSet.add(l.dataConclusao.split('-')[0]);
-                    if (l.operador) operadoresSet.add(l.operador.toUpperCase());
-                }
-            });
-
-            montarSelect('filtro-ano', anosSet, "Todos os Anos");
-            montarSelect('filtro-operador', operadoresSet, "Todos os Operadores");
-        }
-
-        window.atualizarDiasFiltro = function() {
-            const anoSelecionado = document.getElementById('filtro-ano').value;
-            const mesSelecionado = document.getElementById('filtro-mes').value;
-            const diasSet = new Set();
-
-            listaGeralLotes.forEach(l => {
-                if (l.status === "Finalizado" && l.dataConclusao) {
-                    const [anoLote, mesLote, diaLote] = l.dataConclusao.split('T')[0].split('-');
-                    if ((!anoSelecionado || anoLote === anoSelecionado) && (!mesSelecionado || mesLote === mesSelecionado)) {
-                        diasSet.add(diaLote);
-                    }
-                }
-            });
-
-            montarSelect('filtro-dia', diasSet, "Todos os Dias");
-        };
-
+        // RELATÓRIOS & CONTROLE (COM CÁLCULO DE REJEITO E PORCENTAGEM DE PERDA)
         function atualizarFiltrosRelatorios() {
             const anosSet = new Set(), operadoresSet = new Set();
             listaGeralLotes.forEach(l => {
@@ -2054,27 +1505,160 @@
                     if (l.operador) operadoresSet.add(l.operador.toUpperCase());
                 }
             });
-
             montarSelect('rel-filtro-ano', anosSet, "Todos os Anos");
             montarSelect('rel-filtro-operador', operadoresSet, "Todos os Operadores");
         }
 
         window.atualizarDiasRelatorio = function() {
-            const anoSelecionado = document.getElementById('rel-filtro-ano').value;
-            const mesSelecionado = document.getElementById('rel-filtro-mes').value;
+            const anoSel = document.getElementById('rel-filtro-ano').value;
+            const mesSel = document.getElementById('rel-filtro-mes').value;
             const diasSet = new Set();
-
             listaGeralLotes.forEach(l => {
                 if (l.status === "Finalizado" && l.dataConclusao) {
-                    const [anoLote, mesLote, diaLote] = l.dataConclusao.split('T')[0].split('-');
-                    if ((!anoSelecionado || anoLote === anoSelecionado) && (!mesSelecionado || mesLote === mesSelecionado)) {
-                        diasSet.add(diaLote);
-                    }
+                    const [ano, mes, dia] = l.dataConclusao.split('T')[0].split('-');
+                    if ((!anoSel || ano === anoSel) && (!mesSel || mes === mesSel)) diasSet.add(dia);
                 }
             });
-
             montarSelect('rel-filtro-dia', diasSet, "Todos os Dias");
         };
+
+        window.carregarRelatorios = function() {
+            const anoSel = document.getElementById('rel-filtro-ano').value;
+            const mesSel = document.getElementById('rel-filtro-mes').value;
+            const diaSel = document.getElementById('rel-filtro-dia').value;
+            const prazoSel = document.getElementById('rel-filtro-prazo').value;
+            const opSel = document.getElementById('rel-filtro-operador').value;
+
+            let finalizados = listaGeralLotes.filter(l => {
+                if (l.status !== "Finalizado" || !l.dataConclusao) return false;
+                const [ano, mes, dia] = l.dataConclusao.split('T')[0].split('-');
+                if (anoSel && ano !== anoSel) return false;
+                if (mesSel && mes !== mesSel) return false;
+                if (diaSel && dia !== diaSel) return false;
+                if (opSel && (!l.operador || l.operador.toUpperCase() !== opSel)) return false;
+
+                const dataConcStr = l.dataConclusao.split('T')[0];
+                const diasAtraso = calcularDiasAtraso(l.dataPrevista, dataConcStr);
+                const statusPrazo = diasAtraso > 0 ? "atrasado" : "no-prazo";
+                if (prazoSel && statusPrazo !== prazoSel) return false;
+                return true;
+            });
+
+            // Filtragem de Rejeitos baseada nos mesmos filtros de ano/mês/dia
+            let rejeitosFiltrados = listaGeralRejeitos.filter(r => {
+                if (anoSel && r.ano !== anoSel) return false;
+                if (mesSel && r.mes !== mesSel) return false;
+                if (diaSel && r.dia !== diaSel) return false;
+                return true;
+            });
+
+            let totalOs = finalizados.length;
+            let noPrazo = 0, atrasados = 0, volumeCartoes = 0;
+
+            finalizados.forEach(l => {
+                const qtd = parseInt(l.qtd) || 0;
+                volumeCartoes += qtd;
+                const diasAtraso = calcularDiasAtraso(l.dataPrevista, l.dataConclusao.split('T')[0]);
+                if (diasAtraso > 0) atrasados++; else noPrazo++;
+            });
+
+            let totalRejeitoPeriodo = 0;
+            rejeitosFiltrados.forEach(r => { totalRejeitoPeriodo += (parseInt(r.quantidade) || 0); });
+
+            // CÁLCULO DA PORCENTAGEM DE PERDA
+            let porcentagemPerda = 0;
+            if (volumeCartoes > 0) {
+                porcentagemPerda = (totalRejeitoPeriodo / volumeCartoes) * 100;
+            }
+
+            // Atualiza os KPIs na tela de Relatórios
+            document.getElementById('rel-total-os').innerText = totalOs;
+            document.getElementById('rel-no-prazo').innerText = noPrazo;
+            document.getElementById('rel-atrasados').innerText = atrasados;
+            document.getElementById('rel-volume-cartoes').innerText = volumeCartoes.toLocaleString('pt-BR');
+            document.getElementById('rel-kpi-rejeito-porc').innerText = `${totalRejeitoPeriodo.toLocaleString('pt-BR')} un (${porcentagemPerda.toFixed(2)}%)`;
+            document.getElementById('rel-kpi-rejeito-detalhe').innerText = `Baseado em ${volumeCartoes.toLocaleString('pt-BR')} cartões`;
+
+            // Tabela de produtividade de operadores
+            renderizarProdutividadeOperadores(finalizados);
+
+            // Tabela detalhada
+            const tbodyDet = document.getElementById('tabela-relatorio-detalhado');
+            tbodyDet.innerHTML = "";
+            if (finalizados.length === 0) {
+                tbodyDet.innerHTML = `<tr><td colspan="9" class="text-center">Nenhum registro encontrado.</td></tr>`;
+                return;
+            }
+
+            finalizados.sort((a, b) => b.dataConclusao.localeCompare(a.dataConclusao));
+            finalizados.forEach(l => {
+                const dt = new Date(l.dataConclusao);
+                const dtFmt = !isNaN(dt) ? `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}` : '-';
+                const diasAtraso = calcularDiasAtraso(l.dataPrevista, l.dataConclusao.split('T')[0]);
+                const sitHTML = diasAtraso > 0 ? `<span class="badge-atrasado">🔴 Atrasado (${diasAtraso}d)</span>` : `<span class="badge-no-prazo">🟢 No Prazo</span>`;
+                const tipoEnvio = l.parcial ? `<span style="color:#d97706; font-weight:600;">Envio Parcial</span>` : `<span>Total</span>`;
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${dtFmt}</strong></td><td>${l.nome}</td><td>${parseInt(l.qtd).toLocaleString('pt-BR')}</td>
+                    <td>${formatarInfoSetor(l.setores.gravacao, l.dataPrevista)}</td>
+                    <td>${formatarInfoSetor(l.setores.idv, l.dataPrevista)}</td>
+                    <td>${formatarInfoSetor(l.setores.manuseio, l.dataPrevista)}</td>
+                    <td>${sitHTML}</td><td>${tipoEnvio}</td>
+                    <td><textarea class="textarea-justificativa" onchange="salvarJustificativa('${l.id}', this.value)" placeholder="Justificativa...">${l.justificativa || ''}</textarea></td>
+                `;
+                tbodyDet.appendChild(tr);
+            });
+        };
+
+        function renderizarProdutividadeOperadores(finalizados) {
+            const tbodyOp = document.getElementById('tabela-produtividade-operadores');
+            if (!tbodyOp) return;
+            tbodyOp.innerHTML = "";
+
+            let mapaOps = {};
+            finalizados.forEach(l => {
+                ['gravacao', 'idv', 'manuseio'].forEach(sec => {
+                    const s = l.setores[sec];
+                    if (s && s.op && (s.status === "Concluído" || s.status === "Envio Parcial")) {
+                        const nomeOp = s.op.toUpperCase();
+                        if (!mapaOps[nomeOp]) mapaOps[nomeOp] = { gravacao: 0, idv: 0, manuseio: 0 };
+                        mapaOps[nomeOp][sec]++;
+                    }
+                });
+            });
+
+            const chavesOps = Object.keys(mapaOps);
+            if (chavesOps.length === 0) {
+                tbodyOp.innerHTML = `<tr><td colspan="5" class="text-center">Nenhuma ação registrada para os operadores no filtro.</td></tr>`;
+                return;
+            }
+
+            chavesOps.sort().forEach(nome => {
+                const dados = mapaOps[nome];
+                const totalAcoes = dados.gravacao + dados.idv + dados.manuseio;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td><strong>👤 ${nome}</strong></td><td>${dados.gravacao}</td><td>${dados.idv}</td><td>${dados.manuseio}</td><td><strong>${totalAcoes}</strong></td>`;
+                tbodyOp.appendChild(tr);
+            });
+        }
+
+        window.salvarJustificativa = async function(loteId, texto) {
+            if (!eAdministrador()) { alert("Apenas Flávio e André podem editar justificativas."); carregarRelatorios(); return; }
+            try { await updateDoc(doc(db, "lotes", loteId), { justificativa: texto }); } catch (e) { alert("Erro ao salvar justificativa."); }
+        };
+
+        function formatarInfoSetor(objSetor, dataPrevista) {
+            if (!objSetor || objSetor.status === "Pendente") return `<span style="color:#94a3b8">⏳ Pendente</span>`;
+            if (objSetor.status === "N/A") return `<span style="color:#64748b; font-weight:600;">🚫 N/A</span>`;
+            let htmlOp = objSetor.op ? `<span class="op-nome">👤 ${objSetor.op}</span>` : `<span class="op-nome">✅ OK</span>`;
+            let htmlData = "";
+            if (objSetor.data) {
+                const dt = new Date(objSetor.data);
+                if (!isNaN(dt)) htmlData = `<span class="op-data">${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}</span>`;
+            }
+            return `<div class="info-setor-hist">${htmlOp}${htmlData}</div>`;
+        }
 
         function montarSelect(idSelect, conjunto, placeholder) {
             const sel = document.getElementById(idSelect);
@@ -2089,272 +1673,6 @@
                 sel.appendChild(opt);
             });
         }
-
-        function formatarInfoSetor(objSetor, dataPrevista) {
-            if (!objSetor || objSetor.status === "Pendente") return `<span style="color:#94a3b8">⏳ Pendente</span>`;
-            if (objSetor.status === "N/A") return `<span style="color:#64748b; font-weight:600;">🚫 N/A</span>`;
-            
-            let htmlOp = objSetor.op ? `<span class="op-nome">👤 ${objSetor.op}</span>` : `<span class="op-nome">✅ Concluído</span>`;
-            let htmlData = "";
-            let htmlAtraso = "";
-
-            if (objSetor.data) {
-                const dt = new Date(objSetor.data);
-                if (!isNaN(dt)) {
-                    htmlData = `<span class="op-data">🕒 ${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')} ${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}</span>`;
-                    
-                    const dataConclusaoSetorStr = objSetor.data.split('T')[0];
-                    const diasAtrasoSetor = calcularDiasAtraso(dataPrevista, dataConclusaoSetorStr);
-                    if (diasAtrasoSetor > 0) {
-                        htmlAtraso = `<span class="tag-atraso-setor">🔴 Atrasado (${diasAtrasoSetor}d úteis)</span>`;
-                    } else {
-                        htmlAtraso = `<span class="tag-prazo-setor">🟢 No Prazo</span>`;
-                    }
-                }
-            }
-
-            return `<div class="info-setor-hist">${htmlOp}${htmlData}${htmlAtraso}</div>`;
-        }
-
-        window.carregarHistorico = function() {
-            const tabelaHist = document.getElementById('tabela-historico');
-            const anoFiltro = document.getElementById('filtro-ano').value;
-            const mesFiltro = document.getElementById('filtro-mes').value;
-            const diaFiltro = document.getElementById('filtro-dia').value;
-            const prazoFiltro = document.getElementById('filtro-prazo').value;
-            const opFiltro = document.getElementById('filtro-operador').value;
-            const colunasVisiveis = eAdministrador() ? 8 : 7;
-
-            tabelaHist.innerHTML = "";
-
-            const filtrados = listaGeralLotes.filter(l => {
-                if (l.status !== "Finalizado" || !l.dataConclusao) return false;
-                const dataConclusaoStr = l.dataConclusao.split('T')[0];
-                const [anoLote, mesLote, diaLote] = dataConclusaoStr.split('-');
-                if (anoFiltro && anoLote !== anoFiltro) return false;
-                if (mesFiltro && mesLote !== mesFiltro) return false;
-                if (diaFiltro && diaLote !== diaFiltro) return false;
-                if (opFiltro && l.operador && l.operador.toUpperCase() !== opFiltro) return false;
-                
-                const diasAtraso = calcularDiasAtraso(l.dataPrevista, dataConclusaoStr);
-                const ehAtrasado = diasAtraso > 0;
-                if (prazoFiltro === "no-prazo" && ehAtrasado) return false;
-                if (prazoFiltro === "atrasado" && !ehAtrasado) return false;
-
-                return true;
-            });
-
-            filtrados.sort((a, b) => (b.dataConclusao || "").localeCompare(a.dataConclusao || ""));
-
-            document.getElementById('hist-total-lotes').innerText = filtrados.length;
-            document.getElementById('hist-total-cartoes').innerText = filtrados.reduce((a, c) => a + (parseInt(c.qtd) || 0), 0).toLocaleString('pt-BR');
-
-            if (filtrados.length === 0) {
-                tabelaHist.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center">Nenhum lote encontrado.</td></tr>`;
-                return;
-            }
-
-            filtrados.forEach(lote => {
-                const dataConclusaoStr = lote.dataConclusao.split('T')[0];
-                const diasAtraso = calcularDiasAtraso(lote.dataPrevista, dataConclusaoStr);
-                const ehAtrasado = diasAtraso > 0;
-                let situacaoHTML = "";
-                
-                if (ehAtrasado) {
-                    situacaoHTML = `<span class="badge-atrasado">⚠️ Atrasado (${diasAtraso} ${diasAtraso === 1 ? 'dia útil' : 'dias úteis'})</span>`;
-                } else {
-                    situacaoHTML = `<span class="badge-finalizado">✅ No Prazo</span>`;
-                }
-
-                const celulaAcoes = eAdministrador() ? `
-                    <td style="display: flex; gap: 6px;">
-                        <button onclick="solicitarReaberturaLote('${lote.id}')" class="btn-warning" title="Voltar lote para a produção (requer senha do Flávio/André)">🔄 Reabrir</button>
-                        <button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button>
-                    </td>` : '';
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${dataConclusaoStr.split('-').reverse().join('/')}</td>
-                    <td><strong>${lote.nome}</strong></td>
-                    <td>${parseInt(lote.qtd).toLocaleString('pt-BR')} ${lote.parcial ? '<span class="badge-parcial">Parcial</span>' : ''}</td>
-                    <td>${formatarInfoSetor(lote.setores.gravacao, lote.dataPrevista)}</td>
-                    <td>${formatarInfoSetor(lote.setores.idv, lote.dataPrevista)}</td>
-                    <td>${formatarInfoSetor(lote.setores.manuseio, lote.dataPrevista)}</td>
-                    <td>${situacaoHTML}</td>
-                    ${celulaAcoes}
-                `;
-                tabelaHist.appendChild(tr);
-            });
-        };
-
-        window.carregarRelatorios = function() {
-            const tabelaRel = document.getElementById('tabela-relatorio-detalhado');
-            const anoFiltro = document.getElementById('rel-filtro-ano').value;
-            const mesFiltro = document.getElementById('rel-filtro-mes').value;
-            const diaFiltro = document.getElementById('rel-filtro-dia').value;
-            const prazoFiltro = document.getElementById('rel-filtro-prazo').value;
-            const opFiltro = document.getElementById('rel-filtro-operador').value;
-
-            tabelaRel.innerHTML = "";
-
-            const filtrados = listaGeralLotes.filter(l => {
-                if (l.status !== "Finalizado" || !l.dataConclusao) return false;
-                const dataConclusaoStr = l.dataConclusao.split('T')[0];
-                const [anoLote, mesLote, diaLote] = dataConclusaoStr.split('-');
-                if (anoFiltro && anoLote !== anoFiltro) return false;
-                if (mesFiltro && mesLote !== mesFiltro) return false;
-                if (diaFiltro && diaLote !== diaFiltro) return false;
-                if (opFiltro && l.operador && l.operador.toUpperCase() !== opFiltro) return false;
-
-                const diasAtraso = calcularDiasAtraso(l.dataPrevista, dataConclusaoStr);
-                const ehAtrasado = diasAtraso > 0;
-                if (prazoFiltro === "no-prazo" && ehAtrasado) return false;
-                if (prazoFiltro === "atrasado" && !ehAtrasado) return false;
-
-                return true;
-            });
-
-            filtrados.sort((a, b) => (b.dataConclusao || "").localeCompare(a.dataConclusao || ""));
-
-            let totalNoPrazo = 0, totalAtrasados = 0, volumeCartoes = 0;
-
-            filtrados.forEach(lote => {
-                const dataConclusaoStr = lote.dataConclusao.split('T')[0];
-                volumeCartoes += (parseInt(lote.qtd) || 0);
-                const diasAtraso = calcularDiasAtraso(lote.dataPrevista, dataConclusaoStr);
-                if (diasAtraso > 0) totalAtrasados++;
-                else totalNoPrazo++;
-            });
-
-            document.getElementById('rel-total-os').innerText = filtrados.length;
-            document.getElementById('rel-no-prazo').innerText = totalNoPrazo;
-            document.getElementById('rel-atrasados').innerText = totalAtrasados;
-            document.getElementById('rel-volume-cartoes').innerText = volumeCartoes.toLocaleString('pt-BR');
-
-            gerarTabelaProdutividade(anoFiltro, mesFiltro, diaFiltro);
-
-            if (filtrados.length === 0) {
-                tabelaRel.innerHTML = `<tr><td colspan="9" class="text-center">Nenhum dado encontrado.</td></tr>`;
-                return;
-            }
-
-            filtrados.forEach(lote => {
-                const dataConclusaoStr = lote.dataConclusao.split('T')[0];
-                const diasAtraso = calcularDiasAtraso(lote.dataPrevista, dataConclusaoStr);
-                const ehAtrasado = diasAtraso > 0;
-                let situacaoHTML = "";
-
-                if (ehAtrasado) {
-                    situacaoHTML = `<span class="badge-atrasado">🔴 Atrasado (${diasAtraso} ${diasAtraso === 1 ? 'dia útil' : 'dias úteis'})</span>`;
-                } else {
-                    situacaoHTML = `<span class="badge-no-prazo">🟢 No Prazo</span>`;
-                }
-
-                let htmlJustificativa = `<span style="color:var(--text-muted); font-size:12px;">Não aplicável</span>`;
-                
-                if (ehAtrasado) {
-                    const textoJust = lote.justificativa || "";
-                    if (eAdministrador()) {
-                        htmlJustificativa = `<textarea class="textarea-justificativa" placeholder="Digite a justificativa do atraso..." onblur="salvarJustificativa('${lote.id}', this.value)">${textoJust}</textarea>`;
-                    } else {
-                        htmlJustificativa = textoJust ? `<span style="font-size:12px;">${textoJust}</span>` : `<span style="color:#ef4444; font-size:12px;">Pendente de justificativa</span>`;
-                    }
-                }
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${dataConclusaoStr.split('-').reverse().join('/')}</td>
-                    <td><strong>${lote.nome}</strong></td>
-                    <td>${parseInt(lote.qtd).toLocaleString('pt-BR')}</td>
-                    <td>${formatarInfoSetor(lote.setores.gravacao, lote.dataPrevista)}</td>
-                    <td>${formatarInfoSetor(lote.setores.idv, lote.dataPrevista)}</td>
-                    <td>${formatarInfoSetor(lote.setores.manuseio, lote.dataPrevista)}</td>
-                    <td>${situacaoHTML}</td>
-                    <td>${lote.parcial ? '<span class="badge-parcial">Parcial</span>' : '<span class="badge-finalizado">Total</span>'}</td>
-                    <td>${htmlJustificativa}</td>
-                `;
-                tabelaRel.appendChild(tr);
-            });
-        };
-
-        window.salvarJustificativa = async function(loteId, novaJustificativa) {
-            if (!eAdministrador()) {
-                alert("Apenas Flávio e André podem alterar justificativas.");
-                return;
-            }
-
-            try {
-                await updateDoc(doc(db, "lotes", loteId), {
-                    justificativa: novaJustificativa.trim()
-                });
-            } catch (error) {
-                console.error("Erro ao salvar justificativa:", error);
-                alert("Erro ao salvar justificativa no servidor.");
-            }
-        };
-
-        function gerarTabelaProdutividade(anoFiltro, mesFiltro, diaFiltro) {
-            const tabelaProd = document.getElementById('tabela-produtividade-operadores');
-            tabelaProd.innerHTML = "";
-
-            const contagemOp = {};
-
-            listaGeralLotes.forEach(lote => {
-                if (lote.status !== "Finalizado" || !lote.dataConclusao) return;
-                const [anoLote, mesLote, diaLote] = lote.dataConclusao.split('T')[0].split('-');
-                if (anoFiltro && anoLote !== anoFiltro) return;
-                if (mesFiltro && mesLote !== mesLote) return;
-                if (diaFiltro && diaLote !== diaFiltro) return;
-
-                ['gravacao', 'idv', 'manuseio'].forEach(setorKey => {
-                    const objSetor = lote.setores[setorKey];
-                    if (objSetor && (objSetor.status === "Concluído" || objSetor.status === "Envio Parcial") && objSetor.op) {
-                        const opNome = objSetor.op.toUpperCase();
-                        if (!contagemOp[opNome]) {
-                            contagemOp[opNome] = { gravacao: 0, idv: 0, manuseio: 0 };
-                        }
-                        contagemOp[opNome][setorKey]++;
-                    }
-                });
-            });
-
-            const nomesOperadores = Object.keys(contagemOp).sort();
-
-            if (nomesOperadores.length === 0) {
-                tabelaProd.innerHTML = `<tr><td colspan="5" class="text-center">Nenhuma produtividade registrada no período.</td></tr>`;
-                return;
-            }
-
-            nomesOperadores.forEach(op => {
-                const dados = contagemOp[op];
-                const totalAcoes = dados.gravacao + dados.idv + dados.manuseio;
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>👤 ${op}</strong></td>
-                    <td>${dados.gravacao} OS</td>
-                    <td>${dados.idv} OS</td>
-                    <td>${dados.manuseio} OS</td>
-                    <td><strong>${totalAcoes} Ações</strong></td>
-                `;
-                tabelaProd.appendChild(tr);
-            });
-        }
-
-        window.deletarLote = async function(id) {
-            if (!eAdministrador()) {
-                alert("Apenas Flávio e André podem excluir lotes.");
-                return;
-            }
-
-            if(confirm("Deseja realmente excluir este lote?")) {
-                try {
-                    await deleteDoc(doc(db, "lotes", id));
-                } catch (error) {
-                    alert("Erro ao excluir lote.");
-                }
-            }
-        };
     </script>
 </body>
 </html>
