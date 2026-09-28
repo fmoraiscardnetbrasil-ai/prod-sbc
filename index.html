@@ -904,8 +904,7 @@
 
         function ePermitidoEditarProducao() {
             if (!operadorAtual) return false;
-            const op = operadorAtual.trim().toUpperCase();
-            return ["FLÁVIO", "FLAVIO", "ANDRÉ", "ANDRE"].includes(op);
+            return true; // Qualquer operador autenticado pode colocar como concluído ou pendente
         }
 
         function atualizarVisibilidadeUI() {
@@ -1329,7 +1328,7 @@
                 const operadorTexto = lote.operador ? lote.operador.toUpperCase() : '<span style="color:#94a3b8">Pendente</span>';
                 const celulaAcoes = eAdministrador() ? `<td><button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button></td>` : '';
 
-                // Nome do arquivo com botão de edição se for admin
+                // Nome do arquivo com botão de edição se for admin (FLÁVIO/ANDRÉ)
                 let nomeArquivoHTML = `<strong>${lote.nome}</strong>`;
                 let qtdHTML = `${qtdLote.toLocaleString('pt-BR')}`;
                 if (eAdministrador()) {
@@ -1388,7 +1387,7 @@
             let classeCor = valorAtual === "Concluído" ? "setor-concluido" : (valorAtual === "Envio Parcial" ? "setor-parcial" : (valorAtual === "N/A" ? "setor-na" : "setor-pendente"));
             
             const permitido = ePermitidoEditarProducao();
-            const disabledAttr = permitido ? "" : "disabled title='Apenas FLÁVIO ou ANDRÉ podem editar a produção'";
+            const disabledAttr = permitido ? "" : "disabled title='Faça login para editar'";
 
             return `
                 <select class="select-setor ${classeCor}" onchange="atualizarSetorLote('${lote.id}', '${setorNome}', this)" ${disabledAttr}>
@@ -1401,14 +1400,13 @@
         }
 
         window.atualizarSetorLote = async function(loteId, setorNome, selectElement) {
-            if (!ePermitidoEditarProducao()) {
-                alert("Apenas os usuários FLÁVIO e ANDRÉ têm permissão para alterar a produção atual!");
+            if (!operadorAtual) {
+                alert("Faça o login para alterar a produção!");
                 renderizarTabelaProducao();
                 return;
             }
 
             const novoValor = selectElement.value;
-            if (!operadorAtual) { alert("Faça o login!"); renderizarTabelaProducao(); return; }
 
             try {
                 const lote = listaGeralLotes.find(l => l.id === loteId);
