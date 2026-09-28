@@ -345,6 +345,18 @@
             font-weight: 500;
         }
         .btn-danger:hover { background-color: #dc2626; }
+        
+        .btn-warning {
+            background-color: #f59e0b;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .btn-warning:hover { background-color: #d97706; }
 
         .table-responsive { overflow-x: auto; }
 
@@ -379,6 +391,44 @@
         .badge-vence-breve { color: #b45309; font-weight: 600; background: #fffbeb; padding: 4px 8px; border-radius: 20px; font-size: 12px; display: inline-block;}
         .badge-atrasado { color: #dc2626; font-weight: 600; background: #fef2f2; padding: 4px 8px; border-radius: 20px; font-size: 12px; display: inline-block;}
 
+        /* Caixinhas de Status por Setor no Relatório e Histórico */
+        .box-setor-relatorio {
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            border: 1px solid transparent;
+        }
+        .box-setor-no-prazo {
+            background-color: #ecfdf5;
+            color: #065f46;
+            border-color: #a7f3d0;
+        }
+        [data-theme="dark"] .box-setor-no-prazo {
+            background-color: #064e3b;
+            color: #ecfdf5;
+            border-color: #047857;
+        }
+
+        .box-setor-atrasado {
+            background-color: #fef2f2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+        [data-theme="dark"] .box-setor-atrasado {
+            background-color: #7f1d1d;
+            color: #fee2e2;
+            border-color: #b91c1c;
+        }
+
+        .box-setor-neutro {
+            background-color: var(--table-header);
+            color: var(--text-muted);
+            border-color: var(--border-color);
+        }
+
         .select-setor {
             padding: 5px 8px;
             border-radius: 6px;
@@ -401,8 +451,6 @@
         }
         .info-setor-hist .op-nome { font-weight: 600; color: #3b82f6; }
         .info-setor-hist .op-data { color: var(--text-muted); font-size: 10px; }
-        .tag-atraso-setor { color: #ef4444; font-weight: 700; font-size: 10px; }
-        .tag-prazo-setor { color: #10b981; font-weight: 700; font-size: 10px; }
 
         .login-overlay {
             position: fixed;
@@ -696,7 +744,6 @@
                         <div class="kpi-icon yellow">💳</div>
                         <div class="kpi-info"><span class="kpi-title">Volume Total Cartões</span><h2 id="rel-volume-cartoes">0</h2></div>
                     </div>
-                    <!-- NOVO KPI DE REJEITO E PORCENTAGEM DE PERDA -->
                     <div class="kpi-card">
                         <div class="kpi-icon red">⚠️</div>
                         <div class="kpi-info">
@@ -731,7 +778,7 @@
                     <div class="table-responsive">
                         <table class="styled-table">
                             <thead>
-                                <tr><th>Data Conclusão</th><th>Nome do Arquivo / OS</th><th>Qtd Cartões</th><th>Gravação</th><th>IDV</th><th>Manuseio</th><th>Status do Prazo</th><th>Tipo Envio</th><th>Justificativa</th></tr>
+                                <tr><th>Data Conclusão</th><th>Nome do Arquivo / OS</th><th>Qtd Cartões</th><th>Gravação</th><th>IDV</th><th>Manuseio</th><th>Status do Prazo</th><th>Tipo Envio</th><th>Justificativa (Apenas Atrasos)</th></tr>
                             </thead>
                             <tbody id="tabela-relatorio-detalhado"><tr><td colspan="9" class="text-center">Carregando dados...</td></tr></tbody>
                         </table>
@@ -754,7 +801,7 @@
                     <div class="icone-alerta">🔒</div>
                     <div>
                         <h4>Acesso Restrito</h4>
-                        <p>Apenas os operadores <b>FLÁVIO</b> ou <b>ANDRÉ</b> têm permissão para cadastrar novos rejeitos no sistema[cite: 1].</p>
+                        <p>Apenas os operadores <b>FLÁVIO</b> ou <b>ANDRÉ</b> têm permissão para cadastrar novos rejeitos no sistema.</p>
                     </div>
                 </div>
 
@@ -1452,18 +1499,14 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><strong>${dtFmt}</strong></td><td>${l.nome}</td><td>${parseInt(l.qtd).toLocaleString('pt-BR')}</td>
-                    <td>${formatarMiniSetorHist(l.setores.gravacao)}</td><td>${formatarMiniSetorHist(l.setores.idv)}</td><td>${formatarMiniSetorHist(l.setores.manuseio)}</td>
+                    <td>${formatarInfoSetorRelatorio(l.setores.gravacao, l.dataPrevista, dataConcStr)}</td>
+                    <td>${formatarInfoSetorRelatorio(l.setores.idv, l.dataPrevista, dataConcStr)}</td>
+                    <td>${formatarInfoSetorRelatorio(l.setores.manuseio, l.dataPrevista, dataConcStr)}</td>
                     <td>${sitHTML}</td>${celAcao}
                 `;
                 tbody.appendChild(tr);
             });
         };
-
-        function formatarMiniSetorHist(setor) {
-            if (!setor || setor.status === "Pendente") return `<span style="color:#94a3b8">-</span>`;
-            if (setor.status === "N/A") return `<span style="color:#64748b">N/A</span>`;
-            return `<span style="color:#10b981; font-weight:600;">✅ ${setor.op || 'OK'}</span>`;
-        }
 
         window.solicitarReaberturaLote = function(id) {
             if (!eAdministrador()) return;
@@ -1496,7 +1539,7 @@
             } catch (e) { alert("Erro ao reabrir."); }
         };
 
-        // RELATÓRIOS & CONTROLE (COM CÁLCULO DE REJEITO E PORCENTAGEM DE PERDA)
+        // RELATÓRIOS & CONTROLE
         function atualizarFiltrosRelatorios() {
             const anosSet = new Set(), operadoresSet = new Set();
             listaGeralLotes.forEach(l => {
@@ -1544,7 +1587,6 @@
                 return true;
             });
 
-            // Filtragem de Rejeitos baseada nos mesmos filtros de ano/mês/dia
             let rejeitosFiltrados = listaGeralRejeitos.filter(r => {
                 if (anoSel && r.ano !== anoSel) return false;
                 if (mesSel && r.mes !== mesSel) return false;
@@ -1565,13 +1607,11 @@
             let totalRejeitoPeriodo = 0;
             rejeitosFiltrados.forEach(r => { totalRejeitoPeriodo += (parseInt(r.quantidade) || 0); });
 
-            // CÁLCULO DA PORCENTAGEM DE PERDA
             let porcentagemPerda = 0;
             if (volumeCartoes > 0) {
                 porcentagemPerda = (totalRejeitoPeriodo / volumeCartoes) * 100;
             }
 
-            // Atualiza os KPIs na tela de Relatórios
             document.getElementById('rel-total-os').innerText = totalOs;
             document.getElementById('rel-no-prazo').innerText = noPrazo;
             document.getElementById('rel-atrasados').innerText = atrasados;
@@ -1579,10 +1619,8 @@
             document.getElementById('rel-kpi-rejeito-porc').innerText = `${totalRejeitoPeriodo.toLocaleString('pt-BR')} un (${porcentagemPerda.toFixed(2)}%)`;
             document.getElementById('rel-kpi-rejeito-detalhe').innerText = `Baseado em ${volumeCartoes.toLocaleString('pt-BR')} cartões`;
 
-            // Tabela de produtividade de operadores
             renderizarProdutividadeOperadores(finalizados);
 
-            // Tabela detalhada
             const tbodyDet = document.getElementById('tabela-relatorio-detalhado');
             tbodyDet.innerHTML = "";
             if (finalizados.length === 0) {
@@ -1594,18 +1632,26 @@
             finalizados.forEach(l => {
                 const dt = new Date(l.dataConclusao);
                 const dtFmt = !isNaN(dt) ? `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}` : '-';
-                const diasAtraso = calcularDiasAtraso(l.dataPrevista, l.dataConclusao.split('T')[0]);
+                const dataConcStr = l.dataConclusao.split('T')[0];
+                const diasAtraso = calcularDiasAtraso(l.dataPrevista, dataConcStr);
                 const sitHTML = diasAtraso > 0 ? `<span class="badge-atrasado">🔴 Atrasado (${diasAtraso}d)</span>` : `<span class="badge-no-prazo">🟢 No Prazo</span>`;
                 const tipoEnvio = l.parcial ? `<span style="color:#d97706; font-weight:600;">Envio Parcial</span>` : `<span>Total</span>`;
                 
+                let campoJustificativa = "";
+                if (diasAtraso > 0) {
+                    campoJustificativa = `<textarea class="textarea-justificativa" onchange="salvarJustificativa('${l.id}', this.value)" placeholder="Digite a justificativa...">${l.justificativa || ''}</textarea>`;
+                } else {
+                    campoJustificativa = `<span style="color: var(--text-muted); font-style: italic; font-size: 11px;">Não aplicável (Lote no prazo)</span>`;
+                }
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><strong>${dtFmt}</strong></td><td>${l.nome}</td><td>${parseInt(l.qtd).toLocaleString('pt-BR')}</td>
-                    <td>${formatarInfoSetor(l.setores.gravacao, l.dataPrevista)}</td>
-                    <td>${formatarInfoSetor(l.setores.idv, l.dataPrevista)}</td>
-                    <td>${formatarInfoSetor(l.setores.manuseio, l.dataPrevista)}</td>
+                    <td>${formatarInfoSetorRelatorio(l.setores.gravacao, l.dataPrevista, dataConcStr)}</td>
+                    <td>${formatarInfoSetorRelatorio(l.setores.idv, l.dataPrevista, dataConcStr)}</td>
+                    <td>${formatarInfoSetorRelatorio(l.setores.manuseio, l.dataPrevista, dataConcStr)}</td>
                     <td>${sitHTML}</td><td>${tipoEnvio}</td>
-                    <td><textarea class="textarea-justificativa" onchange="salvarJustificativa('${l.id}', this.value)" placeholder="Justificativa...">${l.justificativa || ''}</textarea></td>
+                    <td>${campoJustificativa}</td>
                 `;
                 tbodyDet.appendChild(tr);
             });
@@ -1645,19 +1691,47 @@
 
         window.salvarJustificativa = async function(loteId, texto) {
             if (!eAdministrador()) { alert("Apenas Flávio e André podem editar justificativas."); carregarRelatorios(); return; }
+            
+            const lote = listaGeralLotes.find(l => l.id === loteId);
+            if (lote && lote.dataConclusao) {
+                const diasAtraso = calcularDiasAtraso(lote.dataPrevista, lote.dataConclusao.split('T')[0]);
+                if (diasAtraso <= 0) {
+                    alert("A justificativa só pode ser preenchida em lotes com status de atraso!");
+                    carregarRelatorios();
+                    return;
+                }
+            }
+
             try { await updateDoc(doc(db, "lotes", loteId), { justificativa: texto }); } catch (e) { alert("Erro ao salvar justificativa."); }
         };
 
-        function formatarInfoSetor(objSetor, dataPrevista) {
-            if (!objSetor || objSetor.status === "Pendente") return `<span style="color:#94a3b8">⏳ Pendente</span>`;
-            if (objSetor.status === "N/A") return `<span style="color:#64748b; font-weight:600;">🚫 N/A</span>`;
+        function formatarInfoSetorRelatorio(objSetor, dataPrevistaStr, dataConclusaoLoteStr) {
+            if (!objSetor || objSetor.status === "Pendente") return `<div class="box-setor-relatorio box-setor-neutro"><span>⏳ Pendente</span></div>`;
+            if (objSetor.status === "N/A") return `<div class="box-setor-relatorio box-setor-neutro"><span style="font-weight:600;">🚫 N/A</span></div>`;
+            
             let htmlOp = objSetor.op ? `<span class="op-nome">👤 ${objSetor.op}</span>` : `<span class="op-nome">✅ OK</span>`;
             let htmlData = "";
+            let dataSetorStr = dataConclusaoLoteStr; // fallback
+            
             if (objSetor.data) {
                 const dt = new Date(objSetor.data);
-                if (!isNaN(dt)) htmlData = `<span class="op-data">${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}</span>`;
+                if (!isNaN(dt)) {
+                    dataSetorStr = objSetor.data.split('T')[0];
+                    htmlData = `<span class="op-data">${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')} ${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}</span>`;
+                }
             }
-            return `<div class="info-setor-hist">${htmlOp}${htmlData}</div>`;
+
+            const diasAtrasoSetor = calcularDiasAtraso(dataPrevistaStr, dataSetorStr);
+            const classeCaixa = diasAtrasoSetor > 0 ? "box-setor-atrasado" : "box-setor-no-prazo";
+            const iconeStatus = diasAtrasoSetor > 0 ? "🔴 Atrasado" : "🟢 No Prazo";
+
+            return `
+                <div class="box-setor-relatorio ${classeCaixa}">
+                    ${htmlOp}
+                    ${htmlData}
+                    <span style="font-size: 10px; font-weight: 700; margin-top: 2px;">${iconeStatus}</span>
+                </div>
+            `;
         }
 
         function montarSelect(idSelect, conjunto, placeholder) {
