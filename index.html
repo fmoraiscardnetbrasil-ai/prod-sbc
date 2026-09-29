@@ -678,6 +678,20 @@
                         <h3>Monitoramento de Lotes por Setor</h3>
                         <span class="info-auxiliar">Acompanhe o status e atrasos por setor individual</span>
                     </div>
+
+                    <!-- FILTRO DE PRAZOS ATUALIZADO COM EVENTO DIRECTO -->
+                    <div class="filtro-grid" style="margin-bottom: 20px;">
+                        <div class="input-grupo" style="max-width: 250px;">
+                            <label for="filtro-status-prazo">Filtrar por Status de Prazo</label>
+                            <select id="filtro-status-prazo" onchange="renderizarTabelaProducao()">
+                                <option value="">Todos os Status</option>
+                                <option value="no-prazo">🟢 No Prazo</option>
+                                <option value="vence-breve">🟡 Vence Hoje</option>
+                                <option value="atrasado">🔴 Atrasados</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="table-responsive">
                         <table class="styled-table">
                             <thead>
@@ -904,7 +918,7 @@
 
         function ePermitidoEditarProducao() {
             if (!operadorAtual) return false;
-            return true; // Qualquer operador autenticado pode colocar como concluído ou pendente
+            return true;
         }
 
         function atualizarVisibilidadeUI() {
@@ -1281,11 +1295,14 @@
             return resultado;
         }
 
-        function renderizarTabelaProducao() {
+        window.renderizarTabelaProducao = function() {
             const colunasVisiveis = eAdministrador() ? 10 : 9;
             tabelaLotes.innerHTML = "";
             const hojeStr = new Date().toISOString().split('T')[0];
             const ativos = listaGeralLotes.filter(l => l.status === "Em Produção");
+
+            const filtroPrazoSelect = document.getElementById('filtro-status-prazo');
+            const filtroPrazoValor = filtroPrazoSelect ? filtroPrazoSelect.value : "";
 
             ativos.sort((a, b) => {
                 if (a.dataPrevista !== b.dataPrevista) return a.dataPrevista.localeCompare(b.dataPrevista);
@@ -1294,29 +1311,55 @@
 
             let totalAtivoCount = 0, totalAtivoCartoes = 0, noPrazoCount = 0, noPrazoCartoes = 0, venceBreveCount = 0, venceBreveCartoes = 0, atrasadoCount = 0, atrasadoCartoes = 0;
 
-            if (ativos.length === 0) {
-                tabelaLotes.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center">Nenhum lote em produção.</td></tr>`;
-                atualizarKPIsProducao(0, 0, 0, 0, 0, 0, 0, 0);
-                document.getElementById('banner-alerta-prazos').style.display = 'none';
-                return;
-            }
-
             ativos.forEach(lote => {
                 const qtdLote = parseInt(lote.qtd) || 0;
                 totalAtivoCount++;
                 totalAtivoCartoes += qtdLote;
 
-                let situacaoHTML = "";
                 const diasAtraso = calcularDiasAtraso(lote.dataPrevista, hojeStr);
+                const ehHoje = (lote.dataPrevista === hojeStr);
+
                 if (diasAtraso > 0) {
-                    situacaoHTML = `<span class="badge-atrasado">🔴 ATRASADO (${diasAtraso}d)</span>`;
                     atrasadoCount++; atrasadoCartoes += qtdLote;
-                } else if (lote.dataPrevista === hojeStr) {
-                    situacaoHTML = `<span class="badge-vence-breve">🟡 Vence Hoje</span>`;
+                } else if (ehHoje) {
                     venceBreveCount++; venceBreveCartoes += qtdLote;
                 } else {
-                    situacaoHTML = `<span class="badge-no-prazo">🟢 No Prazo</span>`;
                     noPrazoCount++; noPrazoCartoes += qtdLote;
+                }
+            });
+
+            const ativosFiltrados = ativos.filter(lote => {
+                if (!filtroPrazoValor) return true;
+
+                const diasAtraso = calcularDiasAtraso(lote.dataPrevista, hojeStr);
+                const ehHoje = (lote.dataPrevista === hojeStr);
+
+                if (filtroPrazoValor === "no-prazo" && diasAtraso === 0 && !ehHoje) return true;
+                if (filtroPrazoValor === "vence-breve" && ehHoje) return true;
+                if (filtroPrazoValor === "atrasado" && diasAtraso > 0) return true;
+
+                return false;
+            });
+
+            if (ativosFiltrados.length === 0) {
+                tabelaLotes.innerHTML = `<tr><td colspan="${colunasVisiveis}" class="text-center">Nenhum lote encontrado com este filtro.</td></tr>`;
+                atualizarKPIsProducao(totalAtivoCount, totalAtivoCartoes, noPrazoCount, noPrazoCartoes, venceBreveCount, venceBreveCartoes, atrasadoCount, atrasadoCartoes);
+                document.getElementById('banner-alerta-prazos').style.display = (venceBreveCount > 0 || atrasadoCount > 0) ? 'flex' : 'none';
+                return;
+            }
+
+            ativosFiltrados.forEach(lote => {
+                const qtdLote = parseInt(lote.qtd) || 0;
+                let situacaoHTML = "";
+                const diasAtraso = calcularDiasAtraso(lote.dataPrevista, hojeStr);
+                const ehHoje = (lote.dataPrevista === hojeStr);
+                
+                if (diasAtraso > 0) {
+                    situacaoHTML = `<span class="badge-atrasado">🔴 ATRASADO (${diasAtraso}d)</span>`;
+                } else if (ehHoje) {
+                    situacaoHTML = `<span class="badge-vence-breve">🟡 Vence Hoje</span>`;
+                } else {
+                    situacaoHTML = `<span class="badge-no-prazo">🟢 No Prazo</span>`;
                 }
 
                 let dataHoraExibida = '-';
@@ -1328,7 +1371,6 @@
                 const operadorTexto = lote.operador ? lote.operador.toUpperCase() : '<span style="color:#94a3b8">Pendente</span>';
                 const celulaAcoes = eAdministrador() ? `<td><button onclick="deletarLote('${lote.id}')" class="btn-danger">Excluir</button></td>` : '';
 
-                // Nome do arquivo com botão de edição se for admin (FLÁVIO/ANDRÉ)
                 let nomeArquivoHTML = `<strong>${lote.nome}</strong>`;
                 let qtdHTML = `${qtdLote.toLocaleString('pt-BR')}`;
                 if (eAdministrador()) {
@@ -1763,7 +1805,7 @@
             
             let htmlOp = objSetor.op ? `<span class="op-nome">👤 ${objSetor.op}</span>` : `<span class="op-nome">✅ OK</span>`;
             let htmlData = "";
-            let dataSetorStr = dataConclusaoLoteStr; // fallback
+            let dataSetorStr = dataConclusaoLoteStr;
             
             if (objSetor.data) {
                 const dt = new Date(objSetor.data);
