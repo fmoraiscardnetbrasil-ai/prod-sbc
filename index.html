@@ -136,14 +136,21 @@
         }
 
         .sidebar {
-            width: 250px;
+            width: 260px;
             background-color: var(--bg-sidebar);
             border-right: 1px solid var(--border-color);
             padding: 20px 15px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 20px;
             flex-shrink: 0;
+            justify-content: space-between;
+        }
+
+        .sidebar-top {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .abas-container {
@@ -177,6 +184,54 @@
         .btn-aba.active {
             background: #2563eb;
             color: white;
+        }
+
+        /* Banner de Aniversariantes do Mês na Sidebar */
+        .banner-aniversariantes-mes {
+            background: var(--bg-card);
+            border: 1px solid #f59e0b;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-top: 15px;
+        }
+
+        .banner-aniversariantes-mes h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: #f59e0b;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+        }
+
+        .lista-aniversariantes {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .lista-aniversariantes li {
+            font-size: 12px;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--filtro-bg);
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .lista-aniversariantes li.aniversario-hoje {
+            background-color: rgba(245, 158, 11, 0.15);
+            border-color: #f59e0b;
+            font-weight: 600;
         }
 
         .main-container {
@@ -638,12 +693,22 @@
 
     <div class="app-layout">
         <aside class="sidebar">
-            <div class="abas-container">
-                <button class="btn-aba active" onclick="mudarAba('producao', this)">📦 Produção Atual</button>
-                <button class="btn-aba" onclick="mudarAba('historico', this)">📊 Histórico Concluídos</button>
-                <button class="btn-aba" onclick="mudarAba('relatorios', this)">📈 Relatórios & Controle</button>
-                <button class="btn-aba" onclick="mudarAba('rejeitos', this)">⚠️ Controle de Rejeitos</button>
-                <button class="btn-aba" id="btn-aba-usuarios" onclick="mudarAba('usuarios', this)" style="display: none;">👥 Gerenciar Usuários</button>
+            <div class="sidebar-top">
+                <div class="abas-container">
+                    <button class="btn-aba active" onclick="mudarAba('producao', this)">📦 Produção Atual</button>
+                    <button class="btn-aba" onclick="mudarAba('historico', this)">📊 Histórico Concluídos</button>
+                    <button class="btn-aba" onclick="mudarAba('relatorios', this)">📈 Relatórios & Controle</button>
+                    <button class="btn-aba" onclick="mudarAba('rejeitos', this)">⚠️ Controle de Rejeitos</button>
+                    <button class="btn-aba" id="btn-aba-usuarios" onclick="mudarAba('usuarios', this)" style="display: none;">👥 Gerenciar Usuários</button>
+                </div>
+
+                <!-- Banner fixo na lateral com os aniversariantes do mês (reposicionado abaixo de Gerenciar Usuários) -->
+                <div class="banner-aniversariantes-mes">
+                    <h4 id="titulo-banner-aniversariantes">🎉 Aniversariantes do Mês</h4>
+                    <ul id="lista-aniversariantes-mes" class="lista-aniversariantes">
+                        <li style="color: var(--text-muted); text-align: center; border: none; background: transparent;">Carregando...</li>
+                    </ul>
+                </div>
             </div>
         </aside>
 
@@ -899,6 +964,7 @@
         let operadorAtual = "";
         let listaGeralLotes = [];
         let listaGeralRejeitos = [];
+        let listaGeralOperadoresCache = [];
         let lotePendenteFinalizacao = null;
         let loteParaReabrirId = null;
         let unsubscribeLotes = null;
@@ -1051,8 +1117,60 @@
         function escutarOperadoresEmTempoReal() {
             if (unsubscribeOperadores) unsubscribeOperadores();
             unsubscribeOperadores = onSnapshot(collection(db, "operadores"), (querySnapshot) => {
+                listaGeralOperadoresCache = [];
+                querySnapshot.forEach(docSnap => {
+                    const dados = docSnap.data();
+                    listaGeralOperadoresCache.push({
+                        nome: docSnap.id,
+                        nascimento: (typeof dados === 'object' && dados !== null) ? (dados.nascimento || "") : ""
+                    });
+                });
+                renderizarBannerAniversariantesMes();
+
                 const abaAtiva = document.querySelector('.secao-aba.active');
                 if (abaAtiva && abaAtiva.id === 'aba-usuarios') renderizarTabelaUsuarios(querySnapshot);
+            });
+        }
+
+        function renderizarBannerAniversariantesMes() {
+            const ul = document.getElementById('lista-aniversariantes-mes');
+            if (!ul) return;
+            ul.innerHTML = "";
+
+            const hoje = new Date();
+            const mesAtual = String(hoje.getMonth() + 1).padStart(2, '0');
+            const diaAtualStr = String(hoje.getDate()).padStart(2, '0');
+
+            let aniversariantesMes = [];
+            listaGeralOperadoresCache.forEach(op => {
+                if (op.nascimento) {
+                    const partes = op.nascimento.split('-');
+                    if (partes.length === 3) {
+                        const m = partes[1];
+                        const d = partes[2];
+                        if (m === mesAtual) {
+                            aniversariantesMes.push({ nome: op.nome, dia: d, eHoje: (d === diaAtualStr) });
+                        }
+                    }
+                }
+            });
+
+            aniversariantesMes.sort((a, b) => a.dia.localeCompare(b.dia));
+
+            if (aniversariantesMes.length === 0) {
+                ul.innerHTML = `<li style="color: var(--text-muted); text-align: center; border: none; background: transparent; display: block; padding: 4px;">Nenhum aniversariante este mês.</li>`;
+                return;
+            }
+
+            aniversariantesMes.forEach(item => {
+                const li = document.createElement('li');
+                if (item.eHoje) {
+                    li.className = "aniversario-hoje";
+                    li.innerHTML = `<span>🎂 <b>${item.nome}</b></span><span><b>Hoje!</b></span>`;
+                } else {
+                    li.innerHTML = `<span>👤 ${item.nome}</span><span>${item.dia}/${mesAtual}</span>`;
+                }
+                ul.appendChild(li);
             });
         }
 
@@ -1077,7 +1195,6 @@
                 document.getElementById("display-usuario").innerText = "👤 Operador: " + operadorAtual;
                 atualizarVisibilidadeUI();
                 
-                // VERIFICAR ANIVERSÁRIO
                 verificarAniversarioLogin(dadosOp);
 
                 const abaAtiva = document.querySelector('.secao-aba.active');
@@ -1090,7 +1207,6 @@
 
         function verificarAniversarioLogin(dadosOp) {
             if (!dadosOp || !dadosOp.nascimento) return;
-            // Formato esperado de nascimento: YYYY-MM-DD
             const partesNasc = dadosOp.nascimento.split('-');
             if (partesNasc.length !== 3) return;
             const mesNasc = partesNasc[1];
@@ -1122,7 +1238,6 @@
             const nascimento = document.getElementById("cad-nascimento").value;
             if (!nome || !senha || !nascimento) { alert("Preencha todos os campos, incluindo a data de nascimento!"); return; }
             try {
-                // Utilizando setDoc com merge: true para proteger totalmente dados existentes se o usuário já existir
                 await setDoc(doc(db, "operadores", nome), { senha: senha, nascimento: nascimento }, { merge: true });
                 alert("Operador cadastrado com sucesso!");
                 document.getElementById("cad-operador").value = "";
@@ -1149,7 +1264,6 @@
             const novaSenha = document.getElementById("rec-nova-senha").value;
             if (senhaMestra !== "admin") { alert("Senha mestra incorreta!"); return; }
             try {
-                // Mantém os dados existentes (como nascimento) e atualiza apenas a senha
                 await setDoc(doc(db, "operadores", nome), { senha: novaSenha }, { merge: true });
                 alert("Senha redefinida com sucesso!");
                 voltarParaLogin('recuperacao');
@@ -1298,7 +1412,6 @@
                     if (partes.length === 3) nascFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
                 }
 
-                // Permitir editar ou adicionar data de nascimento direto na tabela
                 const inputNascHTML = `
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <span id="txt-nasc-${op.nome}">${nascFormatada}</span>
