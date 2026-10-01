@@ -506,6 +506,16 @@
 </head>
 <body data-theme="dark">
 
+    <!-- MODAL DE ANIVERSÁRIO -->
+    <div id="modal-aniversario" class="login-overlay" style="display: none;">
+        <div class="login-card" style="border: 2px solid #f59e0b;">
+            <div style="font-size: 48px; margin-bottom: 10px;">🎉🎂</div>
+            <h2 id="titulo-aniversario" style="color: #f59e0b;">Parabéns!</h2>
+            <p id="texto-aniversario" style="font-size: 16px; font-weight: 600; margin-bottom: 20px; color: var(--text-main);">Feliz Aniversario!</p>
+            <button onclick="fecharModalAniversario()" class="btn-primary" style="width: 100%;">Obrigado! Continuar</button>
+        </div>
+    </div>
+
     <!-- MODAL DE QUANTIDADE -->
     <div id="modal-finalizacao" class="login-overlay" style="display: none;">
         <div class="login-card">
@@ -567,7 +577,7 @@
     <div id="modal-cadastro" class="login-overlay" style="display: none;">
         <div class="login-card">
             <h2>Novo Operador</h2>
-            <p>Cadastre um novo nome e senha:</p>
+            <p>Cadastre um novo nome, senha e data de nascimento:</p>
             <div class="login-input-grupo">
                 <label for="cad-operador">Nome do Operador</label>
                 <input type="text" id="cad-operador" placeholder="Ex: CARLOS" autocomplete="off" oninput="this.value = this.value.toUpperCase()">
@@ -575,6 +585,10 @@
             <div class="login-input-grupo">
                 <label for="cad-senha">Senha de Acesso</label>
                 <input type="password" id="cad-senha" placeholder="Crie uma senha" autocomplete="off">
+            </div>
+            <div class="login-input-grupo">
+                <label for="cad-nascimento">Data de Nascimento</label>
+                <input type="date" id="cad-nascimento" onclick="this.showPicker && this.showPicker()" required>
             </div>
             <div style="display: flex; gap: 10px; margin-top: 5px;">
                 <button onclick="voltarParaLogin('cadastro')" class="btn-secondary" style="width: 50%;">Voltar</button>
@@ -679,7 +693,6 @@
                         <span class="info-auxiliar">Acompanhe o status e atrasos por setor individual</span>
                     </div>
 
-                    <!-- FILTRO DE PRAZOS ATUALIZADO COM EVENTO DIRECTO -->
                     <div class="filtro-grid" style="margin-bottom: 20px;">
                         <div class="input-grupo" style="max-width: 250px;">
                             <label for="filtro-status-prazo">Filtrar por Status de Prazo</label>
@@ -852,12 +865,12 @@
                 <section class="panel-card">
                     <div class="panel-header space-between">
                         <h3>👥 Lista de Usuários Cadastrados</h3>
-                        <span class="info-auxiliar">Painel administrativo</span>
+                        <span class="info-auxiliar">Painel administrativo com Data de Nascimento</span>
                     </div>
                     <div class="table-responsive">
                         <table class="styled-table">
-                            <thead><tr><th>Nome do Operador</th><th>Ações</th></tr></thead>
-                            <tbody id="tabela-usuarios-cadastrados"><tr><td colspan="2" class="text-center">Carregando usuários...</td></tr></tbody>
+                            <thead><tr><th>Nome do Operador</th><th>Data de Nascimento</th><th>Ações</th></tr></thead>
+                            <tbody id="tabela-usuarios-cadastrados"><tr><td colspan="3" class="text-center">Carregando usuários...</td></tr></tbody>
                         </table>
                     </div>
                 </section>
@@ -962,9 +975,14 @@
             try {
                 const querySnapshot = await getDocs(collection(db, "operadores"));
                 if (querySnapshot.empty) {
-                    const padrao = { "FLÁVIO": "123", "FLAVIO": "123", "ANDRÉ": "123", "ANDRE": "123" };
-                    for (let [nome, senha] of Object.entries(padrao)) {
-                        await setDoc(doc(db, "operadores", nome), { senha: senha });
+                    const padrao = { 
+                        "FLÁVIO": { senha: "123", nascimento: "" }, 
+                        "FLAVIO": { senha: "123", nascimento: "" }, 
+                        "ANDRÉ": { senha: "123", nascimento: "" }, 
+                        "ANDRE": { senha: "123", nascimento: "" } 
+                    };
+                    for (let [nome, dados] of Object.entries(padrao)) {
+                        await setDoc(doc(db, "operadores", nome), dados);
                     }
                 }
             } catch (e) { console.error(e); }
@@ -1045,8 +1063,12 @@
 
             try {
                 const querySnapshot = await getDocs(collection(db, "operadores"));
-                let senhaSalva = null;
-                querySnapshot.forEach((d) => { if (d.id === nome) senhaSalva = d.data().senha; });
+                let dadosOp = null;
+                querySnapshot.forEach((d) => { 
+                    if (d.id === nome) dadosOp = d.data(); 
+                });
+
+                const senhaSalva = typeof dadosOp === 'string' ? dadosOp : (dadosOp ? dadosOp.senha : null);
 
                 if (!senhaSalva || senhaSalva !== senha) { alert("Acesso negado! Usuário ou senha incorretos."); return; }
 
@@ -1055,12 +1077,38 @@
                 document.getElementById("display-usuario").innerText = "👤 Operador: " + operadorAtual;
                 atualizarVisibilidadeUI();
                 
+                // VERIFICAR ANIVERSÁRIO
+                verificarAniversarioLogin(dadosOp);
+
                 const abaAtiva = document.querySelector('.secao-aba.active');
                 if (abaAtiva && abaAtiva.id === 'aba-producao') renderizarTabelaProducao();
 
                 document.getElementById("input-operador-login").value = "";
                 document.getElementById("input-senha-login").value = "";
             } catch (error) { alert("Erro ao conectar ao servidor."); }
+        };
+
+        function verificarAniversarioLogin(dadosOp) {
+            if (!dadosOp || !dadosOp.nascimento) return;
+            // Formato esperado de nascimento: YYYY-MM-DD
+            const partesNasc = dadosOp.nascimento.split('-');
+            if (partesNasc.length !== 3) return;
+            const mesNasc = partesNasc[1];
+            const diaNasc = partesNasc[2];
+
+            const hoje = new Date();
+            const mesHoje = String(hoje.getMonth() + 1).padStart(2, '0');
+            const diaHoje = String(hoje.getDate()).padStart(2, '0');
+
+            if (mesNasc === mesHoje && diaNasc === diaHoje) {
+                document.getElementById('titulo-aniversario').innerText = `Parabéns, ${operadorAtual}! 🎉`;
+                document.getElementById('texto-aniversario').innerText = `A equipe Cardnet te deseja um Feliz Aniversário! Muitas felicidades e sucesso! 🎂🎈`;
+                document.getElementById('modal-aniversario').style.display = 'flex';
+            }
+        }
+
+        window.fecharModalAniversario = function() {
+            document.getElementById('modal-aniversario').style.display = 'none';
         };
 
         window.mostrarTelaCadastro = function() {
@@ -1071,12 +1119,15 @@
         window.salvarNovoOperador = async function() {
             const nome = document.getElementById("cad-operador").value.trim().toUpperCase();
             const senha = document.getElementById("cad-senha").value;
-            if (!nome || !senha) { alert("Preencha todos os campos!"); return; }
+            const nascimento = document.getElementById("cad-nascimento").value;
+            if (!nome || !senha || !nascimento) { alert("Preencha todos os campos, incluindo a data de nascimento!"); return; }
             try {
-                await setDoc(doc(db, "operadores", nome), { senha: senha });
+                // Utilizando setDoc com merge: true para proteger totalmente dados existentes se o usuário já existir
+                await setDoc(doc(db, "operadores", nome), { senha: senha, nascimento: nascimento }, { merge: true });
                 alert("Operador cadastrado com sucesso!");
                 document.getElementById("cad-operador").value = "";
                 document.getElementById("cad-senha").value = "";
+                document.getElementById("cad-nascimento").value = "";
                 voltarParaLogin('cadastro');
             } catch (e) { alert("Erro ao salvar operador."); }
         };
@@ -1098,7 +1149,8 @@
             const novaSenha = document.getElementById("rec-nova-senha").value;
             if (senhaMestra !== "admin") { alert("Senha mestra incorreta!"); return; }
             try {
-                await setDoc(doc(db, "operadores", nome), { senha: novaSenha });
+                // Mantém os dados existentes (como nascimento) e atualiza apenas a senha
+                await setDoc(doc(db, "operadores", nome), { senha: novaSenha }, { merge: true });
                 alert("Senha redefinida com sucesso!");
                 voltarParaLogin('recuperacao');
             } catch (e) { alert("Erro ao redefinir senha."); }
@@ -1222,22 +1274,62 @@
             if (!tbody) return;
             tbody.innerHTML = "";
             let operadoresList = [];
-            querySnapshot.forEach(docSnap => operadoresList.push({ nome: docSnap.id }));
+            querySnapshot.forEach(docSnap => {
+                const dados = docSnap.data();
+                operadoresList.push({ 
+                    nome: docSnap.id, 
+                    nascimento: (typeof dados === 'object' && dados !== null) ? (dados.nascimento || "") : "" 
+                });
+            });
             operadoresList.sort((a, b) => a.nome.localeCompare(b.nome));
 
             if (operadoresList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="2" class="text-center">Nenhum usuário cadastrado.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="3" class="text-center">Nenhum usuário cadastrado.</td></tr>`;
                 return;
             }
 
             operadoresList.forEach(op => {
                 const ehVoce = (op.nome === operadorAtual.trim().toUpperCase());
                 const btnAcao = ehVoce ? `<span class="info-auxiliar">Usuário atual</span>` : `<button onclick="deletarOperador('${op.nome}')" class="btn-danger">Excluir</button>`;
+                
+                let nascFormatada = '-';
+                if (op.nascimento) {
+                    const partes = op.nascimento.split('-');
+                    if (partes.length === 3) nascFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+                }
+
+                // Permitir editar ou adicionar data de nascimento direto na tabela
+                const inputNascHTML = `
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span id="txt-nasc-${op.nome}">${nascFormatada}</span>
+                        <button onclick="editarNascimento('${op.nome}', '${op.nascimento || ''}')" style="background:transparent; border:none; cursor:pointer; font-size:12px;" title="Editar Data de Nascimento">✏️</button>
+                    </div>
+                `;
+
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td><strong>👤 ${op.nome}</strong></td><td>${btnAcao}</td>`;
+                tr.innerHTML = `<td><strong>👤 ${op.nome}</strong></td><td>${inputNascHTML}</td><td>${btnAcao}</td>`;
                 tbody.appendChild(tr);
             });
         }
+
+        window.editarNascimento = async function(nomeOperador, nascAtual) {
+            if (!eAdministrador()) return;
+            const novaNasc = prompt(`Digite a nova data de nascimento (AAAA-MM-DD) para ${nomeOperador}:`, nascAtual);
+            if (novaNasc !== null) {
+                if (novaNasc.trim() === "" || /^\d{4}-\d{2}-\d{2}$/.test(novaNasc)) {
+                    try {
+                        await setDoc(doc(db, "operadores", nomeOperador), { nascimento: novaNasc.trim() }, { merge: true });
+                        alert("Data de nascimento atualizada com sucesso!");
+                        const querySnapshot = await getDocs(collection(db, "operadores"));
+                        renderizarTabelaUsuarios(querySnapshot);
+                    } catch (e) {
+                        alert("Erro ao atualizar data de nascimento.");
+                    }
+                } else {
+                    alert("Formato inválido! Use o formato AAAA-MM-DD (ex: 1990-05-15).");
+                }
+            }
+        };
 
         window.deletarOperador = async function(nomeOperador) {
             if (!eAdministrador()) return;
@@ -1623,7 +1715,12 @@
             try {
                 const snap = await getDocs(collection(db, "operadores"));
                 let senhaSalva = null;
-                snap.forEach(d => { if (d.id === nomeAdmin) senhaSalva = d.data().senha; });
+                snap.forEach(d => { 
+                    if (d.id === nomeAdmin) {
+                        const dados = d.data();
+                        senhaSalva = typeof dados === 'string' ? dados : dados.senha;
+                    } 
+                });
                 if (!senhaSalva || senhaSalva !== senhaAdmin) { alert("Senha incorreta!"); return; }
 
                 await updateDoc(doc(db, "lotes", loteParaReabrirId), { status: "Em Produção", dataConclusao: null });
