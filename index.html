@@ -532,15 +532,6 @@
         .setor-parcial { background-color: #fef3c7; color: #b45309; border-color: #f59e0b; }
         .setor-na { background-color: #e2e8f0; color: #475569; border-color: #cbd5e1; }
 
-        .info-setor-hist {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            font-size: 11px;
-        }
-        .info-setor-hist .op-nome { font-weight: 600; color: #3b82f6; }
-        .info-setor-hist .op-data { color: var(--text-muted); font-size: 10px; }
-
         .login-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -723,7 +714,7 @@
             <div class="user-info">
                 <button class="btn-theme" id="btn-alternar-tema" onclick="alternarTema()" title="Alternar Tema Claro/Escuro">🌙</button>
                 <span id="display-usuario" class="badge-user">👤 Operador: -</span>
-                <button class="btn-acao-nav" onclick="trocarUsuario()" title="Trocar Usuário">🔄 Trocar Usuário</button>
+                <button class="btn-acao-nav" onclick="trocarUsuario()" title="Trocar Utilizador">🔄 Trocar Utilizador</button>
                 <button class="btn-sair-nav" onclick="sairSistema()" title="Sair">🚪 Sair</button>
             </div>
         </div>
@@ -737,7 +728,7 @@
                     <button class="btn-aba" onclick="mudarAba('historico', this)">📊 Histórico Concluídos</button>
                     <button class="btn-aba" onclick="mudarAba('relatorios', this)">📈 Relatórios & Controle</button>
                     <button class="btn-aba" onclick="mudarAba('rejeitos', this)">⚠️ Controle de Rejeitos</button>
-                    <button class="btn-aba" id="btn-aba-usuarios" onclick="mudarAba('usuarios', this)" style="display: none;">👥 Gerenciar Usuários</button>
+                    <button class="btn-aba" id="btn-aba-usuarios" onclick="mudarAba('usuarios', this)" style="display: none;">👥 Gerenciar Utilizadores</button>
                 </div>
 
                 <div class="banner-aniversariantes-mes">
@@ -752,6 +743,9 @@
         <main class="main-container">
             <!-- ABA 1: PRODUÇÃO -->
             <div id="aba-producao" class="secao-aba active">
+                <!-- CONTAINER DE AVISOS GERAIS COM EXPIRAÇÃO -->
+                <div id="container-avisos-gerais" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;"></div>
+
                 <div id="banner-alerta-prazos" class="banner-alerta-prazos" style="display: none;">
                     <div class="icone-alerta">⚠️</div>
                     <div>
@@ -780,12 +774,30 @@
                 </section>
 
                 <section class="panel-card" id="secao-cadastro-lote" style="display: none;">
-                    <div class="panel-header"><h3>Cadastrar Novo Arquivo</h3></div>
+                    <div class="panel-header"><h3>Cadastrar Novo Ficheiro</h3></div>
                     <form id="form-lote" class="form-grid">
-                        <div class="input-grupo"><label for="nome-arquivo">Nome do Arquivo</label><input type="text" id="nome-arquivo" placeholder="Ex: 260910_NORMAL" required></div>
+                        <div class="input-grupo"><label for="nome-arquivo">Nome do Ficheiro</label><input type="text" id="nome-arquivo" placeholder="Ex: 260910_NORMAL" required></div>
                         <div class="input-grupo"><label for="qtd-cartoes">Qtd. Cartões</label><input type="number" id="qtd-cartoes" placeholder="Ex: 1000" required></div>
                         <div class="input-grupo"><label for="data-prevista">Data Prevista de Coleta</label><input type="date" id="data-prevista" onclick="this.showPicker && this.showPicker()" required></div>
                         <div class="input-grupo"><button type="submit" id="btn-cadastrar-lote" class="btn-primary">+ Cadastrar Lote</button></div>
+                    </form>
+                </section>
+
+                <!-- SEÇÃO DE CADASTRO DE AVISO (APENAS ADMIN) -->
+                <section class="panel-card" id="secao-cadastro-aviso" style="display: none;">
+                    <div class="panel-header"><h3>📢 Publicar Novo Aviso Geral (Com Expiração)</h3></div>
+                    <form id="form-aviso" class="form-grid-rejeito" onsubmit="salvarAviso(event)">
+                        <div class="input-grupo">
+                            <label for="aviso-texto">Texto do Aviso</label>
+                            <input type="text" id="aviso-texto" placeholder="Ex: Manutenção na impressora às 15h" required>
+                        </div>
+                        <div class="input-grupo">
+                            <label for="aviso-expiracao">Expirar em (Data Limite)</label>
+                            <input type="date" id="aviso-expiracao" onclick="this.showPicker && this.showPicker()" required>
+                        </div>
+                        <div class="input-grupo">
+                            <button type="submit" id="btn-salvar-aviso" class="btn-primary">+ Publicar Aviso</button>
+                        </div>
                     </form>
                 </section>
 
@@ -811,7 +823,7 @@
                         <table class="styled-table">
                             <thead>
                                 <tr>
-                                    <th>Data Cadastro</th><th>Arquivo</th><th>Qtd</th><th>Previsão</th><th>Gravação</th><th>IDV</th><th>Manuseio</th><th>Prazo Geral</th><th>Última Alt.</th><th id="th-acoes-producao" style="display: none;">Ações</th>
+                                    <th>Data Cadastro</th><th>Ficheiro</th><th>Qtd</th><th>Previsão</th><th>Gravação</th><th>IDV</th><th>Manuseio</th><th>Prazo Geral</th><th>Última Alt.</th><th id="th-acoes-producao" style="display: none;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="tabela-lotes"><tr><td colspan="10" class="text-center">Carregando dados...</td></tr></tbody>
@@ -845,7 +857,7 @@
                     <div class="table-responsive">
                         <table class="styled-table">
                             <thead>
-                                <tr><th>Data Conclusão</th><th>Arquivo</th><th>Qtd</th><th>Gravação</th><th>IDV</th><th>Manuseio</th><th>Situação</th><th id="th-acoes-historico" style="display: none;">Ações / Reabertura</th></tr>
+                                <tr><th>Data Conclusão</th><th>Ficheiro</th><th>Qtd</th><th>Gravação</th><th>IDV</th><th>Manuseio</th><th>Situação</th><th id="th-acoes-historico" style="display: none;">Ações / Reabertura</th></tr>
                             </thead>
                             <tbody id="tabela-historico"><tr><td colspan="8" class="text-center">Aguarde...</td></tr></tbody>
                         </table>
@@ -906,7 +918,7 @@
                     <div class="table-responsive">
                         <table class="styled-table">
                             <thead>
-                                <tr><th>Data Conclusão</th><th>Nome do Arquivo / OS</th><th>Qtd Cartões</th><th>Gravação</th><th>IDV</th><th>Manuseio</th><th>Status do Prazo</th><th>Tipo Envio</th><th>Justificativa (Apenas Atrasos)</th></tr>
+                                <tr><th>Data Conclusão</th><th>Nome do Ficheiro / OS</th><th>Qtd Cartões</th><th>Gravação</th><th>IDV</th><th>Manuseio</th><th>Status do Prazo</th><th>Tipo Envio</th><th>Justificativa (Apenas Atrasos)</th></tr>
                             </thead>
                             <tbody id="tabela-relatorio-detalhado"><tr><td colspan="9" class="text-center">Carregando dados...</td></tr></tbody>
                         </table>
@@ -962,17 +974,17 @@
                 </section>
             </div>
 
-            <!-- ABA 5: GERENCIAR USUÁRIOS -->
+            <!-- ABA 5: GERENCIAR UTILIZADORES -->
             <div id="aba-usuarios" class="secao-aba">
                 <section class="panel-card">
                     <div class="panel-header space-between">
-                        <h3>👥 Lista de Usuários Cadastrados</h3>
+                        <h3>👥 Lista de Utilizadores Cadastrados</h3>
                         <span class="info-auxiliar">Painel administrativo com Data de Nascimento</span>
                     </div>
                     <div class="table-responsive">
                         <table class="styled-table">
                             <thead><tr><th>Nome do Operador</th><th>Data de Nascimento</th><th>Ações</th></tr></thead>
-                            <tbody id="tabela-usuarios-cadastrados"><tr><td colspan="3" class="text-center">Carregando usuários...</td></tr></tbody>
+                            <tbody id="tabela-usuarios-cadastrados"><tr><td colspan="3" class="text-center">Carregando utilizadores...</td></tr></tbody>
                         </table>
                     </div>
                 </section>
@@ -1001,14 +1013,15 @@
         let operadorAtual = "";
         let listaGeralLotes = [];
         let listaGeralRejeitos = [];
+        let listaGeralAvisos = [];
         let listaGeralOperadoresCache = [];
         let lotePendenteFinalizacao = null;
         let loteParaReabrirId = null;
         let unsubscribeLotes = null;
         let unsubscribeRejeitos = null;
+        let unsubscribeAvisos = null;
         let unsubscribeOperadores = null;
 
-        // Sistema moderno de Toast (Notificações)
         function mostrarToast(mensagem, tipo = 'success') {
             const container = document.getElementById('toast-container');
             if (!container) return;
@@ -1048,21 +1061,20 @@
             return diasUteis;
         }
 
+        // Validação estrita: Apenas FLÁVIO / FLAVIO / ANDRÉ / ANDRE podem alterar
         function eAdministrador() {
             if (!operadorAtual) return false;
             const op = operadorAtual.trim().toUpperCase();
             return ["FLÁVIO", "FLAVIO", "ANDRÉ", "ANDRE"].includes(op);
         }
 
-        function ePermitidoEditarProducao() {
-            if (!operadorAtual) return false;
-            return true;
-        }
-
         function atualizarVisibilidadeUI() {
             const admin = eAdministrador();
             const secaoCadastro = document.getElementById('secao-cadastro-lote');
             if (secaoCadastro) secaoCadastro.style.display = admin ? 'block' : 'none';
+
+            const secaoCadastroAviso = document.getElementById('secao-cadastro-aviso');
+            if (secaoCadastroAviso) secaoCadastroAviso.style.display = admin ? 'block' : 'none';
 
             const thProducao = document.getElementById('th-acoes-producao');
             if (thProducao) thProducao.style.display = admin ? 'table-cell' : 'none';
@@ -1132,6 +1144,7 @@
 
             escutarLotesEmTempoReal();
             escutarRejeitosEmTempoReal();
+            escutarAvisosEmTempoReal();
             escutarOperadoresEmTempoReal();
         };
 
@@ -1172,6 +1185,91 @@
                 }
             });
         }
+
+        function escutarAvisosEmTempoReal() {
+            if (unsubscribeAvisos) unsubscribeAvisos();
+            unsubscribeAvisos = onSnapshot(collection(db, "avisos"), (querySnapshot) => {
+                listaGeralAvisos = [];
+                const hojeStr = new Date().toISOString().split('T')[0];
+
+                querySnapshot.forEach((docSnap) => {
+                    const av = docSnap.data();
+                    av.id = docSnap.id;
+                    if (av.dataExpiracao >= hojeStr) {
+                        listaGeralAvisos.push(av);
+                    } else {
+                        deleteDoc(doc(db, "avisos", av.id)).catch(() => {});
+                    }
+                });
+
+                renderizarAvisosAtivos();
+            });
+        }
+
+        function renderizarAvisosAtivos() {
+            const container = document.getElementById('container-avisos-gerais');
+            if (!container) return;
+            container.innerHTML = "";
+
+            if (listaGeralAvisos.length === 0) return;
+
+            listaGeralAvisos.forEach(av => {
+                const dataFmt = av.dataExpiracao ? av.dataExpiracao.split('-').reverse().join('/') : '';
+                const div = document.createElement('div');
+                div.className = "banner-alerta-prazos";
+                div.style.backgroundColor = "#eff6ff";
+                div.style.borderColor = "#3b82f6";
+                div.style.color = "#1e3a8a";
+                
+                let botaoExcluirAdmin = eAdministrador() ? `<button onclick="deletarAviso('${av.id}')" class="btn-danger" style="padding: 4px 8px; font-size: 11px; margin-left: auto;">Remover</button>` : '';
+
+                div.innerHTML = `
+                    <div class="icone-alerta">📢</div>
+                    <div style="flex: 1;">
+                        <h4 style="color: #2563eb;">AVISO IMPORTANTE (Até ${dataFmt}):</h4>
+                        <p><b>${av.texto}</b> <span style="font-size: 11px; opacity: 0.8;">(Por: ${av.operador})</span></p>
+                    </div>
+                    ${botaoExcluirAdmin}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        window.salvarAviso = async function(e) {
+            e.preventDefault();
+            if (!eAdministrador()) { mostrarToast("Acesso restrito a Flávio e André!", "error"); return; }
+            
+            const texto = document.getElementById('aviso-texto').value.trim();
+            const dataExpiracao = document.getElementById('aviso-expiracao').value;
+
+            if (!texto || !dataExpiracao) { mostrarToast("Preencha todos os campos do aviso.", "warning"); return; }
+
+            try {
+                await addDoc(collection(db, "avisos"), {
+                    texto,
+                    dataExpiracao,
+                    operador: operadorAtual,
+                    criadoEm: new Date().toISOString()
+                });
+                document.getElementById('aviso-texto').value = "";
+                document.getElementById('aviso-expiracao').value = "";
+                mostrarToast("Aviso publicado com sucesso!", "success");
+            } catch (e) {
+                mostrarToast("Erro ao publicar aviso.", "error");
+            }
+        };
+
+        window.deletarAviso = async function(id) {
+            if (!eAdministrador()) return;
+            if (confirm("Deseja remover este aviso antes do prazo?")) {
+                try {
+                    await deleteDoc(doc(db, "avisos", id));
+                    mostrarToast("Aviso removido.", "success");
+                } catch (e) {
+                    mostrarToast("Erro ao remover aviso.", "error");
+                }
+            }
+        };
 
         function escutarOperadoresEmTempoReal() {
             if (unsubscribeOperadores) unsubscribeOperadores();
@@ -1370,7 +1468,7 @@
         // REJEITOS
         window.salvarRejeito = async function(e) {
             e.preventDefault();
-            if (!eAdministrador()) { mostrarToast("Acesso negado!", "error"); return; }
+            if (!eAdministrador()) { mostrarToast("Acesso restrito a Flávio e André!", "error"); return; }
             const dataStr = document.getElementById('rejeito-data').value;
             const qtd = parseInt(document.getElementById('rejeito-qtd').value);
             if (!dataStr || isNaN(qtd) || qtd <= 0) { mostrarToast("Preencha dados válidos.", "warning"); return; }
@@ -1537,7 +1635,7 @@
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!operadorAtual || !eAdministrador()) { mostrarToast("Acesso negado!", "error"); return; }
+            if (!operadorAtual || !eAdministrador()) { mostrarToast("Acesso restrito a Flávio e André!", "error"); return; }
             
             const nome = document.getElementById('nome-arquivo').value.trim();
             const qtd = document.getElementById('qtd-cartoes').value;
@@ -1718,8 +1816,9 @@
             const valorAtual = objSetor.status;
             let classeCor = valorAtual === "Concluído" ? "setor-concluido" : (valorAtual === "Envio Parcial" ? "setor-parcial" : (valorAtual === "N/A" ? "setor-na" : "setor-pendente"));
             
-            const permitido = ePermitidoEditarProducao();
-            const disabledAttr = permitido ? "" : "disabled title='Faça login para editar'";
+            // Restringe alteração de setores apenas a Flávio e André
+            const permitido = eAdministrador();
+            const disabledAttr = permitido ? "" : "disabled title='Apenas Flávio e André podem alterar setores'";
 
             return `
                 <select class="select-setor ${classeCor}" onchange="atualizarSetorLote('${lote.id}', '${setorNome}', this)" ${disabledAttr}>
@@ -1732,8 +1831,8 @@
         }
 
         window.atualizarSetorLote = async function(loteId, setorNome, selectElement) {
-            if (!operadorAtual) {
-                mostrarToast("Faça o login para alterar a produção!", "warning");
+            if (!eAdministrador()) {
+                mostrarToast("Acesso restrito a Flávio e André para alterar setores!", "error");
                 renderizarTabelaProducao();
                 return;
             }
@@ -2029,8 +2128,9 @@
                 const tipoEnvio = l.parcial ? `<span style="color:#d97706; font-weight:600;">Envio Parcial</span>` : `<span>Total</span>`;
                 
                 let campoJustificativa = "";
+                const disabledJust = eAdministrador() ? "" : "disabled title='Apenas Flávio e André podem editar justificativas'";
                 if (diasAtraso > 0) {
-                    campoJustificativa = `<textarea class="textarea-justificativa" onchange="salvarJustificativa('${l.id}', this.value)" placeholder="Digite a justificativa...">${l.justificativa || ''}</textarea>`;
+                    campoJustificativa = `<textarea class="textarea-justificativa" onchange="salvarJustificativa('${l.id}', this.value)" placeholder="Digite a justificativa..." ${disabledJust}>${l.justificativa || ''}</textarea>`;
                 } else {
                     campoJustificativa = `<span style="color: var(--text-muted); font-style: italic; font-size: 11px;">Não aplicável (Lote no prazo)</span>`;
                 }
