@@ -804,7 +804,7 @@
                         <span class="info-auxiliar">Acompanhe o status e atrasos por setor individual</span>
                     </div>
 
-                    <!-- AVISOS GERAIS AGORA POSICIONADOS AQUI, LOGO ACIMA DO FILTRO/TABELA -->
+                    <!-- AVISOS GERAIS ACIMA DO FILTRO/TABELA -->
                     <div id="container-avisos-gerais" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;"></div>
 
                     <div class="filtro-grid" style="margin-bottom: 20px;">
@@ -1634,7 +1634,7 @@
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!operadorAtual || !eAdministrador()) { mostrarToast("Acesso restrito a Flávio e André!", "error"); return; }
+            if (!operadorAtual || !eAdministrador()) { mostrarToast("Acesso restrito a Flávio e André para cadastrar lotes!", "error"); return; }
             
             const nome = document.getElementById('nome-arquivo').value.trim();
             const qtd = document.getElementById('qtd-cartoes').value;
@@ -1815,8 +1815,9 @@
             const valorAtual = objSetor.status;
             let classeCor = valorAtual === "Concluído" ? "setor-concluido" : (valorAtual === "Envio Parcial" ? "setor-parcial" : (valorAtual === "N/A" ? "setor-na" : "setor-pendente"));
             
-            const permitido = eAdministrador();
-            const disabledAttr = permitido ? "" : "disabled title='Apenas Flávio e André podem alterar setores'";
+            // Permitir que qualquer operador logado altere os setores de produção
+            const permitido = operadorAtual !== "";
+            const disabledAttr = permitido ? "" : "disabled title='Faça login para editar'";
 
             return `
                 <select class="select-setor ${classeCor}" onchange="atualizarSetorLote('${lote.id}', '${setorNome}', this)" ${disabledAttr}>
@@ -1829,8 +1830,8 @@
         }
 
         window.atualizarSetorLote = async function(loteId, setorNome, selectElement) {
-            if (!eAdministrador()) {
-                mostrarToast("Acesso restrito a Flávio e André para alterar setores!", "error");
+            if (!operadorAtual) {
+                mostrarToast("Faça o login para alterar a produção!", "warning");
                 renderizarTabelaProducao();
                 return;
             }
