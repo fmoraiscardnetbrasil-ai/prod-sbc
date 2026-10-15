@@ -1544,7 +1544,7 @@
         };
 
         window.deletarRejeito = async function(id) {
-            if (!eAdministrador()) return;
+            if (!eAdministrador()) { mostrarToast("Acesso restrito a Flávio e André!", "error"); return; }
             if (confirm("Deseja realmente excluir este registo?")) {
                 try { 
                     await deleteDoc(doc(db, "rejeitos", id)); 
@@ -1779,6 +1779,18 @@
             atualizarKPIsProducao(totalAtivoCount, totalAtivoCartoes, noPrazoCount, noPrazoCartoes, venceBreveCount, venceBreveCartoes, atrasadoCount, atrasadoCartoes);
         }
 
+        window.deletarLote = async function(id) {
+            if (!eAdministrador()) { mostrarToast("Acesso restrito a Flávio e André!", "error"); return; }
+            if (confirm("Deseja realmente excluir este lote/ficheiro do sistema?")) {
+                try {
+                    await deleteDoc(doc(db, "lotes", id));
+                    mostrarToast("Lote excluído com sucesso!", "success");
+                } catch (e) {
+                    mostrarToast("Erro ao excluir o lote.", "error");
+                }
+            }
+        };
+
         window.editarNomeArquivo = async function(loteId, nomeAtual) {
             if (!eAdministrador()) return;
             const novoNome = prompt("Digite o novo nome para o ficheiro / lote:", nomeAtual);
@@ -1815,7 +1827,6 @@
             const valorAtual = objSetor.status;
             let classeCor = valorAtual === "Concluído" ? "setor-concluido" : (valorAtual === "Envio Parcial" ? "setor-parcial" : (valorAtual === "N/A" ? "setor-na" : "setor-pendente"));
             
-            // Permitir que qualquer operador logado altere os setores de produção
             const permitido = operadorAtual !== "";
             const disabledAttr = permitido ? "" : "disabled title='Faça login para editar'";
 
