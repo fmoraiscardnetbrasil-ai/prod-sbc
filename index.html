@@ -58,7 +58,6 @@
             flex-direction: column;
         }
 
-        /* Sistema de Toasts (Notificações Modernas) */
         #toast-container {
             position: fixed;
             bottom: 20px;
@@ -587,7 +586,6 @@
 </head>
 <body data-theme="dark">
 
-    <!-- CONTAINER DE NOTIFICAÇÕES (TOASTS) -->
     <div id="toast-container"></div>
 
     <!-- MODAL DE ANIVERSÁRIO -->
@@ -597,6 +595,21 @@
             <h2 id="titulo-aniversario" style="color: #f59e0b;">Parabéns!</h2>
             <p id="texto-aniversario" style="font-size: 16px; font-weight: 600; margin-bottom: 20px; color: var(--text-main);">Feliz Aniversario!</p>
             <button onclick="fecharModalAniversario()" class="btn-primary" style="width: 100%;">Obrigado! Continuar</button>
+        </div>
+    </div>
+
+    <!-- MODAL DE UPLOAD DE NOTA PDF -->
+    <div id="modal-upload-pdf" class="login-overlay" style="display: none;">
+        <div class="login-card">
+            <h2>Anexar Nota em PDF</h2>
+            <p id="desc-modal-pdf">Selecione o arquivo PDF da nota para este pedido:</p>
+            <div class="login-input-grupo">
+                <input type="file" id="input-arquivo-pdf-modal" accept="application/pdf" style="padding: 7px;">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button onclick="fecharModalUploadPdf()" class="btn-secondary" style="width: 50%;">Cancelar</button>
+                <button onclick="confirmarUploadPdf()" class="btn-primary" style="width: 50%;">Salvar PDF</button>
+            </div>
         </div>
     </div>
 
@@ -647,7 +660,7 @@
             </div>
             <div class="login-input-grupo">
                 <label for="input-senha-login">Senha de Acesso</label>
-                <input type="password" id="input-senha-login" placeholder="Digite sua senha" autocomplete="off">
+                <input type="password" id="input-senha-login" placeholder="Digite sua senha" autocomplete="off" onkeydown="if(event.key==='Enter') fazerLogin()">
             </div>
             <button onclick="fazerLogin()" class="btn-primary" style="width:100%; margin-top: 5px;">Entrar no Sistema</button>
             <div class="links-container">
@@ -728,6 +741,7 @@
                     <button class="btn-aba" onclick="mudarAba('historico', this)">📊 Histórico Concluídos</button>
                     <button class="btn-aba" onclick="mudarAba('relatorios', this)">📈 Relatórios & Controle</button>
                     <button class="btn-aba" onclick="mudarAba('rejeitos', this)">⚠️ Controle de Rejeitos</button>
+                    <button class="btn-aba" id="btn-aba-solicitacao-notas" onclick="mudarAba('solicitacao-notas', this)" style="display: none;">📄 Solicitação de Notas</button>
                     <button class="btn-aba" id="btn-aba-usuarios" onclick="mudarAba('usuarios', this)" style="display: none;">👥 Gerenciar Utilizadores</button>
                 </div>
 
@@ -750,6 +764,9 @@
                         <p id="texto-alerta-prazos">Existem lotes com vencimento próximo ou atrasados.</p>
                     </div>
                 </div>
+
+                <!-- BANNER DE PEDIDOS / NOTAS SOLICITADAS -->
+                <div id="container-banners-notas" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;"></div>
 
                 <section class="kpi-grid">
                     <div class="kpi-card">
@@ -780,32 +797,24 @@
                     </form>
                 </section>
 
-                <!-- SEÇÃO DE CADASTRO DE AVISO (APENAS ADMIN) -->
-                <section class="panel-card" id="secao-cadastro-aviso" style="display: none;">
-                    <div class="panel-header"><h3>📢 Publicar Novo Aviso Geral (Com Expiração)</h3></div>
-                    <form id="form-aviso" class="form-grid-rejeito" onsubmit="salvarAviso(event)">
-                        <div class="input-grupo">
-                            <label for="aviso-texto">Texto do Aviso</label>
-                            <input type="text" id="aviso-texto" placeholder="Ex: Manutenção na impressora às 15h" required>
-                        </div>
-                        <div class="input-grupo">
-                            <label for="aviso-expiracao">Expirar em (Data Limite)</label>
-                            <input type="date" id="aviso-expiracao" onclick="this.showPicker && this.showPicker()" required>
-                        </div>
-                        <div class="input-grupo">
-                            <button type="submit" id="btn-salvar-aviso" class="btn-primary">+ Publicar Aviso</button>
-                        </div>
+                <!-- PAINEL PARA CADASTRAR AVISOS (APENAS ADMIN) -->
+                <section class="panel-card" id="secao-cadastro-aviso" style="display: none; border: 1px dashed #f59e0b;">
+                    <div class="panel-header"><h3>📢 Cadastrar Aviso Geral na Tela</h3></div>
+                    <form id="form-aviso" class="form-grid" onsubmit="salvarAviso(event)">
+                        <div class="input-grupo" style="grid-column: span 2;"><label for="texto-aviso">Texto do Aviso</label><input type="text" id="texto-aviso" placeholder="Ex: Manutenção programada no sistema sexta-feira..." required></div>
+                        <div class="input-grupo"><label for="data-expiracao-aviso">Validade / Expiração</label><input type="date" id="data-expiracao-aviso" onclick="this.showPicker && this.showPicker()" required></div>
+                        <div class="input-grupo"><button type="submit" id="btn-cadastrar-aviso" class="btn-primary" style="background-color: #f59e0b;">+ Publicar Aviso</button></div>
                     </form>
                 </section>
+
+                <!-- CONTAINER DE AVISOS ATIVOS (POSICIONADO ACIMA DE MONITORAMENTO) -->
+                <div id="container-avisos-gerais" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;"></div>
 
                 <section class="panel-card">
                     <div class="panel-header space-between">
                         <h3>Monitoramento de Lotes por Setor</h3>
                         <span class="info-auxiliar">Acompanhe o status e atrasos por setor individual</span>
                     </div>
-
-                    <!-- AVISOS GERAIS ACIMA DO FILTRO/TABELA -->
-                    <div id="container-avisos-gerais" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;"></div>
 
                     <div class="filtro-grid" style="margin-bottom: 20px;">
                         <div class="input-grupo" style="max-width: 250px;">
@@ -974,6 +983,74 @@
                 </section>
             </div>
 
+            <!-- MÓDULO: SOLICITAÇÃO E CONSULTA DE NOTAS -->
+            <div id="aba-solicitacao-notas" class="secao-aba">
+                <section class="panel-card">
+                    <div class="panel-header"><h3>📄 Solicitação de Novo Pedido</h3></div>
+                    <form id="form-solicitacao-nota" onsubmit="salvarSolicitacaoNota(event)" style="display: flex; flex-direction: column; gap: 15px;">
+                        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px;">
+                            <div class="input-grupo">
+                                <label for="nota-num-pedido">Número do Pedido</label>
+                                <input type="text" id="nota-num-pedido" placeholder="Ex: PED-10293" required>
+                            </div>
+                            <div class="input-grupo">
+                                <label for="nota-cliente">Nome do Cliente</label>
+                                <input type="text" id="nota-cliente" placeholder="Ex: Empresa Exemplo Ltda" required>
+                            </div>
+                        </div>
+
+                        <div class="input-grupo">
+                            <label for="nota-itens">Nomes dos Itens e Quantidades</label>
+                            <textarea id="nota-itens" rows="3" placeholder="Ex: 50x Cartão PVC Branco, 10x Cordão Fita Azul..." required></textarea>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div class="input-grupo">
+                                <label for="nota-volumes">Volumes (Qtd. Caixas)</label>
+                                <input type="number" id="nota-volumes" min="1" placeholder="Ex: 2" required>
+                            </div>
+                            <div class="input-grupo">
+                                <label for="nota-peso">Peso Total (kg)</label>
+                                <input type="number" step="0.01" id="nota-peso" min="0" placeholder="Ex: 4.5" required>
+                            </div>
+                        </div>
+
+                        <div>
+                            <button type="submit" id="btn-salvar-nota" class="btn-primary">+ Cadastrar Solicitação de Pedido</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="panel-card">
+                    <div class="panel-header space-between">
+                        <h3>📋 Consulta de Pedidos e Notas Fiscais</h3>
+                        <div class="input-grupo" style="max-width: 300px; margin: 0;">
+                            <input type="text" id="filtro-busca-nota" placeholder="Buscar por pedido ou cliente..." oninput="carregarSolicitacoesNotas()">
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Nº Pedido</th>
+                                    <th>Cliente</th>
+                                    <th>Itens / Descrição</th>
+                                    <th>Volumes</th>
+                                    <th>Peso Total</th>
+                                    <th>Solicitante</th>
+                                    <th>Nota PDF</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-solicitacoes-notas">
+                                <tr><td colspan="9" class="text-center">Carregando solicitações...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
             <!-- ABA 5: GERENCIAR UTILIZADORES -->
             <div id="aba-usuarios" class="secao-aba">
                 <section class="panel-card">
@@ -995,7 +1072,7 @@
     <!-- JS & FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCVPh1U7jH0WLuPWLWtZDvAgEfPLROqxcA",
@@ -1014,12 +1091,15 @@
         let listaGeralLotes = [];
         let listaGeralRejeitos = [];
         let listaGeralAvisos = [];
+        let listaGeralNotas = [];
         let listaGeralOperadoresCache = [];
         let lotePendenteFinalizacao = null;
         let loteParaReabrirId = null;
+        let idNotaParaUpload = null;
         let unsubscribeLotes = null;
         let unsubscribeRejeitos = null;
         let unsubscribeAvisos = null;
+        let unsubscribeNotas = null;
         let unsubscribeOperadores = null;
 
         function mostrarToast(mensagem, tipo = 'success') {
@@ -1067,8 +1147,15 @@
             return ["FLÁVIO", "FLAVIO", "ANDRÉ", "ANDRE"].includes(op);
         }
 
+        function eLeandro() {
+            if (!operadorAtual) return false;
+            const op = operadorAtual.trim().toUpperCase();
+            return op === "LEANDRO";
+        }
+
         function atualizarVisibilidadeUI() {
             const admin = eAdministrador();
+            const leandro = eLeandro();
             const secaoCadastro = document.getElementById('secao-cadastro-lote');
             if (secaoCadastro) secaoCadastro.style.display = admin ? 'block' : 'none';
 
@@ -1083,6 +1170,9 @@
 
             const btnAbaUsuarios = document.getElementById('btn-aba-usuarios');
             if (btnAbaUsuarios) btnAbaUsuarios.style.display = admin ? 'flex' : 'none';
+
+            const btnAbaNotas = document.getElementById('btn-aba-solicitacao-notas');
+            if (btnAbaNotas) btnAbaNotas.style.display = (admin || leandro) ? 'flex' : 'none';
 
             const secaoFormRejeito = document.getElementById('secao-form-rejeito');
             const avisoPermRejeito = document.getElementById('aviso-permissao-rejeito');
@@ -1109,19 +1199,21 @@
 
         async function verificarInicializacaoOperadores() {
             try {
-                const querySnapshot = await getDocs(collection(db, "operadores"));
-                if (querySnapshot.empty) {
-                    const padrao = { 
-                        "FLÁVIO": { senha: "123", nascimento: "" }, 
-                        "FLAVIO": { senha: "123", nascimento: "" }, 
-                        "ANDRÉ": { senha: "123", nascimento: "" }, 
-                        "ANDRE": { senha: "123", nascimento: "" } 
-                    };
-                    for (let [nome, dados] of Object.entries(padrao)) {
-                        await setDoc(doc(db, "operadores", nome), dados);
+                const padrao = { 
+                    "FLÁVIO": { senha: "123", nascimento: "" }, 
+                    "FLAVIO": { senha: "123", nascimento: "" }, 
+                    "ANDRÉ": { senha: "123", nascimento: "" }, 
+                    "ANDRE": { senha: "123", nascimento: "" },
+                    "LEANDRO": { senha: "123", nascimento: "" }
+                };
+                for (let [nome, dados] of Object.entries(padrao)) {
+                    const docRef = doc(db, "operadores", nome);
+                    const docSnap = await getDoc(docRef);
+                    if (!docSnap.exists()) {
+                        await setDoc(docRef, dados);
                     }
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Erro ao inicializar operadores padrão:", e); }
         }
 
         window.onload = async function() {
@@ -1141,9 +1233,17 @@
             const inputDataRejeito = document.getElementById("rejeito-data");
             if (inputDataRejeito) inputDataRejeito.value = new Date().toISOString().split('T')[0];
 
+            const inputDataAviso = document.getElementById("data-expiracao-aviso");
+            if (inputDataAviso) {
+                const amanha = new Date();
+                amanha.setDate(amanha.getDate() + 1);
+                inputDataAviso.value = amanha.toISOString().split('T')[0];
+            }
+
             escutarLotesEmTempoReal();
             escutarRejeitosEmTempoReal();
             escutarAvisosEmTempoReal();
+            escutarNotasEmTempoReal();
             escutarOperadoresEmTempoReal();
         };
 
@@ -1189,59 +1289,25 @@
             if (unsubscribeAvisos) unsubscribeAvisos();
             unsubscribeAvisos = onSnapshot(collection(db, "avisos"), (querySnapshot) => {
                 listaGeralAvisos = [];
-                const hojeStr = new Date().toISOString().split('T')[0];
-
                 querySnapshot.forEach((docSnap) => {
                     const av = docSnap.data();
                     av.id = docSnap.id;
-                    if (av.dataExpiracao >= hojeStr) {
-                        listaGeralAvisos.push(av);
-                    } else {
-                        deleteDoc(doc(db, "avisos", av.id)).catch(() => {});
-                    }
+                    listaGeralAvisos.push(av);
                 });
-
-                renderizarAvisosAtivos();
-            });
-        }
-
-        function renderizarAvisosAtivos() {
-            const container = document.getElementById('container-avisos-gerais');
-            if (!container) return;
-            container.innerHTML = "";
-
-            if (listaGeralAvisos.length === 0) return;
-
-            listaGeralAvisos.forEach(av => {
-                const dataFmt = av.dataExpiracao ? av.dataExpiracao.split('-').reverse().join('/') : '';
-                const div = document.createElement('div');
-                div.className = "banner-alerta-prazos";
-                div.style.backgroundColor = "#eff6ff";
-                div.style.borderColor = "#3b82f6";
-                div.style.color = "#1e3a8a";
-                
-                let botaoExcluirAdmin = eAdministrador() ? `<button onclick="deletarAviso('${av.id}')" class="btn-danger" style="padding: 4px 8px; font-size: 11px; margin-left: auto;">Remover</button>` : '';
-
-                div.innerHTML = `
-                    <div class="icone-alerta">📢</div>
-                    <div style="flex: 1;">
-                        <h4 style="color: #2563eb;">AVISO IMPORTANTE (Até ${dataFmt}):</h4>
-                        <p><b>${av.texto}</b> <span style="font-size: 11px; opacity: 0.8;">(Por: ${av.operador})</span></p>
-                    </div>
-                    ${botaoExcluirAdmin}
-                `;
-                container.appendChild(div);
+                renderizarBannersAvisosGerais();
             });
         }
 
         window.salvarAviso = async function(e) {
             e.preventDefault();
             if (!eAdministrador()) { mostrarToast("Acesso restrito a Flávio e André!", "error"); return; }
-            
-            const texto = document.getElementById('aviso-texto').value.trim();
-            const dataExpiracao = document.getElementById('aviso-expiracao').value;
-
+            const texto = document.getElementById('texto-aviso').value.trim();
+            const dataExpiracao = document.getElementById('data-expiracao-aviso').value;
             if (!texto || !dataExpiracao) { mostrarToast("Preencha todos os campos do aviso.", "warning"); return; }
+
+            const btn = document.getElementById('btn-cadastrar-aviso');
+            btn.disabled = true;
+            btn.innerText = "A publicar...";
 
             try {
                 await addDoc(collection(db, "avisos"), {
@@ -1250,25 +1316,119 @@
                     operador: operadorAtual,
                     criadoEm: new Date().toISOString()
                 });
-                document.getElementById('aviso-texto').value = "";
-                document.getElementById('aviso-expiracao').value = "";
+                document.getElementById('form-aviso').reset();
+                const amanha = new Date();
+                amanha.setDate(amanha.getDate() + 1);
+                document.getElementById('data-expiracao-aviso').value = amanha.toISOString().split('T')[0];
                 mostrarToast("Aviso publicado com sucesso!", "success");
-            } catch (e) {
+            } catch (err) {
                 mostrarToast("Erro ao publicar aviso.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "+ Publicar Aviso";
             }
         };
 
         window.deletarAviso = async function(id) {
             if (!eAdministrador()) return;
-            if (confirm("Deseja remover este aviso antes do prazo?")) {
+            if (confirm("Deseja apagar este aviso?")) {
                 try {
                     await deleteDoc(doc(db, "avisos", id));
-                    mostrarToast("Aviso removido.", "success");
+                    mostrarToast("Aviso removido com sucesso!", "success");
                 } catch (e) {
                     mostrarToast("Erro ao remover aviso.", "error");
                 }
             }
         };
+
+        function renderizarBannersAvisosGerais() {
+            const container = document.getElementById('container-avisos-gerais');
+            if (!container) return;
+            container.innerHTML = "";
+
+            if (listaGeralAvisos.length === 0) return;
+
+            const hojeStr = new Date().toISOString().split('T')[0];
+
+            listaGeralAvisos.forEach(av => {
+                if (av.dataExpiracao && av.dataExpiracao < hojeStr) return;
+
+                const div = document.createElement('div');
+                div.className = "banner-alerta-prazos";
+                div.style.backgroundColor = "#fef3c7";
+                div.style.borderColor = "#f59e0b";
+                div.style.color = "#78350f";
+
+                let expFmt = av.dataExpiracao ? av.dataExpiracao.split('-').reverse().join('/') : '-';
+                let botoesExtra = '';
+                if (eAdministrador()) {
+                    botoesExtra = `<button onclick="deletarAviso('${av.id}')" class="btn-danger" style="padding: 4px 10px; font-size: 12px; height: auto;">Apagar Aviso</button>`;
+                }
+
+                div.innerHTML = `
+                    <div class="icone-alerta">📢</div>
+                    <div style="flex: 1;">
+                        <h4 style="color: #b45309;">AVISO GERAL DA GESTÃO</h4>
+                        <p style="font-size: 14px; font-weight: 500;">${av.texto}</p>
+                        <div style="margin-top: 4px; font-size: 11px; opacity: 0.8;">Válido até: <b>${expFmt}</b> (Postado por: ${av.operador || 'Gestão'})</div>
+                    </div>
+                    <div>${botoesExtra}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function escutarNotasEmTempoReal() {
+            if (unsubscribeNotas) unsubscribeNotas();
+            unsubscribeNotas = onSnapshot(collection(db, "solicitacoes_notas"), (querySnapshot) => {
+                listaGeralNotas = [];
+                querySnapshot.forEach((docSnap) => {
+                    const nota = docSnap.data();
+                    nota.id = docSnap.id;
+                    listaGeralNotas.push(nota);
+                });
+
+                const abaAtiva = document.querySelector('.secao-aba.active');
+                if (abaAtiva && abaAtiva.id === 'aba-solicitacao-notas') {
+                    carregarSolicitacoesNotas();
+                }
+                renderizarBannersNotasProducao();
+            });
+        }
+
+        function renderizarBannersNotasProducao() {
+            const container = document.getElementById('container-banners-notas');
+            if (!container) return;
+            container.innerHTML = "";
+
+            if (listaGeralNotas.length === 0) return;
+
+            const ordenadas = [...listaGeralNotas].sort((a, b) => (b.dataCriacao || "").localeCompare(a.dataCriacao || ""));
+
+            ordenadas.forEach(n => {
+                if (n.pdfBase64) return;
+
+                const div = document.createElement('div');
+                div.className = "banner-alerta-prazos";
+                div.style.backgroundColor = "#eff6ff";
+                div.style.borderColor = "#3b82f6";
+                div.style.color = "#1e3a8a";
+
+                let statusPdfTexto = `<span style="color: #d97706; font-weight: 600;">⚠️ Nota PDF Pendente de Anexo</span>`;
+                let botaoAcao = `<button onclick="abrirModalUploadPdf('${n.id}')" class="btn-warning" style="padding: 4px 10px; font-size: 12px; height: auto;">Anexar PDF</button>`;
+
+                div.innerHTML = `
+                    <div class="icone-alerta">📄</div>
+                    <div style="flex: 1;">
+                        <h4 style="color: #2563eb;">PEDIDO SOLICITADO: ${n.numPedido} — Cliente: ${n.cliente}</h4>
+                        <p><b>Itens:</b> ${n.itens} | <b>Volumes:</b> ${n.volumes} vol. | <b>Peso:</b> ${n.pesoTotal} kg</p>
+                        <div style="margin-top: 4px;">${statusPdfTexto} <span style="font-size: 11px; opacity: 0.8; margin-left: 10px;">(Por: ${n.operador || 'Sistema'})</span></div>
+                    </div>
+                    <div>${botaoAcao}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
 
         function escutarOperadoresEmTempoReal() {
             if (unsubscribeOperadores) unsubscribeOperadores();
@@ -1331,22 +1491,41 @@
         }
 
         window.fazerLogin = async function() {
-            const nome = document.getElementById("input-operador-login").value.trim().toUpperCase();
-            const senha = document.getElementById("input-senha-login").value;
-            if (!nome || !senha) { mostrarToast("Preencha nome e senha!", "warning"); return; }
+            const nomeInput = document.getElementById("input-operador-login");
+            const senhaInput = document.getElementById("input-senha-login");
+            const nomeOriginal = nomeInput.value.trim();
+            const nome = nomeOriginal.toUpperCase();
+            const senha = senhaInput.value;
+
+            if (!nome || !senha) { 
+                mostrarToast("Preencha nome e senha!", "warning"); 
+                return; 
+            }
 
             try {
-                const querySnapshot = await getDocs(collection(db, "operadores"));
-                let dadosOp = null;
-                querySnapshot.forEach((d) => { 
-                    if (d.id === nome) dadosOp = d.data(); 
-                });
+                let docRef = doc(db, "operadores", nome);
+                let docSnap = await getDoc(docRef);
 
+                if (!docSnap.exists() && nomeOriginal.length > 0) {
+                    const nomeFormatado = nomeOriginal.charAt(0).toUpperCase() + nomeOriginal.slice(1).toLowerCase();
+                    docRef = doc(db, "operadores", nomeFormatado);
+                    docSnap = await getDoc(docRef);
+                }
+
+                if (!docSnap.exists()) {
+                    mostrarToast("Acesso negado! Utilizador não encontrado.", "error");
+                    return;
+                }
+
+                const dadosOp = docSnap.data();
                 const senhaSalva = typeof dadosOp === 'string' ? dadosOp : (dadosOp ? dadosOp.senha : null);
 
-                if (!senhaSalva || senhaSalva !== senha) { mostrarToast("Acesso negado! Utilizador ou senha incorretos.", "error"); return; }
+                if (!senhaSalva || senhaSalva !== senha) {
+                    mostrarToast("Acesso negado! Senha incorreta.", "error");
+                    return;
+                }
 
-                operadorAtual = nome;
+                operadorAtual = docSnap.id.toUpperCase();
                 document.getElementById("modal-login").style.display = "none";
                 document.getElementById("display-usuario").innerText = "👤 Operador: " + operadorAtual;
                 atualizarVisibilidadeUI();
@@ -1357,9 +1536,12 @@
                 const abaAtiva = document.querySelector('.secao-aba.active');
                 if (abaAtiva && abaAtiva.id === 'aba-producao') renderizarTabelaProducao();
 
-                document.getElementById("input-operador-login").value = "";
-                document.getElementById("input-senha-login").value = "";
-            } catch (error) { mostrarToast("Erro ao conectar ao servidor.", "error"); }
+                nomeInput.value = "";
+                senhaInput.value = "";
+            } catch (error) {
+                console.error("Erro no login:", error);
+                mostrarToast("Erro ao conectar ao servidor. Verifique o console.", "error");
+            }
         };
 
         function verificarAniversarioLogin(dadosOp) {
@@ -1437,6 +1619,10 @@
         window.sairSistema = function() { if (confirm("Deseja sair do sistema?")) location.reload(); };
 
         window.mudarAba = async function(abaId, elementoBtn) {
+            if (abaId === 'solicitacao-notas' && !eAdministrador() && !eLeandro()) {
+                mostrarToast("Acesso restrito.", "error");
+                return;
+            }
             document.querySelectorAll('.secao-aba').forEach(sec => sec.classList.remove('active'));
             document.querySelectorAll('.btn-aba').forEach(btn => btn.classList.remove('active'));
 
@@ -1457,10 +1643,202 @@
                 atualizarFiltrosRejeitoDinamicos();
                 atualizarDiasRejeitoFiltro();
                 carregarRejeitos();
+            } else if (abaId === 'solicitacao-notas') {
+                carregarSolicitacoesNotas();
             } else if (abaId === 'usuarios') {
                 if (!eAdministrador()) { mostrarToast("Acesso restrito a Flávio e André.", "error"); return; }
                 const querySnapshot = await getDocs(collection(db, "operadores"));
                 renderizarTabelaUsuarios(querySnapshot);
+            }
+        };
+
+        // MÓDULO DE SOLICITAÇÃO E CONSULTA DE NOTAS
+        window.salvarSolicitacaoNota = async function(e) {
+            e.preventDefault();
+            if (!operadorAtual || (!eAdministrador() && !eLeandro())) { 
+                mostrarToast("Apenas Flávio, André e Leandro podem solicitar pedidos.", "warning"); 
+                return; 
+            }
+
+            const numPedido = document.getElementById('nota-num-pedido').value.trim();
+            const cliente = document.getElementById('nota-cliente').value.trim();
+            const itens = document.getElementById('nota-itens').value.trim();
+            const volumes = document.getElementById('nota-volumes').value;
+            const peso = document.getElementById('nota-peso').value;
+
+            const btnSalvar = document.getElementById('btn-salvar-nota');
+            btnSalvar.disabled = true;
+            btnSalvar.innerText = "A guardar...";
+
+            try {
+                await addDoc(collection(db, "solicitacoes_notas"), {
+                    numPedido,
+                    cliente,
+                    itens,
+                    volumes: parseInt(volumes) || 0,
+                    pesoTotal: parseFloat(peso) || 0,
+                    pdfBase64: null,
+                    nomeArquivoPdf: null,
+                    operador: operadorAtual,
+                    dataCriacao: new Date().toISOString()
+                });
+
+                document.getElementById('form-solicitacao-nota').reset();
+                mostrarToast("Solicitação de pedido cadastrada com sucesso!", "success");
+            } catch (err) {
+                mostrarToast("Erro ao salvar no banco de dados.", "error");
+            } finally {
+                btnSalvar.disabled = false;
+                btnSalvar.innerText = "+ Cadastrar Solicitação de Pedido";
+            }
+        };
+
+        window.copiarItensNota = function(id) {
+            const nota = listaGeralNotas.find(n => n.id === id);
+            if (!nota || !nota.itens) {
+                mostrarToast("Nenhum item encontrado para copiar.", "warning");
+                return;
+            }
+            navigator.clipboard.writeText(nota.itens).then(() => {
+                mostrarToast("Itens copiados para a área de transferência!", "success");
+            }).catch(err => {
+                mostrarToast("Erro ao copiar itens.", "error");
+            });
+        };
+
+        window.abrirModalUploadPdf = function(id) {
+            if (!eAdministrador()) { 
+                mostrarToast("Acesso restrito! Apenas Flávio e André podem anexar PDFs de notas.", "error"); 
+                return; 
+            }
+            idNotaParaUpload = id;
+            document.getElementById('input-arquivo-pdf-modal').value = "";
+            document.getElementById('modal-upload-pdf').style.display = 'flex';
+        };
+
+        window.fecharModalUploadPdf = function() {
+            document.getElementById('modal-upload-pdf').style.display = 'none';
+            idNotaParaUpload = null;
+        };
+
+        window.confirmarUploadPdf = async function() {
+            if (!eAdministrador()) { mostrarToast("Acesso restrito!", "error"); return; }
+            if (!idNotaParaUpload) return;
+            const arquivoInput = document.getElementById('input-arquivo-pdf-modal');
+            if (!arquivoInput.files || arquivoInput.files.length === 0) {
+                mostrarToast("Selecione um arquivo PDF.", "warning");
+                return;
+            }
+
+            const arquivo = arquivoInput.files[0];
+            const reader = new FileReader();
+            reader.readAsDataURL(arquivo);
+            reader.onload = async function() {
+                const pdfBase64 = reader.result;
+                try {
+                    await updateDoc(doc(db, "solicitacoes_notas", idNotaParaUpload), {
+                        pdfBase64,
+                        nomeArquivoPdf: arquivo.name
+                    });
+                    fecharModalUploadPdf();
+                    mostrarToast("PDF da nota anexado com sucesso!", "success");
+                } catch (e) {
+                    mostrarToast("Erro ao enviar o PDF.", "error");
+                }
+            };
+        };
+
+        window.carregarSolicitacoesNotas = function() {
+            const tbody = document.getElementById('tabela-solicitacoes-notas');
+            const termoBusca = (document.getElementById('filtro-busca-nota').value || "").toLowerCase();
+            if (!tbody) return;
+
+            tbody.innerHTML = "";
+            const filtradas = listaGeralNotas.filter(n => {
+                const pedido = (n.numPedido || "").toLowerCase();
+                const cliente = (n.cliente || "").toLowerCase();
+                return pedido.includes(termoBusca) || cliente.includes(termoBusca);
+            });
+
+            filtradas.sort((a, b) => (b.dataCriacao || "").localeCompare(a.dataCriacao || ""));
+
+            if (filtradas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center">Nenhuma solicitação encontrada.</td></tr>`;
+                return;
+            }
+
+            filtradas.forEach(n => {
+                let dataFmt = '-';
+                if (n.dataCriacao) {
+                    const dt = new Date(n.dataCriacao);
+                    if (!isNaN(dt)) dataFmt = `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()} ${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
+                }
+
+                let statusPdfHTML = n.pdfBase64 
+                    ? `<span style="font-size: 12px; color: #10b981; font-weight:600;" title="${n.nomeArquivoPdf}">📄 ${n.nomeArquivoPdf || 'Nota.pdf'}</span>` 
+                    : `<span style="font-size: 12px; color: #f59e0b;">Pendente de Anexo</span>`;
+
+                let botoesAcao = '';
+                if (n.pdfBase64) {
+                    botoesAcao += `<button onclick="abrirNotaPdf('${n.id}')" class="btn-primary" style="padding: 4px 8px; font-size: 11px; height: auto;">Ver PDF</button>`;
+                }
+                
+                if (eAdministrador()) {
+                    botoesAcao += `<button onclick="abrirModalUploadPdf('${n.id}')" class="btn-warning" style="padding: 4px 8px; font-size: 11px; height: auto;">${n.pdfBase64 ? 'Alterar PDF' : 'Anexar PDF'}</button>`;
+                    botoesAcao += `<button onclick="deletarSolicitacaoNota('${n.id}')" class="btn-danger" style="padding: 4px 8px; font-size: 11px; height: auto;">Excluir</button>`;
+                } else if (!n.pdfBase64) {
+                    botoesAcao += `<span style="font-size: 11px; color: var(--text-muted); font-style: italic;">Restrito a Admin</span>`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${dataFmt}</strong></td>
+                    <td><strong>${n.numPedido}</strong></td>
+                    <td>${n.cliente}</td>
+                    <td style="max-width: 250px;">
+                        <div style="font-size: 12px; white-space: pre-wrap; margin-bottom: 6px;">${n.itens}</div>
+                        <button onclick="copiarItensNota('${n.id}')" class="btn-secondary" style="padding: 3px 8px; font-size: 10px; height: auto;">📋 Copiar Itens</button>
+                    </td>
+                    <td>${n.volumes} vol.</td>
+                    <td>${n.pesoTotal} kg</td>
+                    <td>👤 ${n.operador || '-'}</td>
+                    <td>${statusPdfHTML}</td>
+                    <td><div style="display: flex; gap: 6px; flex-wrap: wrap;">${botoesAcao}</div></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        window.abrirNotaPdf = function(id) {
+            const nota = listaGeralNotas.find(n => n.id === id);
+            if (!nota || !nota.pdfBase64) {
+                mostrarToast("Arquivo PDF não encontrado.", "error");
+                return;
+            }
+            const win = window.open();
+            win.document.write(`
+                <html>
+                    <head><title>Nota - Pedido ${nota.numPedido}</title></head>
+                    <body style="margin:0; background:#333; display:flex; flex-direction:column; align-items:center; height:100vh;">
+                        <div style="background:#111; color:#fff; width:100%; padding:10px 20px; display:flex; justify-content:space-between; align-items:center;">
+                            <span><b>Pedido:</b> ${nota.numPedido} | <b>Cliente:</b> ${nota.cliente}</span>
+                            <a href="${nota.pdfBase64}" download="Nota_${nota.numPedido}.pdf" style="background:#2563eb; color:#fff; padding:6px 12px; border-radius:4px; text-decoration:none;">Baixar PDF</a>
+                        </div>
+                        <iframe src="${nota.pdfBase64}" style="width:100%; height:100%; border:none;"></iframe>
+                    </body>
+                </html>
+            `);
+        };
+
+        window.deletarSolicitacaoNota = async function(id) {
+            if (!eAdministrador()) return;
+            if (confirm("Deseja realmente excluir esta solicitação e o PDF anexado?")) {
+                try {
+                    await deleteDoc(doc(db, "solicitacoes_notas", id));
+                    mostrarToast("Solicitação excluída com sucesso!", "success");
+                } catch (e) {
+                    mostrarToast("Erro ao excluir.", "error");
+                }
             }
         };
 
@@ -2022,14 +2400,12 @@
             if (!["FLÁVIO", "FLAVIO", "ANDRÉ", "ANDRE"].includes(nomeAdmin)) { mostrarToast("Permissão negada.", "error"); return; }
 
             try {
-                const snap = await getDocs(collection(db, "operadores"));
-                let senhaSalva = null;
-                snap.forEach(d => { 
-                    if (d.id === nomeAdmin) {
-                        const dados = d.data();
-                        senhaSalva = typeof dados === 'string' ? dados : dados.senha;
-                    } 
-                });
+                const docRef = doc(db, "operadores", nomeAdmin);
+                const docSnap = await getDoc(docRef);
+                if (!docSnap.exists()) { mostrarToast("Administrador não encontrado.", "error"); return; }
+                const dados = docSnap.data();
+                const senhaSalva = typeof dados === 'string' ? dados : dados.senha;
+
                 if (!senhaSalva || senhaSalva !== senhaAdmin) { mostrarToast("Senha incorreta!", "error"); return; }
 
                 await updateDoc(doc(db, "lotes", loteParaReabrirId), { status: "Em Produção", dataConclusao: null });
