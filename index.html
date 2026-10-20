@@ -744,6 +744,7 @@
                     <button class="btn-aba" id="btn-aba-rejeitos" onclick="mudarAba('rejeitos', this)">⚠️ Controle de Rejeitos</button>
                     <button class="btn-aba" id="btn-aba-solicitacao-notas" onclick="mudarAba('solicitacao-notas', this)" style="display: none;">📄 Solicitação de Notas</button>
                     <button class="btn-aba" id="btn-aba-usuarios" onclick="mudarAba('usuarios', this)" style="display: none;">👥 Gerenciar Utilizadores</button>
+                    <button class="btn-aba" id="btn-aba-logs" onclick="mudarAba('logs', this)" style="display: none;">🛡️ Logs de Atividades</button>
                 </div>
 
                 <div class="banner-aniversariantes-mes">
@@ -1076,6 +1077,30 @@
                     </div>
                 </section>
             </div>
+
+            <!-- ABA 6: LOGS DE ATIVIDADES -->
+            <div id="aba-logs" class="secao-aba">
+                <section class="panel-card">
+                    <div class="panel-header space-between">
+                        <h3>🛡️ Auditoria e Histórico de Atividades do Sistema</h3>
+                        <span class="info-auxiliar">Registo automático de ações dos operadores</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Data / Hora</th>
+                                    <th>Operador</th>
+                                    <th>Ação / Descrição</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-logs-sistema">
+                                <tr><td colspan="3" class="text-center">Carregando logs de atividades...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
         </main>
     </div>
 
@@ -1103,6 +1128,7 @@
         let listaGeralRejeitos = [];
         let listaGeralAvisos = [];
         let listaGeralNotas = [];
+        let listaGeralLogs = [];
         let listaGeralOperadoresCache = [];
         let lotePendenteFinalizacao = null;
         let loteParaReabrirId = null;
@@ -1111,6 +1137,7 @@
         let unsubscribeRejeitos = null;
         let unsubscribeAvisos = null;
         let unsubscribeNotas = null;
+        let unsubscribeLogs = null;
         let unsubscribeOperadores = null;
 
         function mostrarToast(mensagem, tipo = 'success') {
@@ -1132,6 +1159,18 @@
                 toast.style.transition = 'all 0.3s ease';
                 setTimeout(() => toast.remove(), 300);
             }, 3500);
+        }
+
+        async function registrarLog(acaoDescricao) {
+            try {
+                await addDoc(collection(db, "logs_sistema"), {
+                    operador: operadorAtual || "SISTEMA",
+                    acao: acaoDescricao,
+                    dataHora: new Date().toISOString()
+                });
+            } catch (e) {
+                console.error("Erro ao gravar log:", e);
+            }
         }
 
         function calcularDiasAtraso(dataPrevistaStr, dataReferenciaStr) {
@@ -1183,10 +1222,12 @@
             const btnAbaUsuarios = document.getElementById('btn-aba-usuarios');
             if (btnAbaUsuarios) btnAbaUsuarios.style.display = admin ? 'flex' : 'none';
 
+            const btnAbaLogs = document.getElementById('btn-aba-logs');
+            if (btnAbaLogs) btnAbaLogs.style.display = admin ? 'flex' : 'none';
+
             const btnAbaNotas = document.getElementById('btn-aba-solicitacao-notas');
             if (btnAbaNotas) btnAbaNotas.style.display = (admin || leandro || permissoesOperadorAtual.solicitacaoNotas) ? 'flex' : 'none';
 
-            // Ajuste dinâmico baseado nas permissões individuais para utilizadores comuns
             if (!admin) {
                 const btnProd = document.getElementById('btn-aba-producao');
                 if (btnProd) btnProd.style.display = (permissoesOperadorAtual.producao !== false) ? 'flex' : 'none';
@@ -1276,6 +1317,7 @@
             escutarRejeitosEmTempoReal();
             escutarAvisosEmTempoReal();
             escutarNotasEmTempoReal();
+            escutarLogsEmTempoReal();
             escutarOperadoresEmTempoReal();
         };
 
@@ -1330,6 +1372,22 @@
             });
         }
 
+        function escutarLogsEmTempoReal() {
+            if (unsubscribeLogs) unsubscribeLogs();
+            unsubscribeLogs = onSnapshot(collection(db, "logs_sistema"), (querySnapshot) => {
+                listaGeralLogs = [];
+                querySnapshot.forEach((docSnap) => {
+                    const lg = docSnap.data();
+                    lg.id = docSnap.id;
+                    listaGeralLogs.push(lg);
+                });
+                const abaAtiva = document.querySelector('.secao-aba.active');
+                if (abaAtiva && abaAtiva.id === 'aba-logs') {
+                    carregarLogsSistema();
+                }
+            });
+        }
+
         window.salvarAviso = async function(e) {
             e.preventDefault();
             if (!eAdministrador()) { mostrarToast("Acesso restrito a Flávio e André!", "error"); return; }
@@ -1352,6 +1410,7 @@
                 const amanha = new Date();
                 amanha.setDate(amanha.getDate() + 1);
                 document.getElementById('data-expiracao-aviso').value = amanha.toISOString().split('T')[0];
+                await registrarLog(`Publicou aviso geral: "${texto.substring(0, 30)}..."`);
                 mostrarToast("Aviso publicado com sucesso!", "success");
             } catch (err) {
                 mostrarToast("Erro ao publicar aviso.", "error");
@@ -1366,6 +1425,7 @@
             if (confirm("Deseja apagar este aviso?")) {
                 try {
                     await deleteDoc(doc(db, "avisos", id));
+                    await registrarLog("Removeu um aviso geral da gestão");
                     mostrarToast("Aviso removido com sucesso!", "success");
                 } catch (e) {
                     mostrarToast("Erro ao remover aviso.", "error");
@@ -1563,12 +1623,13 @@
 
                 document.getElementById("modal-login").style.display = "none";
                 document.getElementById("display-usuario").innerText = "👤 Operador: " + operadorAtual;
+                
+                await registrarLog("Efetuou login no sistema");
                 atualizarVisibilidadeUI();
                 mostrarToast(`Bem-vindo, ${operadorAtual}!`, "success");
                 
                 verificarAniversarioLogin(dadosOp);
 
-                // Se a aba padrão (produção) estiver oculta para ele, abre a primeira disponível
                 const abaAtiva = document.querySelector('.secao-aba.active');
                 if (abaAtiva && abaAtiva.style.display === 'none') {
                     if (permissoesOperadorAtual.historico !== false) mudarAba('historico', document.getElementById('btn-aba-historico'));
@@ -1677,6 +1738,10 @@
                 mostrarToast("Acesso restrito.", "error");
                 return;
             }
+            if (abaId === 'logs' && !eAdministrador()) {
+                mostrarToast("Acesso restrito a administradores.", "error");
+                return;
+            }
 
             document.querySelectorAll('.secao-aba').forEach(sec => sec.classList.remove('active'));
             document.querySelectorAll('.btn-aba').forEach(btn => btn.classList.remove('active'));
@@ -1704,7 +1769,39 @@
                 if (!eAdministrador()) { mostrarToast("Acesso restrito a Flávio e André.", "error"); return; }
                 const querySnapshot = await getDocs(collection(db, "operadores"));
                 renderizarTabelaUsuarios(querySnapshot);
+            } else if (abaId === 'logs') {
+                if (!eAdministrador()) { mostrarToast("Acesso restrito a administradores.", "error"); return; }
+                carregarLogsSistema();
             }
+        };
+
+        window.carregarLogsSistema = function() {
+            const tbody = document.getElementById('tabela-logs-sistema');
+            if (!tbody) return;
+            tbody.innerHTML = "";
+
+            const ordenados = [...listaGeralLogs].sort((a, b) => (b.dataHora || "").localeCompare(a.dataHora || ""));
+
+            if (ordenados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="text-center">Nenhum registo de log encontrado.</td></tr>`;
+                return;
+            }
+
+            ordenados.forEach(lg => {
+                let dataFmt = '-';
+                if (lg.dataHora) {
+                    const dt = new Date(lg.dataHora);
+                    if (!isNaN(dt)) dataFmt = `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()} ${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}:${String(dt.getSeconds()).padStart(2, '0')}`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${dataFmt}</strong></td>
+                    <td>👤 ${lg.operador || 'Sistema'}</td>
+                    <td>${lg.acao}</td>
+                `;
+                tbody.appendChild(tr);
+            });
         };
 
         // MÓDULO DE SOLICITAÇÃO E CONSULTA DE NOTAS
@@ -1738,6 +1835,7 @@
                     dataCriacao: new Date().toISOString()
                 });
 
+                await registrarLog(`Solicitou novo pedido nº ${numPedido} para o cliente ${cliente}`);
                 document.getElementById('form-solicitacao-nota').reset();
                 mostrarToast("Solicitação de pedido cadastrada com sucesso!", "success");
             } catch (err) {
@@ -1795,6 +1893,7 @@
                         pdfBase64,
                         nomeArquivoPdf: arquivo.name
                     });
+                    await registrarLog(`Anexou o PDF "${arquivo.name}" a uma solicitação de nota`);
                     fecharModalUploadPdf();
                     mostrarToast("PDF da nota anexado com sucesso!", "success");
                 } catch (e) {
@@ -1890,6 +1989,7 @@
             if (confirm("Deseja realmente excluir esta solicitação e o PDF anexado?")) {
                 try {
                     await deleteDoc(doc(db, "solicitacoes_notas", id));
+                    await registrarLog("Excluiu uma solicitação de pedido/nota");
                     mostrarToast("Solicitação excluída com sucesso!", "success");
                 } catch (e) {
                     mostrarToast("Erro ao excluir.", "error");
@@ -1914,6 +2014,7 @@
                 await addDoc(collection(db, "rejeitos"), {
                     data: dataStr, ano, mes, dia, quantidade: qtd, operador: operadorAtual, criadoEm: new Date().toISOString()
                 });
+                await registrarLog(`Registrou ${qtd} unidades de rejeito/perda`);
                 document.getElementById('rejeito-qtd').value = "";
                 mostrarToast("Rejeito registrado com sucesso!", "success");
             } catch (e) { 
@@ -1981,6 +2082,7 @@
             if (confirm("Deseja realmente excluir este registo?")) {
                 try { 
                     await deleteDoc(doc(db, "rejeitos", id)); 
+                    await registrarLog("Excluiu um registo de rejeito");
                     mostrarToast("Registo excluído com sucesso!", "success");
                 } catch (e) { 
                     mostrarToast("Erro ao excluir.", "error"); 
@@ -2060,6 +2162,7 @@
                 await updateDoc(docRef, {
                     [`permissoes.${campo}`]: valor
                 });
+                await registrarLog(`Atualizou permissão de ${campo} (${valor}) para o operador ${nomeOp}`);
                 mostrarToast(`Permissões atualizadas para ${nomeOp}!`, "success");
             } catch (e) {
                 mostrarToast("Erro ao atualizar permissão.", "error");
@@ -2074,6 +2177,7 @@
                 if (novaNasc.trim() === "" || /^\d{4}-\d{2}-\d{2}$/.test(novaNasc)) {
                     try {
                         await setDoc(doc(db, "operadores", nomeOperador), { nascimento: novaNasc.trim() }, { merge: true });
+                        await registrarLog(`Alterou a data de nascimento do operador ${nomeOperador}`);
                         mostrarToast("Data de nascimento atualizada com sucesso!", "success");
                         const querySnapshot = await getDocs(collection(db, "operadores"));
                         renderizarTabelaUsuarios(querySnapshot);
@@ -2092,6 +2196,7 @@
             if (confirm(`Excluir operador ${nomeOperador}?`)) {
                 try {
                     await deleteDoc(doc(db, "operadores", nomeOperador));
+                    await registrarLog(`Excluiu o operador ${nomeOperador} do sistema`);
                     mostrarToast("Operador excluído com sucesso!", "success");
                     const querySnapshot = await getDocs(collection(db, "operadores"));
                     renderizarTabelaUsuarios(querySnapshot);
@@ -2124,6 +2229,7 @@
                     },
                     dataConclusao: null, operador: null, justificativa: ""
                 });
+                await registrarLog(`Cadastrou o lote/ficheiro "${nome}" (${qtd} cartões)`);
                 form.reset();
                 mostrarToast("Lote cadastrado com sucesso!", "success");
             } catch (e) { 
@@ -2254,6 +2360,7 @@
             if (confirm("Deseja realmente excluir este lote/ficheiro do sistema?")) {
                 try {
                     await deleteDoc(doc(db, "lotes", id));
+                    await registrarLog("Excluiu um lote/ficheiro do sistema");
                     mostrarToast("Lote excluído com sucesso!", "success");
                 } catch (e) {
                     mostrarToast("Erro ao excluir o lote.", "error");
@@ -2267,6 +2374,7 @@
             if (novoNome !== null && novoNome.trim() !== "") {
                 try {
                     await updateDoc(doc(db, "lotes", loteId), { nome: novoNome.trim() });
+                    await registrarLog(`Alterou o nome do ficheiro de "${nomeAtual}" para "${novoNome.trim()}"`);
                     mostrarToast("Nome do ficheiro atualizado com sucesso!", "success");
                 } catch (e) {
                     mostrarToast("Erro ao atualizar o nome do ficheiro.", "error");
@@ -2282,6 +2390,7 @@
                 if (!isNaN(novaQtd) && novaQtd > 0) {
                     try {
                         await updateDoc(doc(db, "lotes", loteId), { qtd: novaQtd });
+                        await registrarLog(`Alterou a quantidade de cartões de um lote de ${qtdAtual} para ${novaQtd}`);
                         mostrarToast("Quantidade atualizada com sucesso!", "success");
                     } catch (e) {
                         mostrarToast("Erro ao atualizar a quantidade.", "error");
@@ -2342,6 +2451,7 @@
                     document.getElementById('modal-finalizacao').style.display = 'flex';
                 } else {
                     await updateDoc(doc(db, "lotes", loteId), { setores: novosSetores, operador: operadorAtual, status: "Em Produção", dataConclusao: null });
+                    await registrarLog(`Atualizou o setor ${setorNome} do lote "${lote.nome}" para "${novoValor}"`);
                     mostrarToast("Setor atualizado com sucesso!", "success");
                 }
             } catch (e) { mostrarToast("Erro ao atualizar setor.", "error"); }
@@ -2364,8 +2474,10 @@
                         setores: { gravacao: { status: "Pendente", op: null, data: null }, idv: { status: "Pendente", op: null, data: null }, manuseio: { status: "Pendente", op: null, data: null } },
                         dataConclusao: null, operador: null, justificativa: ""
                     });
+                    await registrarLog(`Realizou envio parcial do lote "${lote.nome}" (${qtdEnviada} un)`);
                 } else {
                     await updateDoc(doc(db, "lotes", loteId), { setores: novosSetores, status: "Finalizado", dataConclusao: hojeStr, operador: operadorAtual, parcial: false });
+                    await registrarLog(`Finalizou o lote "${lote.nome}"`);
                 }
                 document.getElementById('modal-finalizacao').style.display = 'none';
                 lotePendenteFinalizacao = null;
@@ -2501,6 +2613,7 @@
                 if (!senhaSalva || senhaSalva !== senhaAdmin) { mostrarToast("Senha incorreta!", "error"); return; }
 
                 await updateDoc(doc(db, "lotes", loteParaReabrirId), { status: "Em Produção", dataConclusao: null });
+                await registrarLog(`Reabriu um lote finalizado para o status Em Produção`);
                 document.getElementById('modal-senha-admin').style.display = 'none';
                 loteParaReabrirId = null;
                 mostrarToast("Lote reaberto com sucesso!", "success");
@@ -2673,6 +2786,7 @@
 
             try { 
                 await updateDoc(doc(db, "lotes", loteId), { justificativa: texto }); 
+                await registrarLog(`Atualizou a justificativa de atraso de um lote`);
                 mostrarToast("Justificativa guardada com sucesso!", "success");
             } catch (e) { 
                 mostrarToast("Erro ao salvar justificativa.", "error"); 
