@@ -1026,9 +1026,12 @@
                 <section class="panel-card">
                     <div class="panel-header space-between">
                         <h3>📋 Consulta de Pedidos e Notas Fiscais</h3>
-                        <div class="input-grupo" style="max-width: 300px; margin: 0;">
-                            <input type="text" id="filtro-busca-nota" placeholder="Buscar por pedido ou cliente..." oninput="carregarSolicitacoesNotas()">
-                        </div>
+                    </div>
+                    <div class="filtro-grid">
+                        <div class="input-grupo"><label for="nota-filtro-ano">Ano</label><select id="nota-filtro-ano" onchange="atualizarDiasNotaFiltro(); carregarSolicitacoesNotas();"><option value="">Todos os Anos</option></select></div>
+                        <div class="input-grupo"><label for="nota-filtro-mes">Mês</label><select id="nota-filtro-mes" onchange="atualizarDiasNotaFiltro(); carregarSolicitacoesNotas();"><option value="">Todos os Meses</option><option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option><option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option><option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select></div>
+                        <div class="input-grupo"><label for="nota-filtro-dia">Dia</label><select id="nota-filtro-dia" onchange="carregarSolicitacoesNotas()"><option value="">Todos os Dias</option></select></div>
+                        <div class="input-grupo" style="grid-column: span 2;"><label for="filtro-busca-nota">Busca por Pedido / Cliente</label><input type="text" id="filtro-busca-nota" placeholder="Digite o pedido ou cliente..." oninput="carregarSolicitacoesNotas()"></div>
                     </div>
                     <div class="table-responsive">
                         <table class="styled-table">
@@ -1084,6 +1087,12 @@
                     <div class="panel-header space-between">
                         <h3>🛡️ Auditoria e Histórico de Atividades do Sistema</h3>
                         <span class="info-auxiliar">Registo automático de ações dos operadores</span>
+                    </div>
+                    <div class="filtro-grid">
+                        <div class="input-grupo"><label for="log-filtro-ano">Ano</label><select id="log-filtro-ano" onchange="atualizarDiasLogFiltro(); carregarLogsSistema();"><option value="">Todos os Anos</option></select></div>
+                        <div class="input-grupo"><label for="log-filtro-mes">Mês</label><select id="log-filtro-mes" onchange="atualizarDiasLogFiltro(); carregarLogsSistema();"><option value="">Todos os Meses</option><option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option><option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option><option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select></div>
+                        <div class="input-grupo"><label for="log-filtro-dia">Dia</label><select id="log-filtro-dia" onchange="carregarLogsSistema()"><option value="">Todos os Dias</option></select></div>
+                        <div class="input-grupo"><label for="log-filtro-operador">Operador</label><select id="log-filtro-operador" onchange="carregarLogsSistema()"><option value="">Todos os Operadores</option></select></div>
                     </div>
                     <div class="table-responsive">
                         <table class="styled-table">
@@ -1163,10 +1172,17 @@
 
         async function registrarLog(acaoDescricao) {
             try {
+                const agora = new Date();
+                const isoStr = agora.toISOString();
+                const ano = String(agora.getFullYear());
+                const mes = String(agora.getMonth() + 1).padStart(2, '0');
+                const dia = String(agora.getDate()).padStart(2, '0');
+
                 await addDoc(collection(db, "logs_sistema"), {
                     operador: operadorAtual || "SISTEMA",
                     acao: acaoDescricao,
-                    dataHora: new Date().toISOString()
+                    dataHora: isoStr,
+                    ano, mes, dia
                 });
             } catch (e) {
                 console.error("Erro ao gravar log:", e);
@@ -1379,10 +1395,20 @@
                 querySnapshot.forEach((docSnap) => {
                     const lg = docSnap.data();
                     lg.id = docSnap.id;
+                    if (lg.dataHora && (!lg.ano || !lg.mes || !lg.dia)) {
+                        const dt = new Date(lg.dataHora);
+                        if (!isNaN(dt)) {
+                            lg.ano = String(dt.getFullYear());
+                            lg.mes = String(dt.getMonth() + 1).padStart(2, '0');
+                            lg.dia = String(dt.getDate()).padStart(2, '0');
+                        }
+                    }
                     listaGeralLogs.push(lg);
                 });
+
                 const abaAtiva = document.querySelector('.secao-aba.active');
                 if (abaAtiva && abaAtiva.id === 'aba-logs') {
+                    atualizarFiltrosLogDinamicos();
                     carregarLogsSistema();
                 }
             });
@@ -1477,11 +1503,20 @@
                 querySnapshot.forEach((docSnap) => {
                     const nota = docSnap.data();
                     nota.id = docSnap.id;
+                    if (nota.dataCriacao && (!nota.ano || !nota.mes || !nota.dia)) {
+                        const dt = new Date(nota.dataCriacao);
+                        if (!isNaN(dt)) {
+                            nota.ano = String(dt.getFullYear());
+                            nota.mes = String(dt.getMonth() + 1).padStart(2, '0');
+                            nota.dia = String(dt.getDate()).padStart(2, '0');
+                        }
+                    }
                     listaGeralNotas.push(nota);
                 });
 
                 const abaAtiva = document.querySelector('.secao-aba.active');
                 if (abaAtiva && abaAtiva.id === 'aba-solicitacao-notas') {
+                    atualizarFiltrosNotaDinamicos();
                     carregarSolicitacoesNotas();
                 }
                 renderizarBannersNotasProducao();
@@ -1764,6 +1799,8 @@
                 atualizarDiasRejeitoFiltro();
                 carregarRejeitos();
             } else if (abaId === 'solicitacao-notas') {
+                atualizarFiltrosNotaDinamicos();
+                atualizarDiasNotaFiltro();
                 carregarSolicitacoesNotas();
             } else if (abaId === 'usuarios') {
                 if (!eAdministrador()) { mostrarToast("Acesso restrito a Flávio e André.", "error"); return; }
@@ -1771,23 +1808,62 @@
                 renderizarTabelaUsuarios(querySnapshot);
             } else if (abaId === 'logs') {
                 if (!eAdministrador()) { mostrarToast("Acesso restrito a administradores.", "error"); return; }
+                atualizarFiltrosLogDinamicos();
+                atualizarDiasLogFiltro();
                 carregarLogsSistema();
             }
         };
 
+        // FILTROS E CARREGAMENTO DE LOGS
+        function atualizarFiltrosLogDinamicos() {
+            const anosSet = new Set(), operadoresSet = new Set();
+            listaGeralLogs.forEach(lg => {
+                if (lg.ano) anosSet.add(lg.ano);
+                if (lg.operador) operadoresSet.add(lg.operador.toUpperCase());
+            });
+            montarSelect('log-filtro-ano', anosSet, "Todos os Anos");
+            montarSelect('log-filtro-operador', operadoresSet, "Todos os Operadores");
+        }
+
+        window.atualizarDiasLogFiltro = function() {
+            const anoSel = document.getElementById('log-filtro-ano').value;
+            const mesSel = document.getElementById('log-filtro-mes').value;
+            const diasSet = new Set();
+            listaGeralLogs.forEach(lg => {
+                if (lg.ano && lg.mes && lg.dia) {
+                    if ((!anoSel || lg.ano === anoSel) && (!mesSel || lg.mes === mesSel)) {
+                        diasSet.add(lg.dia);
+                    }
+                }
+            });
+            montarSelect('log-filtro-dia', diasSet, "Todos os Dias");
+        };
+
         window.carregarLogsSistema = function() {
             const tbody = document.getElementById('tabela-logs-sistema');
+            const anoSel = document.getElementById('log-filtro-ano').value;
+            const mesSel = document.getElementById('log-filtro-mes').value;
+            const diaSel = document.getElementById('log-filtro-dia').value;
+            const opSel = document.getElementById('log-filtro-operador').value;
             if (!tbody) return;
+
             tbody.innerHTML = "";
+            const filtrados = listaGeralLogs.filter(lg => {
+                if (anoSel && lg.ano !== anoSel) return false;
+                if (mesSel && lg.mes !== mesSel) return false;
+                if (diaSel && lg.dia !== diaSel) return false;
+                if (opSel && (!lg.operador || lg.operador.toUpperCase() !== opSel)) return false;
+                return true;
+            });
 
-            const ordenados = [...listaGeralLogs].sort((a, b) => (b.dataHora || "").localeCompare(a.dataHora || ""));
+            filtrados.sort((a, b) => (b.dataHora || "").localeCompare(a.dataHora || ""));
 
-            if (ordenados.length === 0) {
+            if (filtrados.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="3" class="text-center">Nenhum registo de log encontrado.</td></tr>`;
                 return;
             }
 
-            ordenados.forEach(lg => {
+            filtrados.forEach(lg => {
                 let dataFmt = '-';
                 if (lg.dataHora) {
                     const dt = new Date(lg.dataHora);
@@ -1804,7 +1880,29 @@
             });
         };
 
-        // MÓDULO DE SOLICITAÇÃO E CONSULTA DE NOTAS
+        // FILTROS E CARREGAMENTO DE SOLICITAÇÃO DE NOTAS
+        function atualizarFiltrosNotaDinamicos() {
+            const anosSet = new Set();
+            listaGeralNotas.forEach(n => {
+                if (n.ano) anosSet.add(n.ano);
+            });
+            montarSelect('nota-filtro-ano', anosSet, "Todos os Anos");
+        }
+
+        window.atualizarDiasNotaFiltro = function() {
+            const anoSel = document.getElementById('nota-filtro-ano').value;
+            const mesSel = document.getElementById('nota-filtro-mes').value;
+            const diasSet = new Set();
+            listaGeralNotas.forEach(n => {
+                if (n.ano && n.mes && n.dia) {
+                    if ((!anoSel || n.ano === anoSel) && (!mesSel || n.mes === mesSel)) {
+                        diasSet.add(n.dia);
+                    }
+                }
+            });
+            montarSelect('nota-filtro-dia', diasSet, "Todos os Dias");
+        };
+
         window.salvarSolicitacaoNota = async function(e) {
             e.preventDefault();
             if (!operadorAtual || (!eAdministrador() && !eLeandro() && !permissoesOperadorAtual.solicitacaoNotas)) { 
@@ -1823,6 +1921,12 @@
             btnSalvar.innerText = "A guardar...";
 
             try {
+                const agora = new Date();
+                const isoStr = agora.toISOString();
+                const ano = String(agora.getFullYear());
+                const mes = String(agora.getMonth() + 1).padStart(2, '0');
+                const dia = String(agora.getDate()).padStart(2, '0');
+
                 await addDoc(collection(db, "solicitacoes_notas"), {
                     numPedido,
                     cliente,
@@ -1832,7 +1936,8 @@
                     pdfBase64: null,
                     nomeArquivoPdf: null,
                     operador: operadorAtual,
-                    dataCriacao: new Date().toISOString()
+                    dataCriacao: isoStr,
+                    ano, mes, dia
                 });
 
                 await registrarLog(`Solicitou novo pedido nº ${numPedido} para o cliente ${cliente}`);
@@ -1904,11 +2009,18 @@
 
         window.carregarSolicitacoesNotas = function() {
             const tbody = document.getElementById('tabela-solicitacoes-notas');
+            const anoSel = document.getElementById('nota-filtro-ano').value;
+            const mesSel = document.getElementById('nota-filtro-mes').value;
+            const diaSel = document.getElementById('nota-filtro-dia').value;
             const termoBusca = (document.getElementById('filtro-busca-nota').value || "").toLowerCase();
             if (!tbody) return;
 
             tbody.innerHTML = "";
             const filtradas = listaGeralNotas.filter(n => {
+                if (anoSel && n.ano !== anoSel) return false;
+                if (mesSel && n.mes !== mesSel) return false;
+                if (diaSel && n.dia !== diaSel) return false;
+
                 const pedido = (n.numPedido || "").toLowerCase();
                 const cliente = (n.cliente || "").toLowerCase();
                 return pedido.includes(termoBusca) || cliente.includes(termoBusca);
