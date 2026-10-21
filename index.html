@@ -649,7 +649,7 @@
         </div>
     </div>
 
-    <!-- TELA 1: LOGIN COM MENSAGEM DE BOAS-VINDAS PERSONALIZADA -->
+    <!-- TELA 1: LOGIN -->
     <div id="modal-login" class="login-overlay">
         <div class="login-card">
             <div style="font-size: 36px; margin-bottom: 8px;">💳</div>
@@ -739,6 +739,7 @@
             <div class="sidebar-top">
                 <div class="abas-container">
                     <button class="btn-aba active" id="btn-aba-producao" onclick="mudarAba('producao', this)">📦 Produção Atual</button>
+                    <button class="btn-aba" id="btn-aba-expedicao" onclick="mudarAba('expedicao', this)">🚚 Expedição</button>
                     <button class="btn-aba" id="btn-aba-historico" onclick="mudarAba('historico', this)">📊 Histórico Concluídos</button>
                     <button class="btn-aba" id="btn-aba-relatorios" onclick="mudarAba('relatorios', this)">📈 Relatórios & Controle</button>
                     <button class="btn-aba" id="btn-aba-rejeitos" onclick="mudarAba('rejeitos', this)">⚠️ Controle de Rejeitos</button>
@@ -767,7 +768,6 @@
                     </div>
                 </div>
 
-                <!-- BANNER DE PEDIDOS / NOTAS SOLICITADAS -->
                 <div id="container-banners-notas" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;"></div>
 
                 <section class="kpi-grid">
@@ -799,7 +799,6 @@
                     </form>
                 </section>
 
-                <!-- PAINEL PARA CADASTRAR AVISOS (APENAS ADMIN) -->
                 <section class="panel-card" id="secao-cadastro-aviso" style="display: none; border: 1px dashed #f59e0b;">
                     <div class="panel-header"><h3>📢 Cadastrar Aviso Geral na Tela</h3></div>
                     <form id="form-aviso" class="form-grid" onsubmit="salvarAviso(event)">
@@ -809,7 +808,6 @@
                     </form>
                 </section>
 
-                <!-- CONTAINER DE AVISOS ATIVOS (POSICIONADO ACIMA DE MONITORAMENTO) -->
                 <div id="container-avisos-gerais" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;"></div>
 
                 <section class="panel-card">
@@ -838,6 +836,94 @@
                                 </tr>
                             </thead>
                             <tbody id="tabela-lotes"><tr><td colspan="10" class="text-center">Carregando dados...</td></tr></tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- ABA EXPEDIÇÃO -->
+            <div id="aba-expedicao" class="secao-aba">
+                <!-- Seção 1: Pendentes de Coleta -->
+                <section class="panel-card">
+                    <div class="panel-header space-between">
+                        <h3>🚚 Pendentes de Coleta na Expedição</h3>
+                        <span class="info-auxiliar">Lotes com solicitação de nota e PDF anexado aguardando coleta</span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Ficheiro / Lote</th>
+                                    <th>Qtd Cartões</th>
+                                    <th>Previsão Coleta</th>
+                                    <th>Status Outros Setores</th>
+                                    <th>Nota PDF Vínculo</th>
+                                    <th>Status Expedição</th>
+                                    <th>Operador Responsável</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-expedicao-pendentes">
+                                <tr><td colspan="7" class="text-center">Carregando lotes pendentes...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Seção 2: Histórico de Coletas Realizadas com Filtros Próprios -->
+                <section class="panel-card" style="margin-top: 30px;">
+                    <div class="panel-header space-between">
+                        <h3>📋 Histórico de Coletas Realizadas</h3>
+                        <span class="info-auxiliar">Registo de lotes coletados com filtros exclusivos por data</span>
+                    </div>
+
+                    <div class="filtro-grid">
+                        <div class="input-grupo">
+                            <label for="exp-filtro-ano">Ano</label>
+                            <select id="exp-filtro-ano" onchange="atualizarDiasExpedicaoFiltro(); carregarHistoricoExpedicao();">
+                                <option value="">Todos os Anos</option>
+                            </select>
+                        </div>
+                        <div class="input-grupo">
+                            <label for="exp-filtro-mes">Mês</label>
+                            <select id="exp-filtro-mes" onchange="atualizarDiasExpedicaoFiltro(); carregarHistoricoExpedicao();">
+                                <option value="">Todos os Meses</option>
+                                <option value="01">Janeiro</option>
+                                <option value="02">Fevereiro</option>
+                                <option value="03">Março</option>
+                                <option value="04">Abril</option>
+                                <option value="05">Maio</option>
+                                <option value="06">Junho</option>
+                                <option value="07">Julho</option>
+                                <option value="08">Agosto</option>
+                                <option value="09">Setembro</option>
+                                <option value="10">Outubro</option>
+                                <option value="11">Novembro</option>
+                                <option value="12">Dezembro</option>
+                            </select>
+                        </div>
+                        <div class="input-grupo">
+                            <label for="exp-filtro-dia">Dia</label>
+                            <select id="exp-filtro-dia" onchange="carregarHistoricoExpedicao()">
+                                <option value="">Todos os Dias</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Data / Hora da Coleta</th>
+                                    <th>Ficheiro / Lote</th>
+                                    <th>Qtd Cartões</th>
+                                    <th>Nota / Pedido Vínculo</th>
+                                    <th>Operador Responsável</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-expedicao-historico">
+                                <tr><td colspan="5" class="text-center">Nenhum registo no histórico de coletas.</td></tr>
+                            </tbody>
                         </table>
                     </div>
                 </section>
@@ -1244,6 +1330,9 @@
             const btnAbaNotas = document.getElementById('btn-aba-solicitacao-notas');
             if (btnAbaNotas) btnAbaNotas.style.display = (admin || leandro || permissoesOperadorAtual.solicitacaoNotas) ? 'flex' : 'none';
 
+            const btnAbaExpedicao = document.getElementById('btn-aba-expedicao');
+            if (btnAbaExpedicao) btnAbaExpedicao.style.display = (admin || permissoesOperadorAtual.expedicao !== false) ? 'flex' : 'none';
+
             if (!admin) {
                 const btnProd = document.getElementById('btn-aba-producao');
                 if (btnProd) btnProd.style.display = (permissoesOperadorAtual.producao !== false) ? 'flex' : 'none';
@@ -1289,11 +1378,11 @@
         async function verificarInicializacaoOperadores() {
             try {
                 const padrao = { 
-                    "FLÁVIO": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true } }, 
-                    "FLAVIO": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true } }, 
-                    "ANDRÉ": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true } }, 
-                    "ANDRE": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true } },
-                    "LEANDRO": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: false, rejeitos: false, solicitacaoNotas: true } }
+                    "FLÁVIO": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true } }, 
+                    "FLAVIO": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true } }, 
+                    "ANDRÉ": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true } }, 
+                    "ANDRE": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true } },
+                    "LEANDRO": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: false, rejeitos: false, solicitacaoNotas: true, expedicao: true } }
                 };
                 for (let [nome, dados] of Object.entries(padrao)) {
                     const docRef = doc(db, "operadores", nome);
@@ -1351,6 +1440,12 @@
                 const abaAtiva = document.querySelector('.secao-aba.active');
                 if (abaAtiva) {
                     if (abaAtiva.id === 'aba-producao') renderizarTabelaProducao();
+                    else if (abaAtiva.id === 'aba-expedicao') {
+                        renderizarTabelaExpedicaoPendentes();
+                        atualizarFiltrosExpedicaoDinamicos();
+                        atualizarDiasExpedicaoFiltro();
+                        carregarHistoricoExpedicao();
+                    }
                     else if (abaAtiva.id === 'aba-historico') { atualizarFiltrosDinamicos(); carregarHistorico(); }
                     else if (abaAtiva.id === 'aba-relatorios') { atualizarFiltrosRelatorios(); carregarRelatorios(); }
                 }
@@ -1515,9 +1610,14 @@
                 });
 
                 const abaAtiva = document.querySelector('.secao-aba.active');
-                if (abaAtiva && abaAtiva.id === 'aba-solicitacao-notas') {
-                    atualizarFiltrosNotaDinamicos();
-                    carregarSolicitacoesNotas();
+                if (abaAtiva) {
+                    if (abaAtiva.id === 'aba-solicitacao-notas') {
+                        atualizarFiltrosNotaDinamicos();
+                        carregarSolicitacoesNotas();
+                    } else if (abaAtiva.id === 'aba-expedicao') {
+                        renderizarTabelaExpedicaoPendentes();
+                        carregarHistoricoExpedicao();
+                    }
                 }
                 renderizarBannersNotasProducao();
             });
@@ -1654,7 +1754,7 @@
                 }
 
                 operadorAtual = docSnap.id.toUpperCase();
-                permissoesOperadorAtual = dadosOp.permissoes || { producao: true, historico: true, relatorios: false, rejeitos: false, solicitacaoNotas: false };
+                permissoesOperadorAtual = dadosOp.permissoes || { producao: true, historico: true, relatorios: false, rejeitos: false, solicitacaoNotas: false, expedicao: true };
 
                 document.getElementById("modal-login").style.display = "none";
                 document.getElementById("display-usuario").innerText = "👤 Operador: " + operadorAtual;
@@ -1665,12 +1765,14 @@
                 
                 verificarAniversarioLogin(dadosOp);
 
-                const abaAtiva = document.querySelector('.secao-aba.active');
-                if (abaAtiva && abaAtiva.style.display === 'none') {
-                    if (permissoesOperadorAtual.historico !== false) mudarAba('historico', document.getElementById('btn-aba-historico'));
-                    else if (permissoesOperadorAtual.relatorios === true) mudarAba('relatorios', document.getElementById('btn-aba-relatorios'));
-                } else if (abaAtiva && abaAtiva.id === 'aba-producao') {
-                    renderizarTabelaProducao();
+                if (eAdministrador() || permissoesOperadorAtual.producao !== false) {
+                    mudarAba('producao', document.getElementById('btn-aba-producao'));
+                } else if (permissoesOperadorAtual.expedicao !== false) {
+                    mudarAba('expedicao', document.getElementById('btn-aba-expedicao'));
+                } else if (permissoesOperadorAtual.historico !== false) {
+                    mudarAba('historico', document.getElementById('btn-aba-historico'));
+                } else if (permissoesOperadorAtual.relatorios === true) {
+                    mudarAba('relatorios', document.getElementById('btn-aba-relatorios'));
                 }
 
                 nomeInput.value = "";
@@ -1717,7 +1819,7 @@
                 await setDoc(doc(db, "operadores", nome), { 
                     senha: senha, 
                     nascimento: nascimento,
-                    permissoes: { producao: true, historico: true, relatorios: false, rejeitos: false, solicitacaoNotas: false } 
+                    permissoes: { producao: true, historico: true, relatorios: false, rejeitos: false, solicitacaoNotas: false, expedicao: true } 
                 }, { merge: true });
                 mostrarToast("Operador cadastrado com sucesso!", "success");
                 document.getElementById("cad-operador").value = "";
@@ -1761,6 +1863,10 @@
         window.sairSistema = function() { if (confirm("Deseja sair do sistema?")) location.reload(); };
 
         window.mudarAba = async function(abaId, elementoBtn) {
+            if (abaId === 'expedicao' && !eAdministrador() && permissoesOperadorAtual.expedicao === false) {
+                mostrarToast("Acesso restrito ao setor de Expedição.", "error");
+                return;
+            }
             if (abaId === 'solicitacao-notas' && !eAdministrador() && !eLeandro() && !permissoesOperadorAtual.solicitacaoNotas) {
                 mostrarToast("Acesso restrito.", "error");
                 return;
@@ -1786,6 +1892,11 @@
 
             if (abaId === 'producao') {
                 renderizarTabelaProducao();
+            } else if (abaId === 'expedicao') {
+                renderizarTabelaExpedicaoPendentes();
+                atualizarFiltrosExpedicaoDinamicos();
+                atualizarDiasExpedicaoFiltro();
+                carregarHistoricoExpedicao();
             } else if (abaId === 'historico') {
                 atualizarFiltrosDinamicos();
                 atualizarDiasFiltro();
@@ -1814,7 +1925,135 @@
             }
         };
 
-        // FILTROS E CARREGAMENTO DE LOGS
+        // RENDERIZAÇÃO DE PENDENTES NA EXPEDIÇÃO (Apenas com Nota e PDF anexado e status != Coletado)
+        window.renderizarTabelaExpedicaoPendentes = function() {
+            const tbody = document.getElementById('tabela-expedicao-pendentes');
+            if (!tbody) return;
+            tbody.innerHTML = "";
+
+            const lotesAtivos = listaGeralLotes.filter(l => l.status === "Em Produção" || l.status === "Finalizado");
+            lotesAtivos.sort((a, b) => (a.dataPrevista || "").localeCompare(b.dataPrevista || ""));
+
+            const pendentes = lotesAtivos.filter(lote => {
+                const notaVinculada = listaGeralNotas.find(n => (n.numPedido && lote.nome && lote.nome.toUpperCase().includes(n.numPedido.toUpperCase())));
+                if (!notaVinculada || !notaVinculada.pdfBase64) return false;
+
+                return lote.setores.expedicao.status !== "Coletado";
+            });
+
+            if (pendentes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center">Nenum lote pendente de coleta na expedição.</td></tr>`;
+                return;
+            }
+
+            pendentes.forEach(lote => {
+                const expObj = lote.setores.expedicao;
+                const notaVinculada = listaGeralNotas.find(n => (n.numPedido && lote.nome && lote.nome.toUpperCase().includes(n.numPedido.toUpperCase())));
+                let notaStatusHTML = `<span style="color:#10b981; font-weight:600;">✅ PDF Anexado (${notaVinculada.numPedido})</span>`;
+
+                const stGrav = lote.setores.gravacao.status === "Concluído" ? "✅" : "⏳";
+                const stIdv = lote.setores.idv.status === "Concluído" ? "✅" : "⏳";
+                const stMan = lote.setores.manuseio.status === "Concluído" ? "✅" : "⏳";
+                const statusOutrosHTML = `Grav: ${stGrav} | IDV: ${stIdv} | Man: ${stMan}`;
+
+                const dataPrevFmt = lote.dataPrevista ? lote.dataPrevista.split('-').reverse().join('/') : '-';
+                const operadorTexto = expObj.op ? `👤 ${expObj.op}` : '<span style="color:#94a3b8">Pendente</span>';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${lote.nome}</strong></td>
+                    <td>${parseInt(lote.qtd).toLocaleString('pt-BR')} cartões</td>
+                    <td>${dataPrevFmt}</td>
+                    <td style="font-size:12px;">${statusOutrosHTML}</td>
+                    <td>${notaStatusHTML}</td>
+                    <td>${criarSelectSetor(lote, 'expedicao')}</td>
+                    <td>${operadorTexto}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        // HISTÓRICO DE COLETAS DA EXPEDIÇÃO COM FILTROS PRÓPRIOS
+        function atualizarFiltrosExpedicaoDinamicos() {
+            const anosSet = new Set();
+            listaGeralLotes.forEach(l => {
+                const exp = l.setores && l.setores.expedicao;
+                if (exp && exp.status === "Coletado" && exp.data) {
+                    const ano = exp.data.split('-')[0];
+                    if (ano) anosSet.add(ano);
+                }
+            });
+            montarSelect('exp-filtro-ano', anosSet, "Todos os Anos");
+        }
+
+        window.atualizarDiasExpedicaoFiltro = function() {
+            const anoSel = document.getElementById('exp-filtro-ano').value;
+            const mesSel = document.getElementById('exp-filtro-mes').value;
+            const diasSet = new Set();
+            listaGeralLotes.forEach(l => {
+                const exp = l.setores && l.setores.expedicao;
+                if (exp && exp.status === "Coletado" && exp.data) {
+                    const [ano, mes, diaResto] = exp.data.split('T')[0].split('-');
+                    if ((!anoSel || ano === anoSel) && (!mesSel || mes === mesSel)) {
+                        if (diaResto) diasSet.add(diaResto);
+                    }
+                }
+            });
+            montarSelect('exp-filtro-dia', diasSet, "Todos os Dias");
+        };
+
+        window.carregarHistoricoExpedicao = function() {
+            const tbody = document.getElementById('tabela-expedicao-historico');
+            const anoSel = document.getElementById('exp-filtro-ano').value;
+            const mesSel = document.getElementById('exp-filtro-mes').value;
+            const diaSel = document.getElementById('exp-filtro-dia').value;
+            if (!tbody) return;
+
+            tbody.innerHTML = "";
+            let coletados = listaGeralLotes.filter(l => {
+                const exp = l.setores && l.setores.expedicao;
+                if (!exp || exp.status !== "Coletado" || !exp.data) return false;
+
+                const [ano, mes, dia] = exp.data.split('T')[0].split('-');
+                if (anoSel && ano !== anoSel) return false;
+                if (mesSel && mes !== mesSel) return false;
+                if (diaSel && dia !== diaSel) return false;
+                return true;
+            });
+
+            coletados.sort((a, b) => (b.setores.expedicao.data || "").localeCompare(a.setores.expedicao.data || ""));
+
+            if (coletados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center">Nenhum registo encontrado para os filtros selecionados.</td></tr>`;
+                return;
+            }
+
+            coletados.forEach(lote => {
+                const exp = lote.setores.expedicao;
+                let dataHoraFmt = '-';
+                if (exp.data) {
+                    const dt = new Date(exp.data);
+                    if (!isNaN(dt)) {
+                        dataHoraFmt = `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()} ${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
+                    }
+                }
+
+                const notaVinculada = listaGeralNotas.find(n => (n.numPedido && lote.nome && lote.nome.toUpperCase().includes(n.numPedido.toUpperCase())));
+                const notaInfo = notaVinculada ? `Pedido: <b>${notaVinculada.numPedido}</b> (${notaVinculada.cliente})` : '<span style="color:var(--text-muted)">Sem nota vinculada</span>';
+                const operadorColeta = exp.op ? `👤 ${exp.op}` : '-';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${dataHoraFmt}</strong></td>
+                    <td><strong>${lote.nome}</strong></td>
+                    <td>${parseInt(lote.qtd).toLocaleString('pt-BR')} cartões</td>
+                    <td>${notaInfo}</td>
+                    <td>${operadorColeta}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
         function atualizarFiltrosLogDinamicos() {
             const anosSet = new Set(), operadoresSet = new Set();
             listaGeralLogs.forEach(lg => {
@@ -1880,7 +2119,6 @@
             });
         };
 
-        // FILTROS E CARREGAMENTO DE SOLICITAÇÃO DE NOTAS
         function atualizarFiltrosNotaDinamicos() {
             const anosSet = new Set();
             listaGeralNotas.forEach(n => {
@@ -2109,7 +2347,6 @@
             }
         };
 
-        // REJEITOS
         window.salvarRejeito = async function(e) {
             e.preventDefault();
             if (!eAdministrador()) { mostrarToast("Acesso restrito a Flávio e André!", "error"); return; }
@@ -2245,10 +2482,12 @@
                 const pRel = p.relatorios === true ? 'checked' : '';
                 const pRej = p.rejeitos === true ? 'checked' : '';
                 const pNot = p.solicitacaoNotas === true ? 'checked' : '';
+                const pExp = p.expedicao !== false ? 'checked' : '';
 
                 const checkboxesPermissao = `
                     <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px;">
                         <label><input type="checkbox" ${pProd} onchange="atualizarPermissaoOperador('${op.nome}', 'producao', this.checked)"> Produção</label>
+                        <label><input type="checkbox" ${pExp} onchange="atualizarPermissaoOperador('${op.nome}', 'expedicao', this.checked)"> Expedição</label>
                         <label><input type="checkbox" ${pHist} onchange="atualizarPermissaoOperador('${op.nome}', 'historico', this.checked)"> Histórico</label>
                         <label><input type="checkbox" ${pRel} onchange="atualizarPermissaoOperador('${op.nome}', 'relatorios', this.checked)"> Relatórios</label>
                         <label><input type="checkbox" ${pRej} onchange="atualizarPermissaoOperador('${op.nome}', 'rejeitos', this.checked)"> Rejeitos</label>
@@ -2337,7 +2576,8 @@
                     setores: {
                         gravacao: { status: "Pendente", op: null, data: null },
                         idv: { status: "Pendente", op: null, data: null },
-                        manuseio: { status: "Pendente", op: null, data: null }
+                        manuseio: { status: "Pendente", op: null, data: null },
+                        expedicao: { status: "Pendente", op: null, data: null }
                     },
                     dataConclusao: null, operador: null, justificativa: ""
                 });
@@ -2358,14 +2598,21 @@
                 return {
                     gravacao: { status: baseStatus, op: null, data: null },
                     idv: { status: baseStatus, op: null, data: null },
-                    manuseio: { status: baseStatus, op: null, data: null }
+                    manuseio: { status: baseStatus, op: null, data: null },
+                    expedicao: { status: baseStatus === "Concluído" ? "Coletado" : "Pendente", op: null, data: null }
                 };
             }
             const resultado = {};
-            ['gravacao', 'idv', 'manuseio'].forEach(sec => {
-                if (typeof setores[sec] === 'string') resultado[sec] = { status: setores[sec], op: null, data: null };
-                else if (setores[sec]) resultado[sec] = setores[sec];
-                else resultado[sec] = { status: "Pendente", op: null, data: null };
+            ['gravacao', 'idv', 'manuseio', 'expedicao'].forEach(sec => {
+                if (typeof setores[sec] === 'string') {
+                    let st = setores[sec];
+                    if (sec === 'expedicao' && st === "Concluído") st = "Coletado";
+                    resultado[sec] = { status: st, op: null, data: null };
+                } else if (setores[sec]) {
+                    resultado[sec] = setores[sec];
+                } else {
+                    resultado[sec] = { status: "Pendente", op: null, data: null };
+                }
             });
             return resultado;
         }
@@ -2516,11 +2763,22 @@
         function criarSelectSetor(lote, setorNome) {
             const objSetor = lote.setores[setorNome];
             const valorAtual = objSetor.status;
-            let classeCor = valorAtual === "Concluído" ? "setor-concluido" : (valorAtual === "Envio Parcial" ? "setor-parcial" : (valorAtual === "N/A" ? "setor-na" : "setor-pendente"));
             
             const permitido = operadorAtual !== "";
             const disabledAttr = permitido ? "" : "disabled title='Faça login para editar'";
 
+            if (setorNome === 'expedicao') {
+                let classeCor = valorAtual === "Coletado" ? "setor-concluido" : (valorAtual === "N/A" ? "setor-na" : "setor-pendente");
+                return `
+                    <select class="select-setor ${classeCor}" onchange="atualizarSetorLote('${lote.id}', '${setorNome}', this)" ${disabledAttr}>
+                        <option value="Pendente" ${valorAtual === "Pendente" ? "selected" : ""}>⏳ Pendente</option>
+                        <option value="Coletado" ${valorAtual === "Coletado" ? "selected" : ""}>📦 Coletado</option>
+                        <option value="N/A" ${valorAtual === "N/A" ? "selected" : ""}>🚫 N/A</option>
+                    </select>
+                `;
+            }
+
+            let classeCor = valorAtual === "Concluído" ? "setor-concluido" : (valorAtual === "Envio Parcial" ? "setor-parcial" : (valorAtual === "N/A" ? "setor-na" : "setor-pendente"));
             return `
                 <select class="select-setor ${classeCor}" onchange="atualizarSetorLote('${lote.id}', '${setorNome}', this)" ${disabledAttr}>
                     <option value="Pendente" ${valorAtual === "Pendente" ? "selected" : ""}>⏳ Pendente</option>
@@ -2535,17 +2793,35 @@
             if (!operadorAtual) {
                 mostrarToast("Faça o login para alterar a produção!", "warning");
                 renderizarTabelaProducao();
+                renderizarTabelaExpedicaoPendentes();
                 return;
             }
 
             const novoValor = selectElement.value;
+            const lote = listaGeralLotes.find(l => l.id === loteId);
+            if (!lote) return;
+
+            if (setorNome === 'expedicao' && !eAdministrador() && permissoesOperadorAtual.expedicao === false) {
+                mostrarToast("Você não possui permissão para alterar o setor de Expedição!", "error");
+                renderizarTabelaProducao();
+                renderizarTabelaExpedicaoPendentes();
+                return;
+            }
+
+            if (setorNome === 'expedicao' && novoValor === 'Coletado') {
+                const notaVinculada = listaGeralNotas.find(n => (n.numPedido && lote.nome && lote.nome.toUpperCase().includes(n.numPedido.toUpperCase())));
+                if (!notaVinculada || !notaVinculada.pdfBase64) {
+                    mostrarToast("Atenção: Só é possível marcar como Coletado se houver solicitação de nota com PDF anexado!", "warning");
+                    renderizarTabelaProducao();
+                    renderizarTabelaExpedicaoPendentes();
+                    return;
+                }
+            }
 
             try {
-                const lote = listaGeralLotes.find(l => l.id === loteId);
-                if (!lote) return;
                 const novosSetores = { ...lote.setores };
                 
-                if (novoValor === "Concluído" || novoValor === "Envio Parcial") {
+                if (novoValor === "Concluído" || novoValor === "Envio Parcial" || novoValor === "Coletado") {
                     novosSetores[setorNome] = { status: novoValor, op: operadorAtual, data: new Date().toISOString() };
                 } else if (novoValor === "N/A") {
                     novosSetores[setorNome] = { status: "N/A", op: null, data: new Date().toISOString() };
@@ -2583,7 +2859,7 @@
                     const saldo = lote.qtd - qtdEnviada;
                     await addDoc(collection(db, "lotes"), {
                         nome: lote.nome + " (Saldo)", qtd: saldo, dataPrevista: lote.dataPrevista, dataCadastro: new Date().toISOString(), status: "Em Produção",
-                        setores: { gravacao: { status: "Pendente", op: null, data: null }, idv: { status: "Pendente", op: null, data: null }, manuseio: { status: "Pendente", op: null, data: null } },
+                        setores: { gravacao: { status: "Pendente", op: null, data: null }, idv: { status: "Pendente", op: null, data: null }, manuseio: { status: "Pendente", op: null, data: null }, expedicao: { status: "Pendente", op: null, data: null } },
                         dataConclusao: null, operador: null, justificativa: ""
                     });
                     await registrarLog(`Realizou envio parcial do lote "${lote.nome}" (${qtdEnviada} un)`);
@@ -2601,6 +2877,7 @@
             document.getElementById('modal-finalizacao').style.display = 'none';
             lotePendenteFinalizacao = null;
             renderizarTabelaProducao();
+            renderizarTabelaExpedicaoPendentes();
         };
 
         function atualizarKPIsProducao(totOS, totCart, nPrazoOS, nPrazoCart, vbOS, vbCart, atrOS, atrCart) {
@@ -2614,7 +2891,6 @@
             document.getElementById("kpi-atrasado-cartoes").innerText = `${atrCart.toLocaleString('pt-BR')} cartões`;
         }
 
-        // HISTÓRICO
         function atualizarFiltrosDinamicos() {
             const anosSet = new Set(), operadoresSet = new Set();
             listaGeralLotes.forEach(l => {
@@ -2732,7 +3008,6 @@
             } catch (e) { mostrarToast("Erro ao reabrir.", "error"); }
         };
 
-        // RELATÓRIOS & CONTROLE
         function atualizarFiltrosRelatorios() {
             const anosSet = new Set(), operadoresSet = new Set();
             listaGeralLotes.forEach(l => {
@@ -2925,11 +3200,13 @@
             const classeCaixa = diasAtrasoSetor > 0 ? "box-setor-atrasado" : "box-setor-no-prazo";
             const iconeStatus = diasAtrasoSetor > 0 ? "🔴 Atrasado" : "🟢 No Prazo";
 
+            let textoStatusLabel = objSetor.status === "Coletado" ? "📦 Coletado" : iconeStatus;
+
             return `
                 <div class="box-setor-relatorio ${classeCaixa}">
                     ${htmlOp}
                     ${htmlData}
-                    <span style="font-size: 10px; font-weight: 700; margin-top: 2px;">${iconeStatus}</span>
+                    <span style="font-size: 10px; font-weight: 700; margin-top: 2px;">${textoStatusLabel}</span>
                 </div>
             `;
         }
