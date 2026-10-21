@@ -875,7 +875,7 @@
                 <section class="panel-card" style="margin-top: 30px;">
                     <div class="panel-header space-between">
                         <h3>📋 Histórico de Coletas Realizadas</h3>
-                        <span class="info-auxiliar">Registo de pedidos coletados com filtros exclusivos por data</span>
+                        <span class="info-auxiliar">Registo de pedidos coletados com consulta de PDF e filtros por data</span>
                     </div>
 
                     <div class="filtro-grid">
@@ -919,11 +919,12 @@
                                     <th>Nº Pedido</th>
                                     <th>Cliente</th>
                                     <th>Volumes / Peso</th>
+                                    <th>Nota PDF</th>
                                     <th>Operador Responsável</th>
                                 </tr>
                             </thead>
                             <tbody id="tabela-expedicao-historico">
-                                <tr><td colspan="5" class="text-center">Nenhum registo no histórico de coletas.</td></tr>
+                                <tr><td colspan="6" class="text-center">Nenhum registo no histórico de coletas.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1922,7 +1923,7 @@
             }
         };
 
-        // RENDERIZAÇÃO DE PENDENTES NA EXPEDIÇÃO (Baseado direto em solicitacoes_notas com PDF anexado)
+        // RENDERIZAÇÃO DE PENDENTES NA EXPEDIÇÃO
         window.renderizarTabelaExpedicaoPendentes = function() {
             const tbody = document.getElementById('tabela-expedicao-pendentes');
             if (!tbody) return;
@@ -1989,7 +1990,7 @@
             }
         };
 
-        // HISTÓRICO DE COLETAS DA EXPEDIÇÃO COM FILTROS PRÓPRIOS
+        // HISTÓRICO DE COLETAS DA EXPEDIÇÃO COM VISUALIZAÇÃO DE PDF
         function atualizarFiltrosExpedicaoDinamicos() {
             const anosSet = new Set();
             listaGeralNotas.forEach(n => {
@@ -2037,7 +2038,7 @@
             coletados.sort((a, b) => (b.dataColeta || "").localeCompare(a.dataColeta || ""));
 
             if (coletados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center">Nenhum registo no histórico de coletas.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center">Nenhum registo no histórico de coletas.</td></tr>`;
                 return;
             }
 
@@ -2050,6 +2051,10 @@
                     }
                 }
 
+                let statusPdfHTML = n.pdfBase64 
+                    ? `<button onclick="abrirNotaPdf('${n.id}')" class="btn-primary" style="padding: 3px 8px; font-size: 11px; height: auto;">📄 Ver PDF</button>` 
+                    : `<span style="font-size: 12px; color: var(--text-muted);">Sem PDF</span>`;
+
                 const operadorColeta = n.operadorColeta ? `👤 ${n.operadorColeta}` : '-';
 
                 const tr = document.createElement('tr');
@@ -2058,6 +2063,7 @@
                     <td><strong>${n.numPedido}</strong></td>
                     <td>${n.cliente}</td>
                     <td>${n.volumes} vol. (${n.pesoTotal} kg)</td>
+                    <td>${statusPdfHTML}</td>
                     <td>${operadorColeta}</td>
                 `;
                 tbody.appendChild(tr);
