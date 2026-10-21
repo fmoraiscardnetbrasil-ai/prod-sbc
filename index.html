@@ -602,13 +602,18 @@
     <div id="modal-upload-pdf" class="login-overlay" style="display: none;">
         <div class="login-card">
             <h2>Anexar Nota em PDF</h2>
-            <p id="desc-modal-pdf">Selecione o arquivo PDF da nota para este pedido:</p>
+            <p id="desc-modal-pdf">Informe o número da nota fiscal e selecione o arquivo PDF:</p>
             <div class="login-input-grupo">
+                <label for="input-num-nota-modal">Número da Nota Fiscal</label>
+                <input type="text" id="input-num-nota-modal" placeholder="Ex: 00012345" required>
+            </div>
+            <div class="login-input-grupo">
+                <label for="input-arquivo-pdf-modal">Arquivo PDF da Nota</label>
                 <input type="file" id="input-arquivo-pdf-modal" accept="application/pdf" style="padding: 7px;">
             </div>
             <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button onclick="fecharModalUploadPdf()" class="btn-secondary" style="width: 50%;">Cancelar</button>
-                <button onclick="confirmarUploadPdf()" class="btn-primary" style="width: 50%;">Salvar PDF</button>
+                <button onclick="confirmarUploadPdf()" class="btn-primary" style="width: 50%;">Salvar PDF e Nota</button>
             </div>
         </div>
     </div>
@@ -847,7 +852,7 @@
                 <section class="panel-card">
                     <div class="panel-header space-between">
                         <h3>🚚 Pedidos / Notas Pendentes de Coleta</h3>
-                        <span class="info-auxiliar">Solicitações de notas com PDF anexado aguardando coleta</span>
+                        <span class="info-auxiliar">Solicitações de notas com PDF e Nº da Nota anexados aguardando coleta</span>
                     </div>
 
                     <div class="table-responsive">
@@ -856,6 +861,7 @@
                                 <tr>
                                     <th>Data Solicitação</th>
                                     <th>Nº Pedido</th>
+                                    <th>Nº da Nota</th>
                                     <th>Cliente</th>
                                     <th>Itens / Descrição</th>
                                     <th>Volumes</th>
@@ -865,7 +871,7 @@
                                 </tr>
                             </thead>
                             <tbody id="tabela-expedicao-pendentes">
-                                <tr><td colspan="8" class="text-center">Carregando pedidos pendentes...</td></tr>
+                                <tr><td colspan="9" class="text-center">Carregando pedidos pendentes...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -875,7 +881,7 @@
                 <section class="panel-card" style="margin-top: 30px;">
                     <div class="panel-header space-between">
                         <h3>📋 Histórico de Coletas Realizadas</h3>
-                        <span class="info-auxiliar">Registo de pedidos coletados com consulta de PDF e filtros por data</span>
+                        <span class="info-auxiliar">Registo de pedidos coletados com consulta por Nº da Nota e filtros por data</span>
                     </div>
 
                     <div class="filtro-grid">
@@ -909,6 +915,10 @@
                                 <option value="">Todos os Dias</option>
                             </select>
                         </div>
+                        <div class="input-grupo" style="grid-column: span 2;">
+                            <label for="exp-filtro-busca">Busca (Pedido, Cliente ou Nota)</label>
+                            <input type="text" id="exp-filtro-busca" placeholder="Digite para filtrar..." oninput="carregarHistoricoExpedicao()">
+                        </div>
                     </div>
 
                     <div class="table-responsive">
@@ -917,6 +927,7 @@
                                 <tr>
                                     <th>Data / Hora da Coleta</th>
                                     <th>Nº Pedido</th>
+                                    <th>Nº da Nota</th>
                                     <th>Cliente</th>
                                     <th>Volumes / Peso</th>
                                     <th>Nota PDF</th>
@@ -924,7 +935,7 @@
                                 </tr>
                             </thead>
                             <tbody id="tabela-expedicao-historico">
-                                <tr><td colspan="6" class="text-center">Nenhum registo no histórico de coletas.</td></tr>
+                                <tr><td colspan="7" class="text-center">Nenhum registo no histórico de coletas.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1119,7 +1130,7 @@
                         <div class="input-grupo"><label for="nota-filtro-ano">Ano</label><select id="nota-filtro-ano" onchange="atualizarDiasNotaFiltro(); carregarSolicitacoesNotas();"><option value="">Todos os Anos</option></select></div>
                         <div class="input-grupo"><label for="nota-filtro-mes">Mês</label><select id="nota-filtro-mes" onchange="atualizarDiasNotaFiltro(); carregarSolicitacoesNotas();"><option value="">Todos os Meses</option><option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option><option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option><option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select></div>
                         <div class="input-grupo"><label for="nota-filtro-dia">Dia</label><select id="nota-filtro-dia" onchange="carregarSolicitacoesNotas()"><option value="">Todos os Dias</option></select></div>
-                        <div class="input-grupo" style="grid-column: span 2;"><label for="filtro-busca-nota">Busca por Pedido / Cliente</label><input type="text" id="filtro-busca-nota" placeholder="Digite o pedido ou cliente..." oninput="carregarSolicitacoesNotas()"></div>
+                        <div class="input-grupo" style="grid-column: span 2;"><label for="filtro-busca-nota">Busca por Pedido, Cliente ou Nota</label><input type="text" id="filtro-busca-nota" placeholder="Digite o pedido, cliente ou nota..." oninput="carregarSolicitacoesNotas()"></div>
                     </div>
                     <div class="table-responsive">
                         <table class="styled-table">
@@ -1127,6 +1138,7 @@
                                 <tr>
                                     <th>Data</th>
                                     <th>Nº Pedido</th>
+                                    <th>Nº da Nota</th>
                                     <th>Cliente</th>
                                     <th>Itens / Descrição</th>
                                     <th>Volumes</th>
@@ -1137,7 +1149,7 @@
                                 </tr>
                             </thead>
                             <tbody id="tabela-solicitacoes-notas">
-                                <tr><td colspan="9" class="text-center">Carregando solicitações...</td></tr>
+                                <tr><td colspan="10" class="text-center">Carregando solicitações...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1631,7 +1643,7 @@
             const ordenadas = [...listaGeralNotas].sort((a, b) => (b.dataCriacao || "").localeCompare(a.dataCriacao || ""));
 
             ordenadas.forEach(n => {
-                if (n.pdfBase64) return;
+                if (n.pdfBase64 && n.numNota) return;
 
                 const div = document.createElement('div');
                 div.className = "banner-alerta-prazos";
@@ -1639,8 +1651,8 @@
                 div.style.borderColor = "#3b82f6";
                 div.style.color = "#1e3a8a";
 
-                let statusPdfTexto = `<span style="color: #d97706; font-weight: 600;">⚠️ Nota PDF Pendente de Anexo</span>`;
-                let botaoAcao = `<button onclick="abrirModalUploadPdf('${n.id}')" class="btn-warning" style="padding: 4px 10px; font-size: 12px; height: auto;">Anexar PDF</button>`;
+                let statusPdfTexto = `<span style="color: #d97706; font-weight: 600;">⚠️ Nota PDF ou Nº da Nota Pendente de Anexo</span>`;
+                let botaoAcao = `<button onclick="abrirModalUploadPdf('${n.id}')" class="btn-warning" style="padding: 4px 10px; font-size: 12px; height: auto;">Anexar PDF / Nota</button>`;
 
                 div.innerHTML = `
                     <div class="icone-alerta">📄</div>
@@ -1929,11 +1941,11 @@
             if (!tbody) return;
             tbody.innerHTML = "";
 
-            const pendentes = listaGeralNotas.filter(n => n.pdfBase64 && n.statusColeta !== "Coletado");
+            const pendentes = listaGeralNotas.filter(n => n.pdfBase64 && n.numNota && n.statusColeta !== "Coletado");
             pendentes.sort((a, b) => (b.dataCriacao || "").localeCompare(a.dataCriacao || ""));
 
             if (pendentes.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="text-center">Nenhum pedido pendente de coleta na expedição.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center">Nenhum pedido pendente de coleta com PDF e nota anexados.</td></tr>`;
                 return;
             }
 
@@ -1957,6 +1969,7 @@
                 tr.innerHTML = `
                     <td><strong>${dataFmt}</strong></td>
                     <td><strong>${n.numPedido}</strong></td>
+                    <td><strong style="color: #38bdf8;">${n.numNota || '-'}</strong></td>
                     <td>${n.cliente}</td>
                     <td style="max-width: 200px; font-size: 12px; white-space: pre-wrap;">${n.itens}</td>
                     <td>${n.volumes} vol.</td>
@@ -1990,7 +2003,7 @@
             }
         };
 
-        // HISTÓRICO DE COLETAS DA EXPEDIÇÃO COM VISUALIZAÇÃO DE PDF
+        // HISTÓRICO DE COLETAS DA EXPEDIÇÃO COM VISUALIZAÇÃO DE PDF E Nº DA NOTA
         function atualizarFiltrosExpedicaoDinamicos() {
             const anosSet = new Set();
             listaGeralNotas.forEach(n => {
@@ -2022,6 +2035,7 @@
             const anoSel = document.getElementById('exp-filtro-ano').value;
             const mesSel = document.getElementById('exp-filtro-mes').value;
             const diaSel = document.getElementById('exp-filtro-dia').value;
+            const termoBusca = (document.getElementById('exp-filtro-busca').value || "").toLowerCase();
             if (!tbody) return;
 
             tbody.innerHTML = "";
@@ -2032,13 +2046,21 @@
                 if (anoSel && ano !== anoSel) return false;
                 if (mesSel && mes !== mesSel) return false;
                 if (diaSel && dia !== diaSel) return false;
+
+                const pedido = (n.numPedido || "").toLowerCase();
+                const cliente = (n.cliente || "").toLowerCase();
+                const nota = (n.numNota || "").toLowerCase();
+
+                if (termoBusca && !pedido.includes(termoBusca) && !cliente.includes(termoBusca) && !nota.includes(termoBusca)) {
+                    return false;
+                }
                 return true;
             });
 
             coletados.sort((a, b) => (b.dataColeta || "").localeCompare(a.dataColeta || ""));
 
             if (coletados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center">Nenhum registo no histórico de coletas.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center">Nenhum registo no histórico de coletas.</td></tr>`;
                 return;
             }
 
@@ -2061,6 +2083,7 @@
                 tr.innerHTML = `
                     <td><strong>${dataHoraFmt}</strong></td>
                     <td><strong>${n.numPedido}</strong></td>
+                    <td><strong style="color: #38bdf8;">${n.numNota || '-'}</strong></td>
                     <td>${n.cliente}</td>
                     <td>${n.volumes} vol. (${n.pesoTotal} kg)</td>
                     <td>${statusPdfHTML}</td>
@@ -2189,6 +2212,7 @@
                     pesoTotal: parseFloat(peso) || 0,
                     pdfBase64: null,
                     nomeArquivoPdf: null,
+                    numNota: null,
                     statusColeta: "Pendente",
                     operador: operadorAtual,
                     dataCriacao: isoStr,
@@ -2225,6 +2249,8 @@
                 return; 
             }
             idNotaForUpload = id;
+            const nota = listaGeralNotas.find(n => n.id === id);
+            document.getElementById('input-num-nota-modal').value = (nota && nota.numNota) ? nota.numNota : "";
             document.getElementById('input-arquivo-pdf-modal').value = "";
             document.getElementById('modal-upload-pdf').style.display = 'flex';
         };
@@ -2237,9 +2263,16 @@
         window.confirmarUploadPdf = async function() {
             if (!eAdministrador()) { mostrarToast("Acesso restrito!", "error"); return; }
             if (!idNotaForUpload) return;
+            
+            const numNotaModal = document.getElementById('input-num-nota-modal').value.trim();
             const arquivoInput = document.getElementById('input-arquivo-pdf-modal');
+
+            if (!numNotaModal) {
+                mostrarToast("Informe o número da nota fiscal obrigatório.", "warning");
+                return;
+            }
             if (!arquivoInput.files || arquivoInput.files.length === 0) {
-                mostrarToast("Selecione um arquivo PDF.", "warning");
+                mostrarToast("Selecione um arquivo PDF da nota.", "warning");
                 return;
             }
 
@@ -2251,11 +2284,12 @@
                 try {
                     await updateDoc(doc(db, "solicitacoes_notas", idNotaForUpload), {
                         pdfBase64,
-                        nomeArquivoPdf: arquivo.name
+                        nomeArquivoPdf: arquivo.name,
+                        numNota: numNotaModal
                     });
-                    await registrarLog(`Anexou o PDF "${arquivo.name}" a uma solicitação de nota`);
+                    await registrarLog(`Anexou o PDF "${arquivo.name}" e a Nota Nº ${numNotaModal} a uma solicitação`);
                     fecharModalUploadPdf();
-                    mostrarToast("PDF da nota anexado com sucesso!", "success");
+                    mostrarToast("PDF e número da nota salvos com sucesso!", "success");
                 } catch (e) {
                     mostrarToast("Erro ao enviar o PDF.", "error");
                 }
@@ -2278,13 +2312,14 @@
 
                 const pedido = (n.numPedido || "").toLowerCase();
                 const cliente = (n.cliente || "").toLowerCase();
-                return pedido.includes(termoBusca) || cliente.includes(termoBusca);
+                const nota = (n.numNota || "").toLowerCase();
+                return pedido.includes(termoBusca) || cliente.includes(termoBusca) || nota.includes(termoBusca);
             });
 
             filtradas.sort((a, b) => (b.dataCriacao || "").localeCompare(a.dataCriacao || ""));
 
             if (filtradas.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="text-center">Nenhuma solicitação encontrada.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center">Nenhuma solicitação encontrada.</td></tr>`;
                 return;
             }
 
@@ -2315,6 +2350,7 @@
                 tr.innerHTML = `
                     <td><strong>${dataFmt}</strong></td>
                     <td><strong>${n.numPedido}</strong></td>
+                    <td><strong style="color: #38bdf8;">${n.numNota || '<span style="color:#f59e0b; font-weight:normal;">Pendente</span>'}</strong></td>
                     <td>${n.cliente}</td>
                     <td style="max-width: 250px;">
                         <div style="font-size: 12px; white-space: pre-wrap; margin-bottom: 6px;">${n.itens}</div>
@@ -2339,11 +2375,11 @@
             const win = window.open();
             win.document.write(`
                 <html>
-                    <head><title>Nota - Pedido ${nota.numPedido}</title></head>
+                    <head><title>Nota ${nota.numNota || ''} - Pedido ${nota.numPedido}</title></head>
                     <body style="margin:0; background:#333; display:flex; flex-direction:column; align-items:center; height:100vh;">
                         <div style="background:#111; color:#fff; width:100%; padding:10px 20px; display:flex; justify-content:space-between; align-items:center;">
-                            <span><b>Pedido:</b> ${nota.numPedido} | <b>Cliente:</b> ${nota.cliente}</span>
-                            <a href="${nota.pdfBase64}" download="Nota_${nota.numPedido}.pdf" style="background:#2563eb; color:#fff; padding:6px 12px; border-radius:4px; text-decoration:none;">Baixar PDF</a>
+                            <span><b>Nota Nº:</b> ${nota.numNota || '-'} | <b>Pedido:</b> ${nota.numPedido} | <b>Cliente:</b> ${nota.cliente}</span>
+                            <a href="${nota.pdfBase64}" download="Nota_${nota.numNota || nota.numPedido}.pdf" style="background:#2563eb; color:#fff; padding:6px 12px; border-radius:4px; text-decoration:none;">Baixar PDF</a>
                         </div>
                         <iframe src="${nota.pdfBase64}" style="width:100%; height:100%; border:none;"></iframe>
                     </body>
