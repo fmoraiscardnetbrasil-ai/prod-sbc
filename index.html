@@ -574,7 +574,7 @@
         .link-acao { display: inline-block; margin-top: 15px; font-size: 13px; color: #38bdf8; cursor: pointer; text-decoration: underline; }
         .links-container { display: flex; justify-content: space-between; margin-top: 10px; }
 
-        #input-operador-login, #cad-operador, #rec-operador, #modal-senha-admin-input-nome { text-transform: uppercase; }
+        #input-operador-login, #cad-operador, #rec-operador, #modal-senha-admin-input-nome, #portaria-placa { text-transform: uppercase; }
 
         @media (max-width: 768px) {
             .app-layout { flex-direction: column; }
@@ -587,6 +587,24 @@
 <body data-theme="dark">
 
     <div id="toast-container"></div>
+
+    <!-- MODAL DE REGISTRO RÁPIDO DE SAÍDA (PORTARIA) -->
+    <div id="modal-saida-portaria" class="login-overlay" style="display: none;">
+        <div class="login-card">
+            <h2>📤 Registrar Saída</h2>
+            <p id="desc-modal-saida-portaria">Confirme os detalhes da saída do visitante / veículo:</p>
+
+            <div class="login-input-grupo">
+                <label for="saida-portaria-obs">Observação Adicional da Saída (Opcional)</label>
+                <input type="text" id="saida-portaria-obs" placeholder="Ex: Saída concluída normalmente..." autocomplete="off">
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button onclick="fecharModalSaidaPortaria()" class="btn-secondary" style="width: 50%;">Cancelar</button>
+                <button onclick="confirmarSaidaPortaria()" class="btn-primary" style="width: 50%; background-color: #f59e0b;">Confirmar Saída</button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL DE ANIVERSÁRIO -->
     <div id="modal-aniversario" class="login-overlay" style="display: none;">
@@ -744,6 +762,7 @@
             <div class="sidebar-top">
                 <div class="abas-container">
                     <button class="btn-aba active" id="btn-aba-producao" onclick="mudarAba('producao', this)">📦 Produção Atual</button>
+                    <button class="btn-aba" id="btn-aba-portaria" onclick="mudarAba('portaria', this)">🚗 Portaria </button>
                     <button class="btn-aba" id="btn-aba-expedicao" onclick="mudarAba('expedicao', this)">🚚 Expedição</button>
                     <button class="btn-aba" id="btn-aba-historico" onclick="mudarAba('historico', this)">📊 Histórico Concluídos</button>
                     <button class="btn-aba" id="btn-aba-relatorios" onclick="mudarAba('relatorios', this)">📈 Relatórios & Controle</button>
@@ -841,6 +860,156 @@
                                 </tr>
                             </thead>
                             <tbody id="tabela-lotes"><tr><td colspan="10" class="text-center">Carregando dados...</td></tr></tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- ABA PORTARIA / ENTREGAS & COLETAS -->
+            <div id="aba-portaria" class="secao-aba">
+                <section class="panel-card">
+                    <div class="panel-header space-between">
+                        <h3>🚗 Controle de Portaria - Entrada e Saída (Entregas e Coletas)</h3>
+                        <span class="info-auxiliar">Registo e controle de acesso de veículos e pedestres</span>
+                    </div>
+
+                    <form id="form-portaria" onsubmit="salvarRegistroPortaria(event)" style="display: flex; flex-direction: column; gap: 15px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div class="input-grupo">
+                                <label for="portaria-tipo-movimento">Movimento</label>
+                                <select id="portaria-tipo-movimento" onchange="alternarCamposMovimentoPortaria()" required>
+                                    <option value="Agendamento">📅 Pré-cadastro / Agendado</option>
+                                    <option value="Entrada">📥 Entrada Imediata</option>
+                                </select>
+                            </div>
+
+                            <div class="input-grupo">
+                                <label for="portaria-operacao">Operação</label>
+                                <select id="portaria-operacao" required>
+                                    <option value="Entrega">📦 Entrega</option>
+                                    <option value="Coleta">🚚 Coleta</option>
+                                    <option value="Outros">🔹 Outros</option>
+									<option value="Visita">🚶 Visita</option>
+									<option value="Entrevista">🚶 Entrevista</option>
+									<option value="Manutenção">🚶 Manutenção</option>
+                                </select>
+                            </div>
+
+                            <div class="input-grupo">
+                                <label for="portaria-tipo-transporte">Tipo de Transporte</label>
+                                <select id="portaria-tipo-transporte" onchange="alternarExigenciaPlaca()" required>
+                                    <option value="Carro">🚘 Carro</option>
+                                    <option value="Moto">🏍️ Moto</option>
+                                    <option value="Van">🚐 Van</option>
+                                    <option value="Fiorino">🚚 Fiorino</option>
+                                    <option value="Caminhão">🚛 Caminhão</option>
+                                    <option value="Pedestre">🚶 Pedestre / A pé</option>
+                                </select>
+                            </div>
+
+                            <div class="input-grupo">
+                                <label for="portaria-placa" id="lbl-portaria-placa">Placa do Veículo <span style="color:#ef4444;">*</span></label>
+                                <input type="text" id="portaria-placa" placeholder="Ex: ABC-1D23" autocomplete="off" oninput="this.value = this.value.toUpperCase()" required>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div class="input-grupo">
+                                <label for="portaria-nome">Nome do Visitante / Motorista</label>
+                                <input type="text" id="portaria-nome" placeholder="Ex: João da Silva" required>
+                            </div>
+
+                            <div class="input-grupo">
+                                <label for="portaria-doc">Documento (RG / CPF)</label>
+                                <input type="text" id="portaria-doc" placeholder="Ex: 12.345.678-9">
+                            </div>
+
+                            <div class="input-grupo">
+                                <label for="portaria-empresa">Empresa / Transportadora</label>
+                                <input type="text" id="portaria-empresa" placeholder="Ex: Logística Express" required>
+                            </div>
+                        </div>
+
+                        <div class="input-grupo">
+                            <label for="portaria-observacao">Observação / Detalhes do Ficheiro ou Material</label>
+                            <input type="text" id="portaria-observacao" placeholder="Ex: Entregou 3 caixas de cartões PVC / Nota 1042">
+                        </div>
+
+                        <div>
+                            <button type="submit" id="btn-salvar-portaria" class="btn-primary">+ Registrar Acesso na Portaria</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="panel-card">
+                    <div class="panel-header space-between">
+                        <h3>📋 Histórico de Acessos da Portaria</h3>
+                        <span class="info-auxiliar">Consulte entradas, registe saídas rápidas e filtre por dia, mês e ano</span>
+                    </div>
+
+                    <div class="filtro-grid">
+                        <div class="input-grupo">
+                            <label for="portaria-filtro-ano">Ano</label>
+                            <select id="portaria-filtro-ano" onchange="atualizarDiasPortariaFiltro(); carregarPortaria();">
+                                <option value="">Todos os Anos</option>
+                            </select>
+                        </div>
+                        <div class="input-grupo">
+                            <label for="portaria-filtro-mes">Mês</label>
+                            <select id="portaria-filtro-mes" onchange="atualizarDiasPortariaFiltro(); carregarPortaria();">
+                                <option value="">Todos os Meses</option>
+                                <option value="01">Janeiro</option>
+                                <option value="02">Fevereiro</option>
+                                <option value="03">Março</option>
+                                <option value="04">Abril</option>
+                                <option value="05">Maio</option>
+                                <option value="06">Junho</option>
+                                <option value="07">Julho</option>
+                                <option value="08">Agosto</option>
+                                <option value="09">Setembro</option>
+                                <option value="10">Outubro</option>
+                                <option value="11">Novembro</option>
+                                <option value="12">Dezembro</option>
+                            </select>
+                        </div>
+                        <div class="input-grupo">
+                            <label for="portaria-filtro-dia">Dia</label>
+                            <select id="portaria-filtro-dia" onchange="carregarPortaria()">
+                                <option value="">Todos os Dias</option>
+                            </select>
+                        </div>
+                        <div class="input-grupo">
+                            <label for="portaria-filtro-movimento">Movimento</label>
+                            <select id="portaria-filtro-movimento" onchange="carregarPortaria()">
+                                <option value="">Todos</option>
+                                <option value="Entrada">Entrada</option>
+                                <option value="Saída">Saída</option>
+                            </select>
+                        </div>
+                        <div class="input-grupo" style="grid-column: span 2;">
+                            <label for="portaria-filtro-busca">Busca (Nome, Empresa, Placa ou Doc)</label>
+                            <input type="text" id="portaria-filtro-busca" placeholder="Digite para filtrar..." oninput="carregarPortaria()">
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Data / Hora Entrada</th>
+                                    <th>Movimento</th>
+                                    <th>Operação</th>
+                                    <th>Transporte / Placa</th>
+                                    <th>Nome / Documento</th>
+                                    <th>Empresa</th>
+                                    <th>Observações / Status Saída</th>
+                                    <th>Registrado por</th>
+                                    <th>Ações / Saída</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-portaria">
+                                <tr><td colspan="9" class="text-center">Carregando dados da portaria...</td></tr>
+                            </tbody>
                         </table>
                     </div>
                 </section>
@@ -1218,8 +1387,10 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCVPh1U7jH0WLuPWLWtZDvAgEfPLROqxcA",
+        // Configuração do Firebase
+        // IMPORTANTE: Configure suas chaves ou utilize a variável window.FIREBASE_CONFIG
+        const firebaseConfig = window.FIREBASE_CONFIG || {
+            apiKey: "SUA_API_KEY_AQUI",
             authDomain: "prod-sbc.firebaseapp.com",
             projectId: "prod-sbc",
             storageBucket: "prod-sbc.firebasestorage.app",
@@ -1238,15 +1409,19 @@
         let listaGeralAvisos = [];
         let listaGeralNotas = [];
         let listaGeralLogs = [];
+        let listaGeralPortaria = [];
         let listaGeralOperadoresCache = [];
         let lotePendenteFinalizacao = null;
         let loteParaReabrirId = null;
         let idNotaForUpload = null;
+        let idPortariaParaSaida = null;
+
         let unsubscribeLotes = null;
         let unsubscribeRejeitos = null;
         let unsubscribeAvisos = null;
         let unsubscribeNotas = null;
         let unsubscribeLogs = null;
+        let unsubscribePortaria = null;
         let unsubscribeOperadores = null;
 
         function mostrarToast(mensagem, tipo = 'success') {
@@ -1347,6 +1522,9 @@
             const btnAbaExpedicao = document.getElementById('btn-aba-expedicao');
             if (btnAbaExpedicao) btnAbaExpedicao.style.display = (admin || permissoesOperadorAtual.expedicao !== false) ? 'flex' : 'none';
 
+            const btnAbaPortaria = document.getElementById('btn-aba-portaria');
+            if (btnAbaPortaria) btnAbaPortaria.style.display = (admin || permissoesOperadorAtual.portaria !== false) ? 'flex' : 'none';
+
             if (!admin) {
                 const btnProd = document.getElementById('btn-aba-producao');
                 if (btnProd) btnProd.style.display = (permissoesOperadorAtual.producao !== false) ? 'flex' : 'none';
@@ -1392,11 +1570,11 @@
         async function verificarInicializacaoOperadores() {
             try {
                 const padrao = { 
-                    "FLÁVIO": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true } }, 
-                    "FLAVIO": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true } }, 
-                    "ANDRÉ": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true } }, 
-                    "ANDRE": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true } },
-                    "LEANDRO": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: false, rejeitos: false, solicitacaoNotas: true, expedicao: true } }
+                    "FLÁVIO": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true, portaria: true } }, 
+                    "FLAVIO": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true, portaria: true } }, 
+                    "ANDRÉ": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true, portaria: true } }, 
+                    "ANDRE": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true, portaria: true } },
+                    "LEANDRO": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: false, rejeitos: false, solicitacaoNotas: true, expedicao: true, portaria: true } }
                 };
                 for (let [nome, dados] of Object.entries(padrao)) {
                     const docRef = doc(db, "operadores", nome);
@@ -1432,11 +1610,14 @@
                 inputDataAviso.value = amanha.toISOString().split('T')[0];
             }
 
+            alternarExigenciaPlaca();
+
             escutarLotesEmTempoReal();
             escutarRejeitosEmTempoReal();
             escutarAvisosEmTempoReal();
             escutarNotasEmTempoReal();
             escutarLogsEmTempoReal();
+            escutarPortariaEmTempoReal();
             escutarOperadoresEmTempoReal();
         };
 
@@ -1513,6 +1694,33 @@
                 if (abaAtiva && abaAtiva.id === 'aba-logs') {
                     atualizarFiltrosLogDinamicos();
                     carregarLogsSistema();
+                }
+            });
+        }
+
+        function escutarPortariaEmTempoReal() {
+            if (unsubscribePortaria) unsubscribePortaria();
+            unsubscribePortaria = onSnapshot(collection(db, "portaria"), (querySnapshot) => {
+                listaGeralPortaria = [];
+                querySnapshot.forEach((docSnap) => {
+                    const reg = docSnap.data();
+                    reg.id = docSnap.id;
+                    if (reg.dataHora && (!reg.ano || !reg.mes || !reg.dia)) {
+                        const dt = new Date(reg.dataHora);
+                        if (!isNaN(dt)) {
+                            reg.ano = String(dt.getFullYear());
+                            reg.mes = String(dt.getMonth() + 1).padStart(2, '0');
+                            reg.dia = String(dt.getDate()).padStart(2, '0');
+                        }
+                    }
+                    listaGeralPortaria.push(reg);
+                });
+
+                const abaAtiva = document.querySelector('.secao-aba.active');
+                if (abaAtiva && abaAtiva.id === 'aba-portaria') {
+                    atualizarFiltrosPortariaDinamicos();
+                    atualizarDiasPortariaFiltro();
+                    carregarPortaria();
                 }
             });
         }
@@ -1764,7 +1972,7 @@
                 }
 
                 operadorAtual = docSnap.id.toUpperCase();
-                permissoesOperadorAtual = dadosOp.permissoes || { producao: true, historico: true, relatorios: false, rejeitos: false, solicitacaoNotas: false, expedicao: true };
+                permissoesOperadorAtual = dadosOp.permissoes || { producao: true, historico: true, relatorios: false, rejeitos: false, solicitacaoNotas: false, expedicao: true, portaria: true };
 
                 document.getElementById("modal-login").style.display = "none";
                 document.getElementById("display-usuario").innerText = "👤 Operador: " + operadorAtual;
@@ -1777,6 +1985,8 @@
 
                 if (eAdministrador() || permissoesOperadorAtual.producao !== false) {
                     mudarAba('producao', document.getElementById('btn-aba-producao'));
+                } else if (permissoesOperadorAtual.portaria !== false) {
+                    mudarAba('portaria', document.getElementById('btn-aba-portaria'));
                 } else if (permissoesOperadorAtual.expedicao !== false) {
                     mudarAba('expedicao', document.getElementById('btn-aba-expedicao'));
                 } else if (permissoesOperadorAtual.historico !== false) {
@@ -1829,7 +2039,7 @@
                 await setDoc(doc(db, "operadores", nome), { 
                     senha: senha, 
                     nascimento: nascimento,
-                    permissoes: { producao: true, historico: true, relatorios: false, rejeitos: false, solicitacaoNotas: false, expedicao: true } 
+                    permissoes: { producao: true, historico: true, relatorios: false, rejeitos: false, solicitacaoNotas: false, expedicao: true, portaria: true } 
                 }, { merge: true });
                 mostrarToast("Operador cadastrado com sucesso!", "success");
                 document.getElementById("cad-operador").value = "";
@@ -1873,6 +2083,10 @@
         window.sairSistema = function() { if (confirm("Deseja sair do sistema?")) location.reload(); };
 
         window.mudarAba = async function(abaId, elementoBtn) {
+            if (abaId === 'portaria' && !eAdministrador() && permissoesOperadorAtual.portaria === false) {
+                mostrarToast("Acesso restrito ao setor de Portaria.", "error");
+                return;
+            }
             if (abaId === 'expedicao' && !eAdministrador() && permissoesOperadorAtual.expedicao === false) {
                 mostrarToast("Acesso restrito ao setor de Expedição.", "error");
                 return;
@@ -1902,6 +2116,11 @@
 
             if (abaId === 'producao') {
                 renderizarTabelaProducao();
+            } else if (abaId === 'portaria') {
+                alternarExigenciaPlaca();
+                atualizarFiltrosPortariaDinamicos();
+                atualizarDiasPortariaFiltro();
+                carregarPortaria();
             } else if (abaId === 'expedicao') {
                 renderizarTabelaExpedicaoPendentes();
                 atualizarFiltrosExpedicaoDinamicos();
@@ -1932,6 +2151,307 @@
                 atualizarFiltrosLogDinamicos();
                 atualizarDiasLogFiltro();
                 carregarLogsSistema();
+            }
+        };
+
+        // --- LÓGICA E FUNÇÕES DA PORTARIA ---
+
+        window.alternarExigenciaPlaca = function() {
+            const tipoTransporte = document.getElementById('portaria-tipo-transporte').value;
+            const inputPlaca = document.getElementById('portaria-placa');
+            const lblPlaca = document.getElementById('lbl-portaria-placa');
+
+            if (tipoTransporte !== 'Pedestre') {
+                inputPlaca.required = true;
+                inputPlaca.disabled = false;
+                lblPlaca.innerHTML = `Placa do Veículo <span style="color:#ef4444;">*</span>`;
+                inputPlaca.placeholder = "Ex: ABC-1D23";
+            } else {
+                inputPlaca.required = false;
+                inputPlaca.disabled = true;
+                inputPlaca.value = "";
+                lblPlaca.innerHTML = `Placa do Veículo <span style="color:var(--text-muted); font-weight:normal;">(Não requerida para pedestre)</span>`;
+                inputPlaca.placeholder = "Pedestre (sem placa)";
+            }
+        };
+
+        window.salvarRegistroPortaria = async function(e) {
+            e.preventDefault();
+            if (!operadorAtual) {
+                mostrarToast("Faça login para cadastrar acessos na portaria!", "warning");
+                return;
+            }
+
+            const tipoMovimento = document.getElementById('portaria-tipo-movimento').value;
+            const operacao = document.getElementById('portaria-operacao').value;
+            const tipoTransporte = document.getElementById('portaria-tipo-transporte').value;
+            const placa = document.getElementById('portaria-placa').value.trim().toUpperCase();
+            const nome = document.getElementById('portaria-nome').value.trim();
+            const docId = document.getElementById('portaria-doc').value.trim();
+            const empresa = document.getElementById('portaria-empresa').value.trim();
+            const observacao = document.getElementById('portaria-observacao').value.trim();
+
+            if (tipoTransporte !== 'Pedestre' && !placa) {
+                mostrarToast("A placa é OBRIGATÓRIA para entrada/saída de veículos!", "warning");
+                document.getElementById('portaria-placa').focus();
+                return;
+            }
+
+            const btnSalvar = document.getElementById('btn-salvar-portaria');
+            btnSalvar.disabled = true;
+            btnSalvar.innerText = "A guardar registo...";
+
+            try {
+                const agora = new Date();
+                const isoStr = agora.toISOString();
+                const ano = String(agora.getFullYear());
+                const mes = String(agora.getMonth() + 1).padStart(2, '0');
+                const dia = String(agora.getDate()).padStart(2, '0');
+
+                const statusInicial = tipoMovimento === 'Agendamento' ? 'Agendado' : 'Pendente';
+                const dataHoraEntrada = tipoMovimento === 'Agendamento' ? null : isoStr;
+
+                await addDoc(collection(db, "portaria"), {
+                    tipoMovimento: tipoMovimento === 'Agendamento' ? 'Agendado' : 'Entrada',
+                    operacao,
+                    tipoTransporte,
+                    placa: tipoTransporte !== 'Pedestre' ? placa : "-",
+                    nome,
+                    documento: docId || "-",
+                    empresa,
+                    observacao: observacao || "-",
+                    operador: operadorAtual,
+                    dataHora: dataHoraEntrada,
+                    dataCadastro: isoStr,
+                    dataSaida: null,
+                    operadorSaida: null,
+                    statusSaida: statusInicial,
+                    ano, mes, dia
+                });
+
+                await registrarLog(`Portaria: Registrou ${tipoMovimento} de ${tipoTransporte} (${empresa} - ${nome})`);
+                document.getElementById('form-portaria').reset();
+                alternarExigenciaPlaca();
+                mostrarToast("Acesso registrado na portaria com sucesso!", "success");
+            } catch (err) {
+                mostrarToast("Erro ao guardar o registo na portaria.", "error");
+                console.error(err);
+            } finally {
+                btnSalvar.disabled = false;
+                btnSalvar.innerText = "+ Registrar Acesso na Portaria";
+            }
+        };
+
+        window.abrirModalSaidaPortaria = function(id) {
+            idPortariaParaSaida = id;
+            document.getElementById('saida-portaria-obs').value = "";
+            document.getElementById('modal-saida-portaria').style.display = 'flex';
+        };
+
+        window.fecharModalSaidaPortaria = function() {
+            idPortariaParaSaida = null;
+            document.getElementById('modal-saida-portaria').style.display = 'none';
+        };
+
+        window.confirmarSaidaPortaria = async function() {
+            if (!idPortariaParaSaida) return;
+            if (!operadorAtual) {
+                mostrarToast("Faça login para registrar a saída!", "warning");
+                return;
+            }
+
+            const regEntrada = listaGeralPortaria.find(r => r.id === idPortariaParaSaida);
+            if (!regEntrada) {
+                mostrarToast("Registro de entrada não localizado.", "error");
+                return;
+            }
+
+            const obsSaida = document.getElementById('saida-portaria-obs').value.trim();
+            const agora = new Date();
+            const isoStr = agora.toISOString();
+
+            try {
+                // Atualiza o registro existente para indicar que a saída foi confirmada na mesma linha
+                await updateDoc(doc(db, "portaria", idPortariaParaSaida), {
+                    statusSaida: 'Concluído',
+                    dataSaida: isoStr,
+                    operadorSaida: operadorAtual,
+                    observacaoSaida: obsSaida || "-"
+                });
+
+                await registrarLog(`Portaria: Registrou a SAÍDA de ${regEntrada.nome} (${regEntrada.empresa})`);
+                fecharModalSaidaPortaria();
+                mostrarToast("Saída registrada com sucesso na mesma linha!", "success");
+            } catch (e) {
+                mostrarToast("Erro ao registrar a saída.", "error");
+                console.error(e);
+            }
+        };
+
+        function atualizarFiltrosPortariaDinamicos() {
+            const anosSet = new Set();
+            listaGeralPortaria.forEach(r => {
+                if (r.ano) anosSet.add(r.ano);
+            });
+            montarSelect('portaria-filtro-ano', anosSet, "Todos os Anos");
+        }
+
+        window.atualizarDiasPortariaFiltro = function() {
+            const anoSel = document.getElementById('portaria-filtro-ano').value;
+            const mesSel = document.getElementById('portaria-filtro-mes').value;
+            const diasSet = new Set();
+            listaGeralPortaria.forEach(r => {
+                if (r.ano && r.mes && r.dia) {
+                    if ((!anoSel || r.ano === anoSel) && (!mesSel || r.mes === mesSel)) {
+                        diasSet.add(r.dia);
+                    }
+                }
+            });
+            montarSelect('portaria-filtro-dia', diasSet, "Todos os Dias");
+        };
+
+                window.confirmarChegadaPortaria = async function(id) {
+            if (!operadorAtual) {
+                mostrarToast("Faça login para confirmar a chegada!", "warning");
+                return;
+            }
+            const reg = listaGeralPortaria.find(r => r.id === id);
+            if (!reg) return;
+
+            const agora = new Date();
+            const isoStr = agora.toISOString();
+
+            try {
+                await updateDoc(doc(db, "portaria", id), {
+                    tipoMovimento: 'Entrada',
+                    statusSaida: 'Pendente',
+                    dataHora: isoStr,
+                    operadorEntrada: operadorAtual
+                });
+                await registrarLog(`Portaria: Confirmou CHEGADA de ${reg.nome} (${reg.empresa})`);
+                mostrarToast(`Chegada de ${reg.nome} registrada com sucesso!`, "success");
+            } catch (e) {
+                mostrarToast("Erro ao confirmar chegada.", "error");
+                console.error(e);
+            }
+        };
+
+        window.carregarPortaria = function() {
+            const tbody = document.getElementById('tabela-portaria');
+            const anoSel = document.getElementById('portaria-filtro-ano').value;
+            const mesSel = document.getElementById('portaria-filtro-mes').value;
+            const diaSel = document.getElementById('portaria-filtro-dia').value;
+            const movSel = document.getElementById('portaria-filtro-movimento').value;
+            const termoBusca = (document.getElementById('portaria-filtro-busca').value || "").toLowerCase();
+
+            if (!tbody) return;
+            tbody.innerHTML = "";
+
+            const filtrados = listaGeralPortaria.filter(r => {
+                if (anoSel && r.ano !== anoSel) return false;
+                if (mesSel && r.mes !== mesSel) return false;
+                if (diaSel && r.dia !== diaSel) return false;
+                if (movSel && r.tipoMovimento !== movSel) return false;
+
+                const nome = (r.nome || "").toLowerCase();
+                const docId = (r.documento || "").toLowerCase();
+                const emp = (r.empresa || "").toLowerCase();
+                const placa = (r.placa || "").toLowerCase();
+
+                if (termoBusca && !nome.includes(termoBusca) && !docId.includes(termoBusca) && !emp.includes(termoBusca) && !placa.includes(termoBusca)) {
+                    return false;
+                }
+                return true;
+            });
+
+            filtrados.sort((a, b) => (b.dataHora || "").localeCompare(a.dataHora || ""));
+
+            if (filtrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center">Nenhum registo encontrado na portaria.</td></tr>`;
+                return;
+            }
+
+            filtrados.forEach(r => {
+                let dataEntradaFmt = '-';
+                if (r.dataHora) {
+                    const dt = new Date(r.dataHora);
+                    if (!isNaN(dt)) dataEntradaFmt = `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()} ${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
+                }
+
+                let dataSaidaFmt = '';
+                if (r.dataSaida) {
+                    const dtS = new Date(r.dataSaida);
+                    if (!isNaN(dtS)) dataSaidaFmt = `${String(dtS.getDate()).padStart(2, '0')}/${String(dtS.getMonth() + 1).padStart(2, '0')} ${String(dtS.getHours()).padStart(2, '0')}:${String(dtS.getMinutes()).padStart(2, '0')}`;
+                }
+
+                let badgeMov = `<span style="color: #38bdf8; font-weight: 700; background: rgba(56, 189, 248, 0.1); padding: 4px 8px; border-radius: 6px;">📅 Agendado</span>`;
+                if (r.statusSaida === "Concluído") {
+                    badgeMov = `<span style="color: #ef4444; font-weight: 700; background: rgba(239, 68, 68, 0.1); padding: 4px 8px; border-radius: 6px;">📤 Finalizado (Saída)</span>`;
+                } else if (r.tipoMovimento === "Entrada") {
+                    badgeMov = `<span style="color: #10b981; font-weight: 700; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 6px;">📥 Na Unidade</span>`;
+                }
+
+                let iconeTransp = "🚘";
+                if (r.tipoTransporte === "Moto") iconeTransp = "🏍️";
+                else if (r.tipoTransporte === "Van") iconeTransp = "🚐";
+                else if (r.tipoTransporte === "Fiorino") iconeTransp = "🚚";
+                else if (r.tipoTransporte === "Caminhão") iconeTransp = "🚛";
+                else if (r.tipoTransporte === "Pedestre") iconeTransp = "🚶";
+
+                const transpTexto = r.tipoTransporte !== "Pedestre" 
+                    ? `${iconeTransp} ${r.tipoTransporte || 'Veículo'}<br><b style="color: #38bdf8;">Placa: ${r.placa || '-'}</b>`
+                    : `🚶 Pedestre`;
+
+                let statusSaidaHTML = "";
+                if (r.tipoMovimento === "Agendado" || r.statusSaida === "Agendado") {
+                    statusSaidaHTML = `<div style="font-size: 11px; color: #38bdf8; font-weight: 600; margin-top:4px;">📅 Pré-cadastrado (Aguardando Chegada)</div>`;
+                } else if (r.statusSaida === "Concluído" || r.dataSaida) {
+                    statusSaidaHTML = `<div style="font-size: 11px; color: #10b981; font-weight: 600; margin-top:4px;">✅ Saída em: ${dataSaidaFmt} (Por: ${r.operadorSaida || 'OK'})</div>`;
+                } else {
+                    statusSaidaHTML = `<div style="font-size: 11px; color: #f59e0b; font-weight: 600; margin-top:4px;">⏳ Na Unidade (Aguardando Saída)</div>`;
+                }
+
+                let botoesAcao = '';
+                if (r.tipoMovimento === "Agendado" || r.statusSaida === "Agendado") {
+                    botoesAcao += `<button onclick="confirmarChegadaPortaria('${r.id}')" class="btn-primary" style="padding: 5px 10px; font-size: 12px; height: auto; font-weight: 600; background-color: #10b981;">🟢 Confirmar Chegada</button> `;
+                } else if (r.statusSaida !== "Concluído" && !r.dataSaida) {
+                    botoesAcao += `<button onclick="abrirModalSaidaPortaria('${r.id}')" class="btn-warning" style="padding: 5px 10px; font-size: 12px; height: auto; font-weight: 600;">📤 Confirmar Saída</button> `;
+                }
+
+                if (eAdministrador()) {
+                    botoesAcao += `<button onclick="deletarRegistroPortaria('${r.id}')" class="btn-danger" style="padding: 5px 10px; font-size: 12px; height: auto;">Excluir</button>`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${dataEntradaFmt}</strong></td>
+                    <td>${badgeMov}</td>
+                    <td><strong>${r.operacao || 'Entrega'}</strong></td>
+                    <td>${transpTexto}</td>
+                    <td><b>${r.nome}</b><br><span style="font-size: 11px; color: var(--text-muted);">Doc: ${r.documento || '-'}</span></td>
+                    <td>${r.empresa}</td>
+                    <td style="max-width: 220px; font-size: 12px;">
+                        <div>${r.observacao || '-'}</div>
+                        ${r.observacaoSaida && r.observacaoSaida !== '-' ? `<div style="font-size: 11px; color: var(--text-muted);">Obs Saída: ${r.observacaoSaida}</div>` : ''}
+                        ${statusSaidaHTML}
+                    </td>
+                    <td>👤 ${r.operador || 'Sistema'}</td>
+                    <td><div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">${botoesAcao || '-'}</div></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        window.deletarRegistroPortaria = async function(id) {
+            if (!eAdministrador()) return;
+            if (confirm("Deseja realmente excluir este registo da portaria?")) {
+                try {
+                    await deleteDoc(doc(db, "portaria", id));
+                    await registrarLog("Excluiu um registo da Portaria");
+                    mostrarToast("Registo excluído com sucesso!", "success");
+                } catch (e) {
+                    mostrarToast("Erro ao excluir registo.", "error");
+                }
             }
         };
 
@@ -2531,6 +3051,7 @@
 
                 const p = op.permissoes || {};
                 const pProd = p.producao !== false ? 'checked' : '';
+                const pPort = p.portaria !== false ? 'checked' : '';
                 const pHist = p.historico !== false ? 'checked' : '';
                 const pRel = p.relatorios === true ? 'checked' : '';
                 const pRej = p.rejeitos === true ? 'checked' : '';
@@ -2540,6 +3061,7 @@
                 const checkboxesPermissao = `
                     <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px;">
                         <label><input type="checkbox" ${pProd} onchange="atualizarPermissaoOperador('${op.nome}', 'producao', this.checked)"> Produção</label>
+                        <label><input type="checkbox" ${pPort} onchange="atualizarPermissaoOperador('${op.nome}', 'portaria', this.checked)"> Portaria</label>
                         <label><input type="checkbox" ${pExp} onchange="atualizarPermissaoOperador('${op.nome}', 'expedicao', this.checked)"> Expedição</label>
                         <label><input type="checkbox" ${pHist} onchange="atualizarPermissaoOperador('${op.nome}', 'historico', this.checked)"> Histórico</label>
                         <label><input type="checkbox" ${pRel} onchange="atualizarPermissaoOperador('${op.nome}', 'relatorios', this.checked)"> Relatórios</label>
