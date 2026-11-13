@@ -622,6 +622,7 @@
                         <option value="Outros">🔹 Outros</option>
                         <option value="Visita">🚶 Visita</option>
                         <option value="Entrevista">🚶 Entrevista</option>
+						<option value="Manutenção">🚶 Manutenção</option>
                     </select>
                 </div>
 
@@ -957,6 +958,7 @@
                                     <option value="Outros">🔹 Outros</option>
                                     <option value="Visita">🚶 Visita</option>
                                     <option value="Entrevista">🚶 Entrevista</option>
+									<option value="Manutenção">🚶 Manutenção</option>
                                 </select>
                             </div>
 
@@ -1044,11 +1046,24 @@
                             </select>
                         </div>
                         <div class="input-grupo">
+                            <label for="portaria-filtro-operacao">Operação</label>
+                            <select id="portaria-filtro-operacao" onchange="carregarPortaria()">
+                                <option value="">Todas as Operações</option>
+                                <option value="Entrega">📦 Entrega</option>
+                                <option value="Coleta">🚚 Coleta</option>
+                                <option value="Visita">🚶 Visita</option>
+                                <option value="Entrevista">🚶 Entrevista</option>
+                                <option value="Outros">🔹 Outros</option>
+								<option value="Manutenção">🚶 Manutenção</option>
+                            </select>
+                        </div>
+                        <div class="input-grupo">
                             <label for="portaria-filtro-movimento">Movimento</label>
                             <select id="portaria-filtro-movimento" onchange="carregarPortaria()">
                                 <option value="">Todos</option>
-                                <option value="Entrada">Entrada</option>
-                                <option value="Saída">Saída</option>
+                                <option value="Agendado">📅 Agendado</option>
+                                <option value="Entrada">📥 Na Unidade (Entrada)</option>
+                                <option value="Saída">📤 Finalizado (Saída)</option>
                             </select>
                         </div>
                         <div class="input-grupo" style="grid-column: span 2;">
@@ -2522,6 +2537,7 @@
             const anoSel = document.getElementById('portaria-filtro-ano').value;
             const mesSel = document.getElementById('portaria-filtro-mes').value;
             const diaSel = document.getElementById('portaria-filtro-dia').value;
+            const opSel = document.getElementById('portaria-filtro-operacao').value;
             const movSel = document.getElementById('portaria-filtro-movimento').value;
             const termoBusca = (document.getElementById('portaria-filtro-busca').value || "").toLowerCase();
 
@@ -2532,7 +2548,16 @@
                 if (anoSel && r.ano !== anoSel) return false;
                 if (mesSel && r.mes !== mesSel) return false;
                 if (diaSel && r.dia !== diaSel) return false;
-                if (movSel && r.tipoMovimento !== movSel) return false;
+                if (opSel && (r.operacao || 'Entrega') !== opSel) return false;
+                if (movSel) {
+                    if (movSel === 'Saída') {
+                        if (r.statusSaida !== 'Concluído' && r.tipoMovimento !== 'Saída') return false;
+                    } else if (movSel === 'Entrada') {
+                        if (r.tipoMovimento !== 'Entrada' || r.statusSaida === 'Concluído') return false;
+                    } else if (movSel === 'Agendado') {
+                        if (r.tipoMovimento !== 'Agendado' && r.statusSaida !== 'Agendado') return false;
+                    }
+                }
 
                 const nome = (r.nome || "").toLowerCase();
                 const docId = (r.documento || "").toLowerCase();
