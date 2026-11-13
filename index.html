@@ -606,6 +606,72 @@
         </div>
     </div>
 
+
+    <!-- MODAL DE EDIÇÃO DE REGISTRO (PORTARIA) -->
+    <div id="modal-editar-portaria" class="login-overlay" style="display: none;">
+        <div class="login-card" style="max-width: 520px; text-align: left;">
+            <h2 style="text-align: center;">✏️ Editar Registro da Portaria</h2>
+            <p style="text-align: center;">Corrija os dados do visitante, veículo ou operação:</p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="login-input-grupo">
+                    <label for="edit-portaria-operacao">Operação</label>
+                    <select id="edit-portaria-operacao" style="width: 100%; padding: 10px; border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg); color: var(--input-text);">
+                        <option value="Entrega">📦 Entrega</option>
+                        <option value="Coleta">🚚 Coleta</option>
+                        <option value="Outros">🔹 Outros</option>
+                        <option value="Visita">🚶 Visita</option>
+                        <option value="Entrevista">🚶 Entrevista</option>
+                    </select>
+                </div>
+
+                <div class="login-input-grupo">
+                    <label for="edit-portaria-transporte">Tipo de Transporte</label>
+                    <select id="edit-portaria-transporte" onchange="alternarExigenciaPlacaEdicao()" style="width: 100%; padding: 10px; border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg); color: var(--input-text);">
+                        <option value="Carro">🚘 Carro</option>
+                        <option value="Moto">🏍️ Moto</option>
+                        <option value="Van">🚐 Van</option>
+                        <option value="Fiorino">🚚 Fiorino</option>
+                        <option value="Caminhão">🚛 Caminhão</option>
+                        <option value="Pedestre">🚶 Pedestre / A pé</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="login-input-grupo">
+                    <label for="edit-portaria-placa" id="lbl-edit-portaria-placa">Placa do Veículo</label>
+                    <input type="text" id="edit-portaria-placa" placeholder="Ex: FON-1341 ou ABC1D23" autocomplete="off" oninput="formatarPlacaInput(this)" maxlength="8">
+                </div>
+
+                <div class="login-input-grupo">
+                    <label for="edit-portaria-doc">Documento (RG / CPF)</label>
+                    <input type="text" id="edit-portaria-doc" placeholder="Ex: 12.345.678-9" autocomplete="off">
+                </div>
+            </div>
+
+            <div class="login-input-grupo">
+                <label for="edit-portaria-nome">Nome do Visitante / Motorista</label>
+                <input type="text" id="edit-portaria-nome" placeholder="Ex: João da Silva" autocomplete="off" required>
+            </div>
+
+            <div class="login-input-grupo">
+                <label for="edit-portaria-empresa">Empresa / Transportadora</label>
+                <input type="text" id="edit-portaria-empresa" placeholder="Ex: Logística Express" autocomplete="off" required>
+            </div>
+
+            <div class="login-input-grupo">
+                <label for="edit-portaria-observacao">Observação / Detalhes</label>
+                <input type="text" id="edit-portaria-observacao" placeholder="Observações..." autocomplete="off">
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button onclick="fecharModalEditarPortaria()" class="btn-secondary" style="width: 50%;">Cancelar</button>
+                <button onclick="confirmarEdicaoPortaria()" class="btn-primary" style="width: 50%;">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DE ANIVERSÁRIO -->
     <div id="modal-aniversario" class="login-overlay" style="display: none;">
         <div class="login-card" style="border: 2px solid #f59e0b;">
@@ -889,9 +955,8 @@
                                     <option value="Entrega">📦 Entrega</option>
                                     <option value="Coleta">🚚 Coleta</option>
                                     <option value="Outros">🔹 Outros</option>
-									<option value="Visita">🚶 Visita</option>
-									<option value="Entrevista">🚶 Entrevista</option>
-									<option value="Manutenção">🚶 Manutenção</option>
+                                    <option value="Visita">🚶 Visita</option>
+                                    <option value="Entrevista">🚶 Entrevista</option>
                                 </select>
                             </div>
 
@@ -909,7 +974,7 @@
 
                             <div class="input-grupo">
                                 <label for="portaria-placa" id="lbl-portaria-placa">Placa do Veículo <span style="color:#ef4444;">*</span></label>
-                                <input type="text" id="portaria-placa" placeholder="Ex: ABC-1D23" autocomplete="off" oninput="this.value = this.value.toUpperCase()" required>
+                                <input type="text" id="portaria-placa" placeholder="Ex: FON-1341 ou ABC1D23" autocomplete="off" oninput="formatarPlacaInput(this)" maxlength="8" required>
                             </div>
                         </div>
 
@@ -1415,6 +1480,7 @@
         let loteParaReabrirId = null;
         let idNotaForUpload = null;
         let idPortariaParaSaida = null;
+        let idPortariaParaEdicao = null;
 
         let unsubscribeLotes = null;
         let unsubscribeRejeitos = null;
@@ -2156,6 +2222,27 @@
 
         // --- LÓGICA E FUNÇÕES DA PORTARIA ---
 
+                window.formatarPlacaInput = function(el) {
+            let v = el.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (v.length > 3) {
+                // Se os 3 primeiros forem letras
+                if (/^[A-Z]{3}/.test(v)) {
+                    const quartoChar = v.charAt(3);
+                    const quintoChar = v.charAt(4);
+                    // Se for o modelo antigo (3 letras + números, ex: FON1341 -> FON-1341)
+                    if (/^\d/.test(quartoChar) && (!quintoChar || /^\d/.test(quintoChar))) {
+                        v = v.substring(0, 3) + '-' + v.substring(3, 7);
+                    } else {
+                        // Modelo Mercosul ou outros: limita em 7 caracteres (ex: ABC1D23)
+                        v = v.substring(0, 7);
+                    }
+                } else {
+                    v = v.substring(0, 7);
+                }
+            }
+            el.value = v;
+        };
+
         window.alternarExigenciaPlaca = function() {
             const tipoTransporte = document.getElementById('portaria-tipo-transporte').value;
             const inputPlaca = document.getElementById('portaria-placa');
@@ -2284,6 +2371,100 @@
                 mostrarToast("Saída registrada com sucesso na mesma linha!", "success");
             } catch (e) {
                 mostrarToast("Erro ao registrar a saída.", "error");
+                console.error(e);
+            }
+        };
+
+
+        window.alternarExigenciaPlacaEdicao = function() {
+            const tipoTransporte = document.getElementById('edit-portaria-transporte').value;
+            const inputPlaca = document.getElementById('edit-portaria-placa');
+            const lblPlaca = document.getElementById('lbl-edit-portaria-placa');
+
+            if (tipoTransporte !== 'Pedestre') {
+                inputPlaca.disabled = false;
+                lblPlaca.innerHTML = `Placa do Veículo <span style="color:#ef4444;">*</span>`;
+                inputPlaca.placeholder = "Ex: FON-1341 ou ABC1D23";
+            } else {
+                inputPlaca.disabled = true;
+                inputPlaca.value = "";
+                lblPlaca.innerHTML = `Placa do Veículo <span style="color:var(--text-muted); font-weight:normal;">(Pedestre)</span>`;
+                inputPlaca.placeholder = "Pedestre (sem placa)";
+            }
+        };
+
+        window.abrirModalEditarPortaria = function(id) {
+            if (!operadorAtual) {
+                mostrarToast("Faça login para editar registos da portaria!", "warning");
+                return;
+            }
+            const reg = listaGeralPortaria.find(r => r.id === id);
+            if (!reg) {
+                mostrarToast("Registo não encontrado.", "error");
+                return;
+            }
+
+            idPortariaParaEdicao = id;
+            document.getElementById('edit-portaria-operacao').value = reg.operacao || 'Entrega';
+            document.getElementById('edit-portaria-transporte').value = reg.tipoTransporte || 'Carro';
+            document.getElementById('edit-portaria-placa').value = (reg.placa && reg.placa !== '-') ? reg.placa : '';
+            document.getElementById('edit-portaria-nome').value = reg.nome || '';
+            document.getElementById('edit-portaria-doc').value = (reg.documento && reg.documento !== '-') ? reg.documento : '';
+            document.getElementById('edit-portaria-empresa').value = reg.empresa || '';
+            document.getElementById('edit-portaria-observacao').value = (reg.observacao && reg.observacao !== '-') ? reg.observacao : '';
+
+            alternarExigenciaPlacaEdicao();
+            document.getElementById('modal-editar-portaria').style.display = 'flex';
+        };
+
+        window.fecharModalEditarPortaria = function() {
+            idPortariaParaEdicao = null;
+            document.getElementById('modal-editar-portaria').style.display = 'none';
+        };
+
+        window.confirmarEdicaoPortaria = async function() {
+            if (!idPortariaParaEdicao) return;
+            if (!operadorAtual) {
+                mostrarToast("Faça login para salvar alterações!", "warning");
+                return;
+            }
+
+            const operacao = document.getElementById('edit-portaria-operacao').value;
+            const tipoTransporte = document.getElementById('edit-portaria-transporte').value;
+            const placa = document.getElementById('edit-portaria-placa').value.trim().toUpperCase();
+            const nome = document.getElementById('edit-portaria-nome').value.trim();
+            const docId = document.getElementById('edit-portaria-doc').value.trim();
+            const empresa = document.getElementById('edit-portaria-empresa').value.trim();
+            const observacao = document.getElementById('edit-portaria-observacao').value.trim();
+
+            if (!nome || !empresa) {
+                mostrarToast("Nome e Empresa são obrigatórios!", "warning");
+                return;
+            }
+            if (tipoTransporte !== 'Pedestre' && !placa) {
+                mostrarToast("A placa é obrigatória para veículos!", "warning");
+                document.getElementById('edit-portaria-placa').focus();
+                return;
+            }
+
+            try {
+                await updateDoc(doc(db, "portaria", idPortariaParaEdicao), {
+                    operacao,
+                    tipoTransporte,
+                    placa: tipoTransporte !== 'Pedestre' ? placa : "-",
+                    nome,
+                    documento: docId || "-",
+                    empresa,
+                    observacao: observacao || "-",
+                    ultimaEdicaoPor: operadorAtual,
+                    ultimaEdicaoEm: new Date().toISOString()
+                });
+
+                await registrarLog(`Portaria: Editou o registo de ${nome} (${empresa})`);
+                fecharModalEditarPortaria();
+                mostrarToast("Registo da portaria atualizado com sucesso!", "success");
+            } catch (e) {
+                mostrarToast("Erro ao salvar edição na portaria.", "error");
                 console.error(e);
             }
         };
@@ -2417,6 +2598,8 @@
                 } else if (r.statusSaida !== "Concluído" && !r.dataSaida) {
                     botoesAcao += `<button onclick="abrirModalSaidaPortaria('${r.id}')" class="btn-warning" style="padding: 5px 10px; font-size: 12px; height: auto; font-weight: 600;">📤 Confirmar Saída</button> `;
                 }
+
+                botoesAcao += `<button onclick="abrirModalEditarPortaria('${r.id}')" class="btn-secondary" style="padding: 5px 10px; font-size: 12px; height: auto;" title="Editar dados deste acesso">✏️ Editar</button> `;
 
                 if (eAdministrador()) {
                     botoesAcao += `<button onclick="deletarRegistroPortaria('${r.id}')" class="btn-danger" style="padding: 5px 10px; font-size: 12px; height: auto;">Excluir</button>`;
