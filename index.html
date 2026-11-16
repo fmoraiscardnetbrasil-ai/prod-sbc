@@ -609,7 +609,7 @@
 
     <!-- MODAL DE EDIÇÃO DE REGISTRO (PORTARIA) -->
     <div id="modal-editar-portaria" class="login-overlay" style="display: none;">
-        <div class="login-card" style="max-width: 520px; text-align: left;">
+        <div class="login-card" style="max-width: 620px; text-align: left;">
             <h2 style="text-align: center;">✏️ Editar Registro da Portaria</h2>
             <p style="text-align: center;">Corrija os dados do visitante, veículo ou operação:</p>
 
@@ -646,19 +646,17 @@
                 </div>
 
                 <div class="login-input-grupo">
-                    <label for="edit-portaria-doc">Documento (RG / CPF)</label>
-                    <input type="text" id="edit-portaria-doc" placeholder="Ex: 12.345.678-9" autocomplete="off">
+                    <label for="edit-portaria-empresa">Empresa / Transportadora</label>
+                    <input type="text" id="edit-portaria-empresa" placeholder="Ex: Logística Express" autocomplete="off" required>
                 </div>
             </div>
 
-            <div class="login-input-grupo">
-                <label for="edit-portaria-nome">Nome do Visitante / Motorista</label>
-                <input type="text" id="edit-portaria-nome" placeholder="Ex: João da Silva" autocomplete="off" required>
-            </div>
-
-            <div class="login-input-grupo">
-                <label for="edit-portaria-empresa">Empresa / Transportadora</label>
-                <input type="text" id="edit-portaria-empresa" placeholder="Ex: Logística Express" autocomplete="off" required>
+            <div style="background: var(--filtro-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 12px; max-height: 220px; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <label style="font-size: 12px; font-weight: 600; color: var(--text-main);">👥 Pessoas (Motorista / Ajudantes)</label>
+                    <button type="button" onclick="adicionarPessoaPortariaModal()" class="btn-secondary" style="padding: 4px 8px; font-size: 11px; height: auto; background-color: #0284c7;">+ Adicionar Pessoa</button>
+                </div>
+                <div id="edit-container-pessoas-portaria" style="display: flex; flex-direction: column; gap: 8px;"></div>
             </div>
 
             <div class="login-input-grupo">
@@ -980,20 +978,38 @@
                             </div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 15px;">
                             <div class="input-grupo">
-                                <label for="portaria-nome">Nome do Visitante / Motorista</label>
-                                <input type="text" id="portaria-nome" placeholder="Ex: João da Silva" required>
-                            </div>
-
-                            <div class="input-grupo">
-                                <label for="portaria-doc">Documento (RG / CPF)</label>
-                                <input type="text" id="portaria-doc" placeholder="Ex: 12.345.678-9">
-                            </div>
-
-                            <div class="input-grupo">
-                                <label for="portaria-empresa">Empresa / Transportadora</label>
+                                <label for="portaria-empresa">Empresa / Transportadora <span style="color:#ef4444;">*</span></label>
                                 <input type="text" id="portaria-empresa" placeholder="Ex: Logística Express" required>
+                            </div>
+                        </div>
+
+                        <div style="background: var(--filtro-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                <label style="font-size: 13px; font-weight: 600; color: var(--text-main);">👥 Pessoas no Acesso (Motorista, Ajudantes, Visitantes)</label>
+                                <button type="button" onclick="adicionarPessoaPortariaForm()" class="btn-secondary" style="padding: 6px 12px; font-size: 12px; height: auto; background-color: #0284c7;">+ Adicionar Ajudante / Pessoa</button>
+                            </div>
+                            <div id="container-pessoas-portaria" style="display: flex; flex-direction: column; gap: 10px;">
+                                <div class="linha-pessoa-portaria" style="display: grid; grid-template-columns: 140px 2fr 1.5fr auto; gap: 10px; align-items: end;">
+                                    <div class="input-grupo">
+                                        <label>Função / Papel</label>
+                                        <select class="portaria-pessoa-papel">
+                                            <option value="Motorista">🚛 Motorista</option>
+                                            <option value="Ajudante">👷 Ajudante</option>
+                                            <option value="Visitante">🚶 Visitante</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-grupo">
+                                        <label>Nome Completo <span style="color:#ef4444;">*</span></label>
+                                        <input type="text" class="portaria-pessoa-nome" placeholder="Ex: João da Silva" required>
+                                    </div>
+                                    <div class="input-grupo">
+                                        <label>Documento (RG / CPF)</label>
+                                        <input type="text" class="portaria-pessoa-doc" placeholder="Ex: 12.345.678-9">
+                                    </div>
+                                    <div style="width: 36px;"></div>
+                                </div>
                             </div>
                         </div>
 
@@ -2277,6 +2293,57 @@
             }
         };
 
+        window.adicionarPessoaPortariaForm = function() {
+            const container = document.getElementById('container-pessoas-portaria');
+            if (!container) return;
+            const div = document.createElement('div');
+            div.className = 'linha-pessoa-portaria';
+            div.style.cssText = 'display: grid; grid-template-columns: 140px 2fr 1.5fr auto; gap: 10px; align-items: end;';
+            div.innerHTML = `
+                <div class="input-grupo">
+                    <select class="portaria-pessoa-papel">
+                        <option value="Ajudante" selected>👷 Ajudante</option>
+                        <option value="Motorista">🚛 Motorista</option>
+                        <option value="Visitante">🚶 Visitante</option>
+                    </select>
+                </div>
+                <div class="input-grupo">
+                    <input type="text" class="portaria-pessoa-nome" placeholder="Nome do ajudante/visitante" required>
+                </div>
+                <div class="input-grupo">
+                    <input type="text" class="portaria-pessoa-doc" placeholder="Documento (RG / CPF)">
+                </div>
+                <button type="button" onclick="this.parentElement.remove()" class="btn-danger" style="height: 40px; padding: 0 12px;" title="Remover pessoa">✕</button>
+            `;
+            container.appendChild(div);
+        };
+
+        window.resetarPessoasPortariaForm = function() {
+            const container = document.getElementById('container-pessoas-portaria');
+            if (!container) return;
+            container.innerHTML = `
+                <div class="linha-pessoa-portaria" style="display: grid; grid-template-columns: 140px 2fr 1.5fr auto; gap: 10px; align-items: end;">
+                    <div class="input-grupo">
+                        <label>Função / Papel</label>
+                        <select class="portaria-pessoa-papel">
+                            <option value="Motorista">🚛 Motorista</option>
+                            <option value="Ajudante">👷 Ajudante</option>
+                            <option value="Visitante">🚶 Visitante</option>
+                        </select>
+                    </div>
+                    <div class="input-grupo">
+                        <label>Nome Completo <span style="color:#ef4444;">*</span></label>
+                        <input type="text" class="portaria-pessoa-nome" placeholder="Ex: João da Silva" required>
+                    </div>
+                    <div class="input-grupo">
+                        <label>Documento (RG / CPF)</label>
+                        <input type="text" class="portaria-pessoa-doc" placeholder="Ex: 12.345.678-9">
+                    </div>
+                    <div style="width: 36px;"></div>
+                </div>
+            `;
+        };
+
         window.salvarRegistroPortaria = async function(e) {
             e.preventDefault();
             if (!operadorAtual) {
@@ -2288,8 +2355,6 @@
             const operacao = document.getElementById('portaria-operacao').value;
             const tipoTransporte = document.getElementById('portaria-tipo-transporte').value;
             const placa = document.getElementById('portaria-placa').value.trim().toUpperCase();
-            const nome = document.getElementById('portaria-nome').value.trim();
-            const docId = document.getElementById('portaria-doc').value.trim();
             const empresa = document.getElementById('portaria-empresa').value.trim();
             const observacao = document.getElementById('portaria-observacao').value.trim();
 
@@ -2298,6 +2363,29 @@
                 document.getElementById('portaria-placa').focus();
                 return;
             }
+
+            const linhasPessoas = document.querySelectorAll('#container-pessoas-portaria .linha-pessoa-portaria');
+            const pessoas = [];
+            linhasPessoas.forEach(linha => {
+                const papel = linha.querySelector('.portaria-pessoa-papel').value;
+                const nomeP = linha.querySelector('.portaria-pessoa-nome').value.trim();
+                const docP = linha.querySelector('.portaria-pessoa-doc').value.trim();
+                if (nomeP) {
+                    pessoas.push({
+                        papel,
+                        nome: nomeP,
+                        documento: docP || "-"
+                    });
+                }
+            });
+
+            if (pessoas.length === 0) {
+                mostrarToast("Informe pelo menos uma pessoa (motorista ou visitante)!", "warning");
+                return;
+            }
+
+            const principal = pessoas[0];
+            const nomesResumo = pessoas.map(p => p.nome).join(', ');
 
             const btnSalvar = document.getElementById('btn-salvar-portaria');
             btnSalvar.disabled = true;
@@ -2318,8 +2406,9 @@
                     operacao,
                     tipoTransporte,
                     placa: tipoTransporte !== 'Pedestre' ? placa : "-",
-                    nome,
-                    documento: docId || "-",
+                    nome: principal.nome,
+                    documento: principal.documento,
+                    pessoas: pessoas,
                     empresa,
                     observacao: observacao || "-",
                     operador: operadorAtual,
@@ -2331,8 +2420,9 @@
                     ano, mes, dia
                 });
 
-                await registrarLog(`Portaria: Registrou ${tipoMovimento} de ${tipoTransporte} (${empresa} - ${nome})`);
+                await registrarLog(`Portaria: Registrou ${tipoMovimento} de ${tipoTransporte} (${empresa} - ${nomesResumo})`);
                 document.getElementById('form-portaria').reset();
+                resetarPessoasPortariaForm();
                 alternarExigenciaPlaca();
                 mostrarToast("Acesso registrado na portaria com sucesso!", "success");
             } catch (err) {
@@ -2408,6 +2498,25 @@
             }
         };
 
+        window.adicionarPessoaPortariaModal = function(papel = 'Ajudante', nome = '', docVal = '', removivel = true) {
+            const container = document.getElementById('edit-container-pessoas-portaria');
+            if (!container) return;
+            const div = document.createElement('div');
+            div.className = 'edit-linha-pessoa-portaria';
+            div.style.cssText = 'display: grid; grid-template-columns: 125px 1.6fr 1.2fr auto; gap: 8px; align-items: center;';
+            div.innerHTML = `
+                <select class="edit-pessoa-papel" style="padding: 8px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--input-text); font-size: 13px;">
+                    <option value="Motorista" ${papel === 'Motorista' ? 'selected' : ''}>🚛 Motorista</option>
+                    <option value="Ajudante" ${papel === 'Ajudante' ? 'selected' : ''}>👷 Ajudante</option>
+                    <option value="Visitante" ${papel === 'Visitante' ? 'selected' : ''}>🚶 Visitante</option>
+                </select>
+                <input type="text" class="edit-pessoa-nome" value="${nome.replace(/"/g, '&quot;')}" placeholder="Nome completo" style="padding: 8px; font-size: 13px;" required>
+                <input type="text" class="edit-pessoa-doc" value="${(docVal && docVal !== '-') ? docVal.replace(/"/g, '&quot;') : ''}" placeholder="Doc (RG/CPF)" style="padding: 8px; font-size: 13px;">
+                ${removivel ? `<button type="button" onclick="this.parentElement.remove()" class="btn-danger" style="padding: 6px 10px; font-size: 12px;">✕</button>` : `<div style="width: 30px;"></div>`}
+            `;
+            container.appendChild(div);
+        };
+
         window.abrirModalEditarPortaria = function(id) {
             if (!operadorAtual) {
                 mostrarToast("Faça login para editar registos da portaria!", "warning");
@@ -2423,10 +2532,18 @@
             document.getElementById('edit-portaria-operacao').value = reg.operacao || 'Entrega';
             document.getElementById('edit-portaria-transporte').value = reg.tipoTransporte || 'Carro';
             document.getElementById('edit-portaria-placa').value = (reg.placa && reg.placa !== '-') ? reg.placa : '';
-            document.getElementById('edit-portaria-nome').value = reg.nome || '';
-            document.getElementById('edit-portaria-doc').value = (reg.documento && reg.documento !== '-') ? reg.documento : '';
             document.getElementById('edit-portaria-empresa').value = reg.empresa || '';
             document.getElementById('edit-portaria-observacao').value = (reg.observacao && reg.observacao !== '-') ? reg.observacao : '';
+
+            const containerPessoas = document.getElementById('edit-container-pessoas-portaria');
+            containerPessoas.innerHTML = '';
+            if (Array.isArray(reg.pessoas) && reg.pessoas.length > 0) {
+                reg.pessoas.forEach((p, idx) => {
+                    adicionarPessoaPortariaModal(p.papel || 'Motorista', p.nome || '', p.documento || '', idx > 0);
+                });
+            } else {
+                adicionarPessoaPortariaModal(reg.tipoTransporte === 'Pedestre' ? 'Visitante' : 'Motorista', reg.nome || '', reg.documento || '', false);
+            }
 
             alternarExigenciaPlacaEdicao();
             document.getElementById('modal-editar-portaria').style.display = 'flex';
@@ -2447,13 +2564,26 @@
             const operacao = document.getElementById('edit-portaria-operacao').value;
             const tipoTransporte = document.getElementById('edit-portaria-transporte').value;
             const placa = document.getElementById('edit-portaria-placa').value.trim().toUpperCase();
-            const nome = document.getElementById('edit-portaria-nome').value.trim();
-            const docId = document.getElementById('edit-portaria-doc').value.trim();
             const empresa = document.getElementById('edit-portaria-empresa').value.trim();
             const observacao = document.getElementById('edit-portaria-observacao').value.trim();
 
-            if (!nome || !empresa) {
-                mostrarToast("Nome e Empresa são obrigatórios!", "warning");
+            const linhasPessoas = document.querySelectorAll('#edit-container-pessoas-portaria .edit-linha-pessoa-portaria');
+            const pessoas = [];
+            linhasPessoas.forEach(linha => {
+                const papel = linha.querySelector('.edit-pessoa-papel').value;
+                const nomeP = linha.querySelector('.edit-pessoa-nome').value.trim();
+                const docP = linha.querySelector('.edit-pessoa-doc').value.trim();
+                if (nomeP) {
+                    pessoas.push({
+                        papel,
+                        nome: nomeP,
+                        documento: docP || "-"
+                    });
+                }
+            });
+
+            if (pessoas.length === 0 || !empresa) {
+                mostrarToast("Pelo menos uma pessoa e a Empresa são obrigatórios!", "warning");
                 return;
             }
             if (tipoTransporte !== 'Pedestre' && !placa) {
@@ -2462,20 +2592,24 @@
                 return;
             }
 
+            const principal = pessoas[0];
+            const nomesResumo = pessoas.map(p => p.nome).join(', ');
+
             try {
                 await updateDoc(doc(db, "portaria", idPortariaParaEdicao), {
                     operacao,
                     tipoTransporte,
                     placa: tipoTransporte !== 'Pedestre' ? placa : "-",
-                    nome,
-                    documento: docId || "-",
+                    nome: principal.nome,
+                    documento: principal.documento,
+                    pessoas: pessoas,
                     empresa,
                     observacao: observacao || "-",
                     ultimaEdicaoPor: operadorAtual,
                     ultimaEdicaoEm: new Date().toISOString()
                 });
 
-                await registrarLog(`Portaria: Editou o registo de ${nome} (${empresa})`);
+                await registrarLog(`Portaria: Editou o registo de ${nomesResumo} (${empresa})`);
                 fecharModalEditarPortaria();
                 mostrarToast("Registo da portaria atualizado com sucesso!", "success");
             } catch (e) {
@@ -2559,12 +2693,18 @@
                     }
                 }
 
-                const nome = (r.nome || "").toLowerCase();
-                const docId = (r.documento || "").toLowerCase();
+                const listaPessoas = Array.isArray(r.pessoas) && r.pessoas.length > 0
+                    ? r.pessoas
+                    : [{ papel: '', nome: r.nome || '', documento: r.documento || '' }];
+
+                const matchPessoa = listaPessoas.some(p =>
+                    (p.nome || "").toLowerCase().includes(termoBusca) ||
+                    (p.documento || "").toLowerCase().includes(termoBusca)
+                );
                 const emp = (r.empresa || "").toLowerCase();
                 const placa = (r.placa || "").toLowerCase();
 
-                if (termoBusca && !nome.includes(termoBusca) && !docId.includes(termoBusca) && !emp.includes(termoBusca) && !placa.includes(termoBusca)) {
+                if (termoBusca && !matchPessoa && !emp.includes(termoBusca) && !placa.includes(termoBusca)) {
                     return false;
                 }
                 return true;
@@ -2636,7 +2776,17 @@
                     <td>${badgeMov}</td>
                     <td><strong>${r.operacao || 'Entrega'}</strong></td>
                     <td>${transpTexto}</td>
-                    <td><b>${r.nome}</b><br><span style="font-size: 11px; color: var(--text-muted);">Doc: ${r.documento || '-'}</span></td>
+                    <td>${
+                        Array.isArray(r.pessoas) && r.pessoas.length > 0
+                            ? r.pessoas.map(p => {
+                                const iconeP = p.papel === 'Ajudante' ? '👷' : (p.papel === 'Motorista' ? '🚛' : '🚶');
+                                return `<div style="margin-bottom: 4px; padding-bottom: 3px; border-bottom: 1px dashed var(--border-color);">
+                                    <span style="font-size: 10px; font-weight: 700; color: #38bdf8; text-transform: uppercase;">${iconeP} ${p.papel || 'Pessoa'}:</span> <b>${p.nome}</b>
+                                    <br><span style="font-size: 11px; color: var(--text-muted);">Doc: ${p.documento || '-'}</span>
+                                </div>`;
+                            }).join('')
+                            : `<b>${r.nome}</b><br><span style="font-size: 11px; color: var(--text-muted);">Doc: ${r.documento || '-'}</span>`
+                    }</td>
                     <td>${r.empresa}</td>
                     <td style="max-width: 220px; font-size: 12px;">
                         <div>${r.observacao || '-'}</div>
