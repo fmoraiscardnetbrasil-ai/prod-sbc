@@ -574,7 +574,7 @@
         .link-acao { display: inline-block; margin-top: 15px; font-size: 13px; color: #38bdf8; cursor: pointer; text-decoration: underline; }
         .links-container { display: flex; justify-content: space-between; margin-top: 10px; }
 
-        #input-operador-login, #cad-operador, #rec-operador, #modal-senha-admin-input-nome, #portaria-placa { text-transform: uppercase; }
+        input[type="text"], textarea { text-transform: uppercase; }
 
         @media (max-width: 768px) {
             .app-layout { flex-direction: column; }
@@ -642,7 +642,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div class="login-input-grupo">
                     <label for="edit-portaria-placa" id="lbl-edit-portaria-placa">Placa do Veículo</label>
-                    <input type="text" id="edit-portaria-placa" placeholder="Ex: FON-1341 ou ABC1D23" autocomplete="off" oninput="formatarPlacaInput(this)" maxlength="8">
+                    <input type="text" id="edit-portaria-placa" placeholder="AAA-0000" autocomplete="off" oninput="formatarPlacaInput(this)" maxlength="8">
                 </div>
 
                 <div class="login-input-grupo">
@@ -974,7 +974,7 @@
 
                             <div class="input-grupo">
                                 <label for="portaria-placa" id="lbl-portaria-placa">Placa do Veículo <span style="color:#ef4444;">*</span></label>
-                                <input type="text" id="portaria-placa" placeholder="Ex: FON-1341 ou ABC1D23" autocomplete="off" oninput="formatarPlacaInput(this)" maxlength="8" required>
+                                <input type="text" id="portaria-placa" placeholder="AAA-0000" autocomplete="off" oninput="formatarPlacaInput(this)" maxlength="8" required>
                             </div>
                         </div>
 
@@ -1482,6 +1482,22 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Força letras maiúsculas em tempo real em todos os campos de texto e textarea (exceto senhas)
+        document.addEventListener('input', function(e) {
+            const el = e.target;
+            if ((el.tagName === 'INPUT' && (!el.type || el.type === 'text' || el.type === 'search')) || el.tagName === 'TEXTAREA') {
+                const start = el.selectionStart;
+                const end = el.selectionEnd;
+                const upper = el.value.toUpperCase();
+                if (el.value !== upper) {
+                    el.value = upper;
+                    if (start !== null && end !== null) {
+                        el.setSelectionRange(start, end);
+                    }
+                }
+            }
+        });
 
         // Configuração do Firebase
         // IMPORTANTE: Configure suas chaves ou utilize a variável window.FIREBASE_CONFIG
@@ -2253,25 +2269,16 @@
 
         // --- LÓGICA E FUNÇÕES DA PORTARIA ---
 
-                window.formatarPlacaInput = function(el) {
+        window.formatarPlacaInput = function(el) {
             let v = el.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-            if (v.length > 3) {
-                // Se os 3 primeiros forem letras
-                if (/^[A-Z]{3}/.test(v)) {
-                    const quartoChar = v.charAt(3);
-                    const quintoChar = v.charAt(4);
-                    // Se for o modelo antigo (3 letras + números, ex: FON1341 -> FON-1341)
-                    if (/^\d/.test(quartoChar) && (!quintoChar || /^\d/.test(quintoChar))) {
-                        v = v.substring(0, 3) + '-' + v.substring(3, 7);
-                    } else {
-                        // Modelo Mercosul ou outros: limita em 7 caracteres (ex: ABC1D23)
-                        v = v.substring(0, 7);
-                    }
-                } else {
-                    v = v.substring(0, 7);
-                }
+            let letras = v.slice(0, 3).replace(/[^A-Z]/g, '');
+            let resto = v.slice(3, 7).replace(/[^A-Z0-9]/g, '');
+            
+            if (letras.length === 3 && resto.length > 0) {
+                el.value = letras + '-' + resto;
+            } else {
+                el.value = letras + resto;
             }
-            el.value = v;
         };
 
         window.alternarExigenciaPlaca = function() {
@@ -2283,7 +2290,7 @@
                 inputPlaca.required = true;
                 inputPlaca.disabled = false;
                 lblPlaca.innerHTML = `Placa do Veículo <span style="color:#ef4444;">*</span>`;
-                inputPlaca.placeholder = "Ex: ABC-1D23";
+                inputPlaca.placeholder = "AAA-0000";
             } else {
                 inputPlaca.required = false;
                 inputPlaca.disabled = true;
@@ -2358,10 +2365,12 @@
             const empresa = document.getElementById('portaria-empresa').value.trim();
             const observacao = document.getElementById('portaria-observacao').value.trim();
 
-            if (tipoTransporte !== 'Pedestre' && !placa) {
-                mostrarToast("A placa é OBRIGATÓRIA para entrada/saída de veículos!", "warning");
-                document.getElementById('portaria-placa').focus();
-                return;
+            if (tipoTransporte !== 'Pedestre') {
+                if (!placa || !/^[A-Z]{3}-[A-Z0-9]{4}$/.test(placa)) {
+                    mostrarToast("Informe uma placa válida no formato AAA-0000!", "warning");
+                    document.getElementById('portaria-placa').focus();
+                    return;
+                }
             }
 
             const linhasPessoas = document.querySelectorAll('#container-pessoas-portaria .linha-pessoa-portaria');
@@ -2489,7 +2498,7 @@
             if (tipoTransporte !== 'Pedestre') {
                 inputPlaca.disabled = false;
                 lblPlaca.innerHTML = `Placa do Veículo <span style="color:#ef4444;">*</span>`;
-                inputPlaca.placeholder = "Ex: FON-1341 ou ABC1D23";
+                inputPlaca.placeholder = "AAA-0000";
             } else {
                 inputPlaca.disabled = true;
                 inputPlaca.value = "";
@@ -2586,10 +2595,12 @@
                 mostrarToast("Pelo menos uma pessoa e a Empresa são obrigatórios!", "warning");
                 return;
             }
-            if (tipoTransporte !== 'Pedestre' && !placa) {
-                mostrarToast("A placa é obrigatória para veículos!", "warning");
-                document.getElementById('edit-portaria-placa').focus();
-                return;
+            if (tipoTransporte !== 'Pedestre') {
+                if (!placa || !/^[A-Z]{3}-[A-Z0-9]{4}$/.test(placa)) {
+                    mostrarToast("Informe uma placa válida no formato AAA-0000!", "warning");
+                    document.getElementById('edit-portaria-placa').focus();
+                    return;
+                }
             }
 
             const principal = pessoas[0];
