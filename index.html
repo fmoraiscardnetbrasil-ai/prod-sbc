@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cardnet - Sistema de Produção por Setor</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg-body: #f4f7f6;
@@ -576,6 +578,42 @@
 
         input[type="text"], textarea { text-transform: uppercase; }
 
+        /* ESTILOS DO MÓDULO PLANILHA DE PRODUÇÃO GERAL */
+        #aba-planilha-geral .pg-toolbar { display:flex; gap:10px; align-items:end; flex-wrap:wrap; background:var(--filtro-bg); padding:15px; border:1px solid var(--border-color); border-radius:10px; margin-bottom:16px; }
+        #aba-planilha-geral .pg-field { display:flex; flex-direction:column; gap:5px; }
+        #aba-planilha-geral .pg-field label { font-size:12px; font-weight:600; color:var(--text-muted); }
+        #aba-planilha-geral .pg-field input, #aba-planilha-geral .pg-field select { height:38px; border:1px solid var(--input-border); border-radius:8px; padding:0 11px; background:var(--input-bg); color:var(--input-text); outline:none; font-size:13px; }
+        #aba-planilha-geral .pg-tabs { display:flex; gap:8px; margin-bottom:16px; }
+        #aba-planilha-geral .pg-tab { background:var(--filtro-bg); color:var(--text-muted); border:1px solid var(--border-color); padding:8px 16px; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer; }
+        #aba-planilha-geral .pg-tab.active { background:#2563eb; color:#fff; border-color:#2563eb; }
+        #aba-planilha-geral .pg-table-wrap { overflow:auto; border:1px solid var(--border-color); border-radius:10px; max-height:620px; }
+        #aba-planilha-geral table.pg-table { border-collapse:separate; border-spacing:0; min-width:1200px; width:100%; font-size:12px; }
+        #aba-planilha-geral table.pg-table th, #aba-planilha-geral table.pg-table td { border-right:1px solid var(--border-color); border-bottom:1px solid var(--border-color); padding:6px 7px; text-align:center; white-space:nowrap; height:38px; vertical-align:middle; }
+        #aba-planilha-geral table.pg-table th { background:var(--table-header); color:var(--text-main); position:sticky; top:0; z-index:3; font-weight:600; }
+        #aba-planilha-geral table.pg-table .pg-name { position:sticky; left:0; z-index:4; background:var(--bg-card); text-align:left; min-width:250px; max-width:250px; width:250px; font-weight:600; color:var(--text-main); }
+        #aba-planilha-geral table.pg-table th.pg-name { z-index:5; background:var(--table-header); }
+        #aba-planilha-geral .pg-name-content { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; height:100%; }
+        #aba-planilha-geral .pg-btn-delete { background:transparent; border:0; color:var(--text-muted); font-size:14px; cursor:pointer; padding:2px 6px; border-radius:4px; line-height:1; }
+        #aba-planilha-geral .pg-btn-delete:hover { background:rgba(239,68,68,0.15); color:#ef4444; }
+        #aba-planilha-geral table.pg-table .pg-sum { position:sticky; right:82px; background:#1e3a8a; color:#fff; z-index:2; min-width:90px; font-weight:700; }
+        #aba-planilha-geral table.pg-table .pg-avg { position:sticky; right:0; background:var(--table-header); color:var(--text-main); z-index:2; min-width:82px; font-weight:700; }
+        #aba-planilha-geral .pg-day-input { width:68px; height:30px; text-align:center; border:1px solid transparent; background:transparent; border-radius:6px; padding:0 4px; color:var(--text-main); font-size:12px; }
+        #aba-planilha-geral .pg-day-input:hover { border-color:var(--input-border); background:var(--filtro-bg); }
+        #aba-planilha-geral .pg-day-input:focus { border-color:#3b82f6; background:var(--input-bg); outline:none; }
+        #aba-planilha-geral .pg-weekend { background:rgba(148,163,184,0.08); }
+        #aba-planilha-geral tr.pg-total-row td { background:#1e3a8a; color:#fff; font-weight:700; }
+        #aba-planilha-geral tr.pg-total-row .pg-name { background:#1e3a8a; color:#fff; }
+        .pg-ranking-list { list-style:none; padding:0; margin:15px 0; display:flex; flex-direction:column; gap:6px; }
+        .pg-ranking-item { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border:1px solid var(--border-color); border-radius:8px; background:var(--filtro-bg); font-size:13px; }
+        .pg-ranking-item:nth-child(1), .pg-ranking-item:nth-child(2), .pg-ranking-item:nth-child(3) { background:#14532d; color:#f0fdf4; border-color:#22c55e; font-weight:700; }
+        .pg-ranking-badge { background:#2563eb; color:white; padding:3px 8px; border-radius:12px; font-size:11px; }
+        .pg-ranking-item:nth-child(1) .pg-ranking-badge, .pg-ranking-item:nth-child(2) .pg-ranking-badge, .pg-ranking-item:nth-child(3) .pg-ranking-badge { background:#22c55e; color:#052e16; font-weight:700; }
+        .pg-resumo-box { background:var(--filtro-bg); border:1px solid var(--border-color); border-radius:12px; padding:16px; margin:14px 0; display:flex; flex-direction:column; gap:12px; text-align:left; }
+        .pg-resumo-box div { padding-bottom:10px; border-bottom:1px dashed var(--border-color); }
+        .pg-resumo-box div:last-child { border-bottom:none; padding-bottom:0; }
+        .pg-resumo-box div span { display:block; font-size:11px; color:var(--text-muted); font-weight:700; margin-bottom:4px; text-transform:uppercase; }
+        .pg-resumo-box div strong { font-size:20px; color:var(--text-main); }
+
         @media (max-width: 768px) {
             .app-layout { flex-direction: column; }
             .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border-color); }
@@ -587,6 +625,59 @@
 <body data-theme="dark">
 
     <div id="toast-container"></div>
+
+    <!-- MODAIS DA PLANILHA DE PRODUÇÃO GERAL -->
+    <div id="pg-modal-lancamento" class="login-overlay" style="display: none;">
+        <div class="login-card" style="text-align: left;">
+            <h2 style="text-align: center;">➕ Novo Lançamento (Planilha Geral)</h2>
+            <p style="text-align: center;">Registre a produção diária do cliente/produto:</p>
+            <div class="login-input-grupo">
+                <label for="pg-m-cliente">Cliente / Produto</label>
+                <select id="pg-m-cliente" style="width: 100%; padding: 10px; border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg); color: var(--input-text);"></select>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="login-input-grupo">
+                    <label for="pg-m-dia">Dia</label>
+                    <input type="number" id="pg-m-dia" min="1" max="31">
+                </div>
+                <div class="login-input-grupo">
+                    <label for="pg-m-qtd">Quantidade</label>
+                    <input type="number" id="pg-m-qtd" min="0" step="0.01" placeholder="Ex: 500">
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button onclick="pgFecharModal('pg-modal-lancamento')" class="btn-secondary" style="width: 50%;">Cancelar</button>
+                <button onclick="pgSalvarLancamento()" class="btn-primary" style="width: 50%;">Lançar Produção</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pg-modal-resumo" class="login-overlay" style="display: none;">
+        <div class="login-card" style="max-width: 560px; max-height: 85vh; overflow-y: auto;">
+            <h2 id="pg-resumo-titulo">📊 Resumo Geral do Mês</h2>
+            <div id="pg-resumo-totais" class="pg-resumo-box"></div>
+            <p style="color: var(--text-muted); font-size: 13px; margin-top: 14px;">Ranking consolidado (Produção + Produção Chip) no período selecionado.</p>
+            <ul class="pg-ranking-list" id="pg-lista-ranking"></ul>
+            <button onclick="pgFecharModal('pg-modal-resumo')" class="btn-primary" style="width: 100%; margin-top: 10px;">Fechar</button>
+        </div>
+    </div>
+
+    <div id="pg-modal-analise" class="login-overlay" style="display: none;">
+        <div class="login-card" style="max-width: 880px; text-align: left;">
+            <h2 style="text-align: center;">📈 Análise Comparativa de Produção</h2>
+            <div class="login-input-grupo" style="margin-top: 10px;">
+                <label for="pg-tipo-analise">Tipo de Comparação</label>
+                <select id="pg-tipo-analise" onchange="pgAtualizarGraficoComparativo()" style="width: 100%; padding: 10px; border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg); color: var(--input-text);">
+                    <option value="mensal">Comparativo Mensal (Ano Selecionado)</option>
+                    <option value="anual">Comparativo Anual (Anos Registrados)</option>
+                </select>
+            </div>
+            <div style="background: var(--filtro-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); position: relative; height: 350px; margin-top: 10px;">
+                <canvas id="pg-grafico-comparativo"></canvas>
+            </div>
+            <button onclick="pgFecharModal('pg-modal-analise')" class="btn-primary" style="width: 100%; margin-top: 15px;">Fechar</button>
+        </div>
+    </div>
 
     <!-- MODAL DE REGISTRO RÁPIDO DE SAÍDA (PORTARIA) -->
     <div id="modal-saida-portaria" class="login-overlay" style="display: none;">
@@ -622,7 +713,6 @@
                         <option value="Outros">🔹 Outros</option>
                         <option value="Visita">🚶 Visita</option>
                         <option value="Entrevista">🚶 Entrevista</option>
-						<option value="Manutenção">🚶 Manutenção</option>
                     </select>
                 </div>
 
@@ -828,6 +918,7 @@
                 <div class="abas-container">
                     <button class="btn-aba active" id="btn-aba-producao" onclick="mudarAba('producao', this)">📦 Produção Atual</button>
                     <button class="btn-aba" id="btn-aba-portaria" onclick="mudarAba('portaria', this)">🚗 Portaria </button>
+                    <button class="btn-aba" id="btn-aba-planilha-geral" onclick="mudarAba('planilha-geral', this)">📑 Planilha de Produção Geral</button>
                     <button class="btn-aba" id="btn-aba-expedicao" onclick="mudarAba('expedicao', this)">🚚 Expedição</button>
                     <button class="btn-aba" id="btn-aba-historico" onclick="mudarAba('historico', this)">📊 Histórico Concluídos</button>
                     <button class="btn-aba" id="btn-aba-relatorios" onclick="mudarAba('relatorios', this)">📈 Relatórios & Controle</button>
@@ -956,7 +1047,6 @@
                                     <option value="Outros">🔹 Outros</option>
                                     <option value="Visita">🚶 Visita</option>
                                     <option value="Entrevista">🚶 Entrevista</option>
-									<option value="Manutenção">🚶 Manutenção</option>
                                 </select>
                             </div>
 
@@ -1070,7 +1160,6 @@
                                 <option value="Visita">🚶 Visita</option>
                                 <option value="Entrevista">🚶 Entrevista</option>
                                 <option value="Outros">🔹 Outros</option>
-								<option value="Manutenção">🚶 Manutenção</option>
                             </select>
                         </div>
                         <div class="input-grupo">
@@ -1475,6 +1564,86 @@
                     </div>
                 </section>
             </div>
+            <!-- ABA PLANILHA DE PRODUÇÃO GERAL (BANCO PRODCARDNET) -->
+            <div id="aba-planilha-geral" class="secao-aba">
+                <section class="panel-card">
+                    <div class="panel-header space-between">
+                        <div>
+                            <h3>📑 Planilha de Produção Geral (Diária)</h3>
+                            <span class="info-auxiliar" id="pg-status-firebase">🟡 Conectando ao banco da planilha...</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button id="pg-btn-novo-lancamento" class="btn-primary" style="height: 36px; padding: 0 14px; font-size: 13px;" onclick="pgAbrirLancamento()">+ Novo Lançamento</button>
+                            <button id="pg-btn-novo-cliente" class="btn-secondary" style="height: 36px; padding: 0 14px; font-size: 13px;" onclick="pgAdicionarCliente()">+ Cliente / Produto</button>
+                            <button class="btn-primary" style="height: 36px; padding: 0 14px; font-size: 13px; background-color: #8b5cf6;" onclick="pgAbrirResumo()">📊 Resumo Geral / Ranking</button>
+                            <button class="btn-primary" style="height: 36px; padding: 0 14px; font-size: 13px; background-color: #0284c7;" onclick="pgAbrirAnaliseComparativa()">📈 Análise Anual / Mensal</button>
+                        </div>
+                    </div>
+
+                    <div class="pg-toolbar">
+                        <div class="pg-field">
+                            <label for="pg-mes">MÊS</label>
+                            <select id="pg-mes" onchange="pgRender(true)">
+                                <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+                                <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+                                <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+                                <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+                            </select>
+                        </div>
+                        <div class="pg-field">
+                            <label for="pg-ano">ANO</label>
+                            <input id="pg-ano" type="number" value="2026" min="2020" max="2100" style="width: 95px;" onchange="pgRender(true)">
+                        </div>
+                        <div class="pg-field" style="flex: 1; min-width: 200px;">
+                            <label for="pg-busca">BUSCAR CLIENTE / PRODUTO</label>
+                            <input id="pg-busca" type="text" placeholder="Digite para filtrar..." oninput="pgRender(true)">
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button class="btn-primary" style="height: 38px; padding: 0 14px; font-size: 13px; background-color: #10b981;" onclick="pgBaixarExcel()">📥 Baixar Excel</button>
+                            <button id="pg-btn-backup" class="btn-secondary" style="height: 38px; padding: 0 14px; font-size: 13px;" onclick="pgExportarBackup()">Backup</button>
+                            <button id="pg-btn-restaurar" class="btn-secondary" style="height: 38px; padding: 0 14px; font-size: 13px;" onclick="document.getElementById('pg-arquivo-backup').click()">Restaurar</button>
+                            <input id="pg-arquivo-backup" type="file" accept=".json" hidden onchange="pgImportarBackup(event)">
+                        </div>
+                    </div>
+
+                    <div class="pg-tabs">
+                        <button id="pg-tab-producao" class="pg-tab active" onclick="pgMudarAba('producao')">PRODUÇÃO</button>
+                        <button id="pg-tab-chip" class="pg-tab" onclick="pgMudarAba('chip')">PRODUÇÃO CHIP</button>
+                    </div>
+
+                    <div class="kpi-grid" style="margin-bottom: 20px;">
+                        <div class="kpi-card">
+                            <div class="kpi-icon blue">📊</div>
+                            <div class="kpi-info"><span class="kpi-title">Total do Mês (Aba Ativa)</span><h2 id="pg-total-mes">0</h2></div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon green">📈</div>
+                            <div class="kpi-info"><span class="kpi-title">Média por Lançamento</span><h2 id="pg-media-mes">0</h2></div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon yellow">🏢</div>
+                            <div class="kpi-info"><span class="kpi-title">Clientes / Produtos</span><h2 id="pg-qtd-clientes">0</h2></div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon purple">📅</div>
+                            <div class="kpi-info"><span class="kpi-title">Dias com Produção</span><h2 id="pg-dias-com-prod">0</h2></div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;">
+                        <div>
+                            <h4 id="pg-titulo-tabela" style="margin: 0; font-size: 16px;">Produção</h4>
+                            <span class="info-auxiliar">Clique em qualquer dia, digite a quantidade e pressione <strong>ENTER</strong> ou mude com o mouse.</span>
+                        </div>
+                        <button id="pg-btn-limpar-mes" class="btn-danger" style="padding: 6px 12px; font-size: 12px; height: auto;" onclick="pgLimparMes()">Limpar mês atual</button>
+                    </div>
+
+                    <div class="pg-table-wrap">
+                        <table id="pg-tabela" class="pg-table"></table>
+                    </div>
+                </section>
+            </div>
+
         </main>
     </div>
 
@@ -1482,6 +1651,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getDatabase, ref as rtdbRef, onValue as rtdbOnValue, set as rtdbSet } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         // Força letras maiúsculas em tempo real em todos os campos de texto e textarea (exceto senhas)
         document.addEventListener('input', function(e) {
@@ -1513,6 +1683,20 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        // Segundo Banco de Dados (Firebase Realtime Database - Planilha de Produção Geral)
+        const firebaseConfigPlanilha = {
+            apiKey: "AIzaSyBAFZ-cV19gjmqldhwJJWeaB3P5sIiqVSc",
+            authDomain: "prodcardnet.firebaseapp.com",
+            databaseURL: "https://prodcardnet-default-rtdb.firebaseio.com",
+            projectId: "prodcardnet",
+            storageBucket: "prodcardnet.firebasestorage.app",
+            messagingSenderId: "1021411614783",
+            appId: "1:1021411614783:web:178dda85ea99c4093a988a",
+            measurementId: "G-WERMVH6EDG"
+        };
+        const appPlanilha = initializeApp(firebaseConfigPlanilha, "appPlanilha");
+        const dbPlanilha = getDatabase(appPlanilha);
 
         let operadorAtual = "";
         let permissoesOperadorAtual = {};
@@ -1638,6 +1822,10 @@
             const btnAbaPortaria = document.getElementById('btn-aba-portaria');
             if (btnAbaPortaria) btnAbaPortaria.style.display = (admin || permissoesOperadorAtual.portaria !== false) ? 'flex' : 'none';
 
+            const btnAbaPlanilha = document.getElementById('btn-aba-planilha-geral');
+            if (btnAbaPlanilha) btnAbaPlanilha.style.display = (admin || permissoesOperadorAtual.planilhaGeral !== false) ? 'flex' : 'none';
+            pgAplicarControlePermissao();
+
             if (!admin) {
                 const btnProd = document.getElementById('btn-aba-producao');
                 if (btnProd) btnProd.style.display = (permissoesOperadorAtual.producao !== false) ? 'flex' : 'none';
@@ -1683,11 +1871,11 @@
         async function verificarInicializacaoOperadores() {
             try {
                 const padrao = { 
-                    "FLÁVIO": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true, portaria: true } }, 
-                    "FLAVIO": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true, portaria: true } }, 
-                    "ANDRÉ": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true, portaria: true } }, 
-                    "ANDRE": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true, portaria: true } },
-                    "LEANDRO": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: false, rejeitos: false, solicitacaoNotas: true, expedicao: true, portaria: true } }
+                    "FLÁVIO": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true, portaria: true, planilhaGeral: true } }, 
+                    "FLAVIO": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true, portaria: true, planilhaGeral: true } }, 
+                    "ANDRÉ": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true, portaria: true, planilhaGeral: true } }, 
+                    "ANDRE": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: true, rejeitos: true, solicitacaoNotas: true, expedicao: true, portaria: true, planilhaGeral: true } },
+                    "LEANDRO": { senha: "123", nascimento: "", permissoes: { producao: true, historico: true, relatorios: false, rejeitos: false, solicitacaoNotas: true, expedicao: true, portaria: true, planilhaGeral: true } }
                 };
                 for (let [nome, dados] of Object.entries(padrao)) {
                     const docRef = doc(db, "operadores", nome);
@@ -2152,7 +2340,7 @@
                 await setDoc(doc(db, "operadores", nome), { 
                     senha: senha, 
                     nascimento: nascimento,
-                    permissoes: { producao: true, historico: true, relatorios: false, rejeitos: false, solicitacaoNotas: false, expedicao: true, portaria: true } 
+                    permissoes: { producao: true, historico: true, relatorios: false, rejeitos: false, solicitacaoNotas: false, expedicao: true, portaria: true, planilhaGeral: true } 
                 }, { merge: true });
                 mostrarToast("Operador cadastrado com sucesso!", "success");
                 document.getElementById("cad-operador").value = "";
@@ -2200,6 +2388,10 @@
                 mostrarToast("Acesso restrito ao setor de Portaria.", "error");
                 return;
             }
+            if (abaId === 'planilha-geral' && !eAdministrador() && permissoesOperadorAtual.planilhaGeral === false) {
+                mostrarToast("Acesso restrito à Planilha de Produção Geral.", "error");
+                return;
+            }
             if (abaId === 'expedicao' && !eAdministrador() && permissoesOperadorAtual.expedicao === false) {
                 mostrarToast("Acesso restrito ao setor de Expedição.", "error");
                 return;
@@ -2234,6 +2426,8 @@
                 atualizarFiltrosPortariaDinamicos();
                 atualizarDiasPortariaFiltro();
                 carregarPortaria();
+            } else if (abaId === 'planilha-geral') {
+                pgRender(true);
             } else if (abaId === 'expedicao') {
                 renderizarTabelaExpedicaoPendentes();
                 atualizarFiltrosExpedicaoDinamicos();
@@ -3421,6 +3615,7 @@
                 const p = op.permissoes || {};
                 const pProd = p.producao !== false ? 'checked' : '';
                 const pPort = p.portaria !== false ? 'checked' : '';
+                const pPlan = p.planilhaGeral !== false ? 'checked' : '';
                 const pHist = p.historico !== false ? 'checked' : '';
                 const pRel = p.relatorios === true ? 'checked' : '';
                 const pRej = p.rejeitos === true ? 'checked' : '';
@@ -3431,6 +3626,7 @@
                     <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px;">
                         <label><input type="checkbox" ${pProd} onchange="atualizarPermissaoOperador('${op.nome}', 'producao', this.checked)"> Produção</label>
                         <label><input type="checkbox" ${pPort} onchange="atualizarPermissaoOperador('${op.nome}', 'portaria', this.checked)"> Portaria</label>
+                        <label><input type="checkbox" ${pPlan} onchange="atualizarPermissaoOperador('${op.nome}', 'planilhaGeral', this.checked)"> Planilha Geral</label>
                         <label><input type="checkbox" ${pExp} onchange="atualizarPermissaoOperador('${op.nome}', 'expedicao', this.checked)"> Expedição</label>
                         <label><input type="checkbox" ${pHist} onchange="atualizarPermissaoOperador('${op.nome}', 'historico', this.checked)"> Histórico</label>
                         <label><input type="checkbox" ${pRel} onchange="atualizarPermissaoOperador('${op.nome}', 'relatorios', this.checked)"> Relatórios</label>
@@ -4136,6 +4332,754 @@
                 sel.appendChild(opt);
             });
         }
+
+        // =========================================================================
+        // MÓDULO: PLANILHA DE PRODUÇÃO GERAL (FIREBASE REALTIME DATABASE - PRODCARDNET)
+        // =========================================================================
+        const PG_CLIENTES_PADRAO = {
+            "producao": [
+                "AGAFARMA", "APROFARMA", "AUTOPASS", "BEM", "CNR", "DONA BALBINA", "FESP", "GOODCARD SEM PARAR",
+                "GOODCARD VB", "HAVAN", "HIPERLIFE (ELPHIS)", "HOTZONE", "LOJAS BESNI", "PLAYLAND", "SPTRANS",
+                "TAIKOCARD", "TOP APS SHOW", "UNIMED BAIXA MOGIANA", "UNIMED BRUSQUE", "UNIMED CAMPINAS",
+                "UNIMED CAMPOS", "UNIMED CENTRAL RS", "UNIMED CNU", "UNIMED COSTA VERDE", "UNIMED FLORIANÓPOLIS",
+                "UNIMED FRUTAL", "UNIMED ITAUNA", "UNIMED MONTE ALTO", "UNIMED NORTE CAPIXABA", "UNIMED PINDAMONHANGABA",
+                "UNIMED PORTO ALEGRE", "UNIMED SALTO DE ITU", "UNIMED SEGUROS ODONTO", "UNIMED SEGUROS SAUDE",
+                "UNIMED SJDR", "UNIMED TUPA", "UNIMED VALE DO AÇO", "UNIMED VERTENTES DO CAPARAO",
+                "UNIODONTO CAMPINAS", "UP POLICARD"
+            ],
+            "chip": [
+                "ABC TRANSPORTES CHIP", "AESA CHIIP", "ARAGUAINA CHIP", "ATRANSPI TRANSORTES CHIP", "ATUV CHIP",
+                "AVIAÇÃO ATIBAIA CHIP", "AVIAÇÃO ATLANTICO CHIP", "AVIAÇÃO DOURADOS CHIP", "BENFACIL TRANSPORTES CHIP",
+                "BENFICA TRANSPORTES CHIP", "BH AIRPORT CHIP", "BOA VISTA CHIP", "BRUBUSS CHIP", "CARTÃO LEGAL CHIP",
+                "CARTÃO PORTO DE REGISTRO CHIP", "CCR METRO BAHIA CHIP", "COLEURB CHIP", "CONSORCIO 123 CHIP",
+                "CONSORCIO METROPASSE CHIP", "CONSORCIO OTIMO CHIP", "GLOBALMOB CHIP", "ITAMOBI CHIP", "JÁ É",
+                "JTP COM CARD CHIP", "MAIS MOBI CHIP", "MOBI CARTÕES CHIP", "MORIÁ TRANSPORTES CHIP", "MOVECARD CHIP",
+                "MUNICIPIO DE MAQUINE CHIP", "NUBUS CAMPINA GRANDE CHIP", "NUBUS DNE CHIP", "NUBUS JOÃO PESSOA",
+                "NUBUS NATAL", "PASSARO MARROM", "PETROCARD", "PEVETUR CHIP", "PLAYLAND CHIP", "RICCO TRANSPORTES CHIP",
+                "RIOPRETRANS", "SALVADOR CARD", "SETAP CHIP", "SETUF CHIP", "SHOPPING HIGIENOPOLIS CHIP", "SOU DIADEMA CHIP",
+                "SUMARE CHIP", "TCR TIL CHIP", "TEU VT CHIP", "TOP SHOPPING INDIGO CHIP", "TRANSCARD CHIP",
+                "TRANSMOBI", "TRANSPORTE SUZANO CHIP", "UNIÃO GERAL DOS ESTUDANTES CHIP", "UP TECNOLOGIA CHIP",
+                "URBS CHIP", "UTILE TRANSPORTES CHIP", "VEGAS CARDS CHIP", "VEM CARD CHIP", "VIA BRASIL SHOPPING CHIP",
+                "VIA FEIRA", "VIAÇÃO ATIBAIA CHIP", "VIAÇÃO CANARINHO GUARAMIRIM CHIP", "VIAÇÃO CANARINHO JARAGUÁ DO SUL CHIP",
+                "VIAÇÃO CIDADE TRES LAGOAS CHIP", "VIAÇÃO GARCIA CHIP", "VIAÇÃO ITAMARATI CHIP", "VIAÇÃO JACAREÍ VALEVIA CHIP",
+                "VIAÇÃO LONDRINA CHIP", "VIAÇÃO PINHALZINHO CHIP", "VIAÇÃO PRAIANA CHIP", "VIAÇÃO SENHOR DO BONFIM CHIP",
+                "VIAÇÃO UNIÃO CHIP"
+            ]
+        };
+
+        let pgAbaAtiva = 'producao';
+        let pgBancoDados = {};
+        window.pgUsuarioEditando = false;
+        let pgCarregouMesInicial = false;
+        let pgMeuGrafico = null;
+        const pgMesesNomes = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+        function pgObjetoDiasNormalizado(diasEntrada) {
+            const obj = {};
+            if (!diasEntrada) return obj;
+            if (Array.isArray(diasEntrada)) {
+                diasEntrada.forEach((val, index) => {
+                    if (val !== null && val !== undefined && val !== '') {
+                        obj[`d${index + 1}`] = parseFloat(val);
+                    }
+                });
+            } else if (typeof diasEntrada === 'object') {
+                Object.keys(diasEntrada).forEach(k => {
+                    const val = diasEntrada[k];
+                    if (val !== null && val !== undefined && val !== '') {
+                        const diaNum = k.startsWith('d') ? k : `d${parseInt(k, 10) + 1}`;
+                        obj[diaNum] = parseFloat(val);
+                    }
+                });
+            }
+            return obj;
+        }
+
+        function pgSelecionarUltimoMesComLancamento() {
+            let ultimoAno = null;
+            let ultimoMes = null;
+            Object.keys(pgBancoDados).forEach(chave => {
+                const partes = chave.split('_');
+                if (partes.length === 2) {
+                    const ano = parseInt(partes[0], 10);
+                    const mes = parseInt(partes[1], 10);
+                    const dadosMes = pgBancoDados[chave];
+                    let possuiLancamento = false;
+                    ['producao', 'chip'].forEach(cat => {
+                        if (dadosMes[cat]) {
+                            dadosMes[cat].forEach(item => {
+                                const diasObj = item.diasObj || item.dias || {};
+                                if (Object.keys(diasObj).length > 0) possuiLancamento = true;
+                            });
+                        }
+                    });
+                    if (possuiLancamento) {
+                        if (!ultimoAno || ano > ultimoAno || (ano === ultimoAno && mes > ultimoMes)) {
+                            ultimoAno = ano;
+                            ultimoMes = mes;
+                        }
+                    }
+                }
+            });
+            if (ultimoAno && ultimoMes) {
+                const elMes = document.getElementById('pg-mes');
+                const elAno = document.getElementById('pg-ano');
+                if (elMes) elMes.value = ultimoMes;
+                if (elAno) elAno.value = ultimoAno;
+            }
+        }
+
+        function iniciarEscutaPlanilhaGeral() {
+            const refDados = rtdbRef(dbPlanilha, 'producao_dados');
+            rtdbOnValue(refDados, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    pgBancoDados = data;
+                    Object.keys(pgBancoDados).forEach(chave => {
+                        ['producao', 'chip'].forEach(cat => {
+                            if (pgBancoDados[chave][cat]) {
+                                pgBancoDados[chave][cat].forEach(item => {
+                                    item.diasObj = pgObjetoDiasNormalizado(item.diasObj || item.dias);
+                                });
+                            }
+                        });
+                    });
+                }
+                const stEl = document.getElementById('pg-status-firebase');
+                if (stEl) {
+                    stEl.innerText = '🟢 Conectado ao banco da planilha (prodcardnet)';
+                    stEl.style.color = '#10b981';
+                }
+                if (!pgCarregouMesInicial) {
+                    pgSelecionarUltimoMesComLancamento();
+                    pgCarregouMesInicial = true;
+                }
+                if (!window.pgUsuarioEditando) {
+                    pgRender(false);
+                }
+            }, (error) => {
+                console.error("Erro RTDB Planilha:", error);
+                const stEl = document.getElementById('pg-status-firebase');
+                if (stEl) {
+                    stEl.innerText = '🔴 Erro na conexão com banco da planilha';
+                    stEl.style.color = '#ef4444';
+                }
+            });
+        }
+
+        iniciarEscutaPlanilhaGeral();
+
+        function pgSalvarDados() {
+            if (!eAdministrador()) return;
+            rtdbSet(rtdbRef(dbPlanilha, 'producao_dados'), pgBancoDados);
+        }
+
+        function pgGetDiasNoMes(mes, ano) {
+            return new Date(ano, mes, 0).getDate();
+        }
+
+        function pgObterDadosMesAtual() {
+            const mes = document.getElementById('pg-mes').value;
+            const ano = document.getElementById('pg-ano').value;
+            const chave = `${ano}_${mes}`;
+
+            if (!pgBancoDados[chave]) {
+                pgBancoDados[chave] = {
+                    producao: PG_CLIENTES_PADRAO.producao.map(nome => ({ nome, diasObj: {} })),
+                    chip: PG_CLIENTES_PADRAO.chip.map(nome => ({ nome, diasObj: {} }))
+                };
+                if (eAdministrador()) pgSalvarDados();
+            }
+
+            ['producao', 'chip'].forEach(cat => {
+                if (pgBancoDados[chave][cat]) {
+                    pgBancoDados[chave][cat].forEach(item => {
+                        item.diasObj = pgObjetoDiasNormalizado(item.diasObj || item.dias);
+                    });
+                    pgBancoDados[chave][cat].sort((a, b) => a.nome.localeCompare(b.nome));
+                }
+            });
+
+            return pgBancoDados[chave];
+        }
+
+        function pgAplicarControlePermissao() {
+            const admin = eAdministrador();
+            const idsBotoesEsconder = ['pg-btn-novo-lancamento', 'pg-btn-novo-cliente', 'pg-btn-limpar-mes', 'pg-btn-backup', 'pg-btn-restaurar'];
+            idsBotoesEsconder.forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.style.display = admin ? 'inline-block' : 'none';
+            });
+            document.querySelectorAll('.pg-btn-delete').forEach(btn => {
+                btn.style.display = admin ? 'inline-block' : 'none';
+            });
+            document.querySelectorAll('.pg-day-input').forEach(input => {
+                input.disabled = !admin;
+            });
+        }
+
+        window.pgMudarAba = function(aba) {
+            pgAbaAtiva = aba;
+            document.getElementById('pg-tab-producao').classList.toggle('active', aba === 'producao');
+            document.getElementById('pg-tab-chip').classList.toggle('active', aba === 'chip');
+            pgRender(true);
+        };
+
+        window.pgRender = function(forcar = false) {
+            if (window.pgUsuarioEditando && !forcar) return;
+
+            const mesEl = document.getElementById('pg-mes');
+            const anoEl = document.getElementById('pg-ano');
+            if (!mesEl || !anoEl) return;
+
+            const mes = parseInt(mesEl.value);
+            const ano = parseInt(anoEl.value);
+            const busca = (document.getElementById('pg-busca').value || "").toLowerCase();
+            const totalDias = pgGetDiasNoMes(mes, ano);
+
+            document.getElementById('pg-titulo-tabela').innerText = `Produção (${pgAbaAtiva === 'producao' ? 'Geral' : 'Chip'}) — ${pgMesesNomes[mes - 1]}/${ano}`;
+
+            const dadosMes = pgObterDadosMesAtual();
+            const lista = (dadosMes[pgAbaAtiva] || []).filter(item => item.nome.toLowerCase().includes(busca));
+
+            const tabela = document.getElementById('pg-tabela');
+            let html = '<thead><tr><th class="pg-name">Cliente / Produto</th>';
+
+            for (let d = 1; d <= totalDias; d++) {
+                const dataObj = new Date(ano, mes - 1, d);
+                const eFimDeSemana = dataObj.getDay() === 0 || dataObj.getDay() === 6;
+                html += `<th class="${eFimDeSemana ? 'pg-weekend' : ''}">${d}</th>`;
+            }
+            html += '<th class="pg-sum">TOTAL</th><th class="pg-avg">MÉDIA</th></tr></thead><tbody>';
+
+            let somaGeral = 0;
+            let totalLancamentos = 0;
+            let diasComProdSet = new Set();
+            let totDia = new Array(totalDias).fill(0);
+
+            lista.forEach((item, index) => {
+                let somaCliente = 0;
+                let lancamentosCliente = 0;
+
+                html += `<tr id="pg-row-${index}">
+                    <td class="pg-name">
+                        <div class="pg-name-content">
+                            <span>${item.nome}</span>
+                            <button class="pg-btn-delete" title="Excluir este cliente" onclick="pgDeletarCliente('${item.nome.replace(/'/g, "\'")}')">🗑️</button>
+                        </div>
+                    </td>`;
+
+                const diasObj = item.diasObj || {};
+
+                for (let d = 1; d <= totalDias; d++) {
+                    const val = diasObj[`d${d}`];
+                    const dataObj = new Date(ano, mes - 1, d);
+                    const eFimDeSemana = dataObj.getDay() === 0 || dataObj.getDay() === 6;
+
+                    if (val !== null && val !== undefined && val !== '') {
+                        const nVal = parseFloat(val);
+                        somaCliente += nVal;
+                        totDia[d - 1] += nVal;
+                        somaGeral += nVal;
+                        lancamentosCliente++;
+                        totalLancamentos++;
+                        diasComProdSet.add(d);
+                    }
+
+                    html += `<td class="${eFimDeSemana ? 'pg-weekend' : ''}">
+                        <input class="pg-day-input" type="number" step="any"
+                        data-pg-row="${index}" data-pg-col="${d}"
+                        onfocus="window.pgUsuarioEditando=true; this.select()"
+                        onblur="window.pgUsuarioEditando=false"
+                        onkeydown="pgTratarTeclado(event, ${index}, ${d}, this)"
+                        value="${val !== null && val !== undefined ? val : ''}"
+                        onchange="pgAtualizarValor(${index}, ${d}, this.value)">
+                    </td>`;
+                }
+
+                const mediaCliente = lancamentosCliente > 0 ? (somaCliente / lancamentosCliente).toFixed(1) : 0;
+                html += `<td class="pg-sum" id="pg-sum-${index}">${somaCliente.toLocaleString('pt-BR')}</td>`;
+                html += `<td class="pg-avg" id="pg-avg-${index}">${mediaCliente}</td></tr>`;
+            });
+
+            html += '<tr class="pg-total-row"><td class="pg-name"><div class="pg-name-content"><span>TOTAL DIÁRIO</span></div></td>';
+            for (let d = 0; d < totalDias; d++) {
+                html += `<td id="pg-tot-col-${d}">${totDia[d] > 0 ? totDia[d].toLocaleString('pt-BR') : '-'}</td>`;
+            }
+            const mediaGeral = totalLancamentos > 0 ? (somaGeral / totalLancamentos).toFixed(1) : 0;
+            html += `<td class="pg-sum" id="pg-tot-sum-geral">${somaGeral.toLocaleString('pt-BR')}</td><td class="pg-avg" id="pg-tot-avg-geral">${mediaGeral}</td></tr>`;
+            html += '</tbody>';
+            tabela.innerHTML = html;
+
+            document.getElementById('pg-total-mes').innerText = somaGeral.toLocaleString('pt-BR');
+            document.getElementById('pg-media-mes').innerText = mediaGeral;
+            document.getElementById('pg-qtd-clientes').innerText = lista.length;
+            document.getElementById('pg-dias-com-prod').innerText = diasComProdSet.size;
+
+            pgAplicarControlePermissao();
+        };
+
+        window.pgDeletarCliente = async function(nomeCliente) {
+            if (!eAdministrador()) return;
+            if (confirm(`Tem certeza que deseja apagar o cliente "${nomeCliente}" deste mês?`)) {
+                const dadosMes = pgObterDadosMesAtual();
+                dadosMes[pgAbaAtiva] = (dadosMes[pgAbaAtiva] || []).filter(c => c.nome !== nomeCliente);
+                pgSalvarDados();
+                await registrarLog(`Planilha Geral: Removeu cliente "${nomeCliente}"`);
+                pgRender(true);
+                mostrarToast("Cliente removido da planilha!", "success");
+            }
+        };
+
+        window.pgTratarTeclado = function(event, r, d, element) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                pgAtualizarValor(r, d, element.value);
+                const proximo = document.querySelector(`input[data-pg-row="${r}"][data-pg-col="${d + 1}"]`);
+                if (proximo) proximo.focus();
+                else element.blur();
+            } else if (event.key === 'ArrowRight') {
+                event.preventDefault();
+                const proximo = document.querySelector(`input[data-pg-row="${r}"][data-pg-col="${d + 1}"]`);
+                if (proximo) proximo.focus();
+            } else if (event.key === 'ArrowLeft') {
+                event.preventDefault();
+                const anterior = document.querySelector(`input[data-pg-row="${r}"][data-pg-col="${d - 1}"]`);
+                if (anterior) anterior.focus();
+            }
+        };
+
+        window.pgAtualizarValor = function(clienteIdx, dia, valor) {
+            if (!eAdministrador()) return;
+            const busca = (document.getElementById('pg-busca').value || "").toLowerCase();
+            const dadosMes = pgObterDadosMesAtual();
+            const listaFiltrada = (dadosMes[pgAbaAtiva] || []).filter(item => item.nome.toLowerCase().includes(busca));
+            const clienteReal = listaFiltrada[clienteIdx];
+
+            if (clienteReal) {
+                if (!clienteReal.diasObj) clienteReal.diasObj = {};
+                if (valor === '' || valor === null || valor === undefined) {
+                    delete clienteReal.diasObj[`d${dia}`];
+                } else {
+                    clienteReal.diasObj[`d${dia}`] = parseFloat(valor);
+                }
+                pgSalvarDados();
+                pgRecalcularTotaisSemRedesenhar();
+                mostrarToast("Salvo na planilha!", "success");
+            }
+        };
+
+        function pgRecalcularTotaisSemRedesenhar() {
+            const mes = parseInt(document.getElementById('pg-mes').value);
+            const ano = parseInt(document.getElementById('pg-ano').value);
+            const busca = (document.getElementById('pg-busca').value || "").toLowerCase();
+            const totalDias = pgGetDiasNoMes(mes, ano);
+
+            const dadosMes = pgObterDadosMesAtual();
+            const lista = (dadosMes[pgAbaAtiva] || []).filter(item => item.nome.toLowerCase().includes(busca));
+
+            let somaGeral = 0;
+            let totalLancamentos = 0;
+            let diasComProdSet = new Set();
+            let totDia = new Array(totalDias).fill(0);
+
+            lista.forEach((item, index) => {
+                let somaCliente = 0;
+                let lancamentosCliente = 0;
+                const diasObj = item.diasObj || {};
+
+                for (let d = 1; d <= totalDias; d++) {
+                    const val = diasObj[`d${d}`];
+                    if (val !== null && val !== undefined && val !== '') {
+                        const nVal = parseFloat(val);
+                        somaCliente += nVal;
+                        totDia[d - 1] += nVal;
+                        somaGeral += nVal;
+                        lancamentosCliente++;
+                        totalLancamentos++;
+                        diasComProdSet.add(d);
+                    }
+                }
+
+                const mediaCliente = lancamentosCliente > 0 ? (somaCliente / lancamentosCliente).toFixed(1) : 0;
+                const elSum = document.getElementById(`pg-sum-${index}`);
+                const elAvg = document.getElementById(`pg-avg-${index}`);
+                if (elSum) elSum.innerText = somaCliente.toLocaleString('pt-BR');
+                if (elAvg) elAvg.innerText = mediaCliente;
+            });
+
+            for (let d = 0; d < totalDias; d++) {
+                const elTotCol = document.getElementById(`pg-tot-col-${d}`);
+                if (elTotCol) elTotCol.innerText = totDia[d] > 0 ? totDia[d].toLocaleString('pt-BR') : '-';
+            }
+
+            const mediaGeral = totalLancamentos > 0 ? (somaGeral / totalLancamentos).toFixed(1) : 0;
+            const elTotSum = document.getElementById('pg-tot-sum-geral');
+            const elTotAvg = document.getElementById('pg-tot-avg-geral');
+            if (elTotSum) elTotSum.innerText = somaGeral.toLocaleString('pt-BR');
+            if (elTotAvg) elTotAvg.innerText = mediaGeral;
+
+            document.getElementById('pg-total-mes').innerText = somaGeral.toLocaleString('pt-BR');
+            document.getElementById('pg-media-mes').innerText = mediaGeral;
+            document.getElementById('pg-dias-com-prod').innerText = diasComProdSet.size;
+        }
+
+        window.pgAbrirLancamento = function() {
+            if (!eAdministrador()) return;
+            const dadosMes = pgObterDadosMesAtual();
+            const select = document.getElementById('pg-m-cliente');
+            select.innerHTML = (dadosMes[pgAbaAtiva] || []).map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+            document.getElementById('pg-m-dia').value = new Date().getDate();
+            document.getElementById('pg-m-qtd').value = '';
+            document.getElementById('pg-modal-lancamento').style.display = 'flex';
+        };
+
+        window.pgFecharModal = function(id) {
+            document.getElementById(id).style.display = 'none';
+        };
+
+        window.pgSalvarLancamento = async function() {
+            if (!eAdministrador()) return;
+            const nomeCliente = document.getElementById('pg-m-cliente').value;
+            const diaDigitado = parseInt(document.getElementById('pg-m-dia').value, 10);
+            const qtd = parseFloat(document.getElementById('pg-m-qtd').value);
+
+            const mes = parseInt(document.getElementById('pg-mes').value, 10);
+            const ano = parseInt(document.getElementById('pg-ano').value, 10);
+            const totalDiasMes = pgGetDiasNoMes(mes, ano);
+
+            if (isNaN(diaDigitado) || diaDigitado < 1 || diaDigitado > totalDiasMes || isNaN(qtd)) {
+                mostrarToast(`Insira um dia válido (1 a ${totalDiasMes}) e uma quantidade numérica.`, "warning");
+                return;
+            }
+
+            const dadosMes = pgObterDadosMesAtual();
+            const cliente = (dadosMes[pgAbaAtiva] || []).find(c => c.nome === nomeCliente);
+
+            if (cliente) {
+                if (!cliente.diasObj) cliente.diasObj = {};
+                cliente.diasObj[`d${diaDigitado}`] = qtd;
+                pgSalvarDados();
+                await registrarLog(`Planilha Geral: Lançou ${qtd} unid para ${nomeCliente} (dia ${diaDigitado}/${mes}/${ano})`);
+                pgFecharModal('pg-modal-lancamento');
+                pgRender(true);
+                mostrarToast("Lançamento salvo com sucesso!", "success");
+            }
+        };
+
+        window.pgAdicionarCliente = async function() {
+            if (!eAdministrador()) return;
+            const nome = prompt("Nome do novo Cliente / Produto:");
+            if (nome && nome.trim() !== "") {
+                const nomeFormatado = nome.trim().toUpperCase();
+                const dadosMes = pgObterDadosMesAtual();
+
+                if (dadosMes[pgAbaAtiva].some(c => c.nome === nomeFormatado)) {
+                    mostrarToast("Este cliente já está cadastrado!", "warning");
+                    return;
+                }
+
+                dadosMes[pgAbaAtiva].push({ nome: nomeFormatado, diasObj: {} });
+                dadosMes[pgAbaAtiva].sort((a, b) => a.nome.localeCompare(b.nome));
+
+                pgSalvarDados();
+                await registrarLog(`Planilha Geral: Adicionou cliente "${nomeFormatado}"`);
+                pgRender(true);
+                mostrarToast("Cliente/Produto adicionado!", "success");
+            }
+        };
+
+        function pgSomarDias(diasObj) {
+            if (!diasObj) return 0;
+            const obj = pgObjetoDiasNormalizado(diasObj);
+            return Object.values(obj).reduce((acc, val) => acc + (parseFloat(val) || 0), 0);
+        }
+
+        window.pgAbrirResumo = function() {
+            const mes = parseInt(document.getElementById('pg-mes').value, 10);
+            const ano = parseInt(document.getElementById('pg-ano').value, 10);
+            const dadosMes = pgObterDadosMesAtual();
+
+            document.getElementById('pg-resumo-titulo').innerText = `📊 Resumo Geral — ${pgMesesNomes[mes - 1]}/${ano}`;
+
+            let totalProducao = 0;
+            let totalChip = 0;
+            const mapaClientes = {};
+
+            (dadosMes.producao || []).forEach(cliente => {
+                const total = pgSomarDias(cliente.diasObj || cliente.dias);
+                totalProducao += total;
+                if (total > 0) mapaClientes[cliente.nome] = (mapaClientes[cliente.nome] || 0) + total;
+            });
+
+            (dadosMes.chip || []).forEach(cliente => {
+                const total = pgSomarDias(cliente.diasObj || cliente.dias);
+                totalChip += total;
+                if (total > 0) mapaClientes[cliente.nome] = (mapaClientes[cliente.nome] || 0) + total;
+            });
+
+            const totalGeral = totalProducao + totalChip;
+
+            document.getElementById('pg-resumo-totais').innerHTML = `
+                <div>
+                    <span>Quantidade de Produção Total Geral</span>
+                    <strong>${totalProducao.toLocaleString('pt-BR')} unid</strong>
+                </div>
+                <div>
+                    <span>Produção Chip Total Geral</span>
+                    <strong>${totalChip.toLocaleString('pt-BR')} unid</strong>
+                </div>
+                <div>
+                    <span>Total Geral Acumulado</span>
+                    <strong style="color:#38bdf8">${totalGeral.toLocaleString('pt-BR')} unid</strong>
+                </div>
+            `;
+
+            const ranking = Object.keys(mapaClientes).map(nome => ({
+                nome,
+                total: mapaClientes[nome]
+            })).sort((a, b) => b.total - a.total);
+
+            const listaEl = document.getElementById('pg-lista-ranking');
+            if (ranking.length === 0) {
+                listaEl.innerHTML = '<li style="padding:15px;text-align:center;color:var(--text-muted)">Nenhum lançamento registrado neste mês.</li>';
+            } else {
+                listaEl.innerHTML = ranking.map((item, pos) => {
+                    const nomeLimpo = String(item.nome).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    return `
+                        <li class="pg-ranking-item">
+                            <span><strong>#${pos + 1}</strong> ${nomeLimpo}</span>
+                            <span class="pg-ranking-badge">${item.total.toLocaleString('pt-BR')} unid</span>
+                        </li>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('pg-modal-resumo').style.display = 'flex';
+        };
+
+        window.pgAbrirAnaliseComparativa = function() {
+            document.getElementById('pg-modal-analise').style.display = 'flex';
+            setTimeout(() => pgAtualizarGraficoComparativo(), 100);
+        };
+
+        window.pgAtualizarGraficoComparativo = function() {
+            const tipo = document.getElementById('pg-tipo-analise').value;
+            const anoAtual = parseInt(document.getElementById('pg-ano').value, 10);
+            const canvas = document.getElementById('pg-grafico-comparativo');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            let rotulos = [];
+            let valoresProducao = [];
+            let valoresChip = [];
+
+            if (tipo === 'mensal') {
+                rotulos = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+                valoresProducao = new Array(12).fill(0);
+                valoresChip = new Array(12).fill(0);
+
+                for (let m = 1; m <= 12; m++) {
+                    const chave = `${anoAtual}_${m}`;
+                    if (pgBancoDados[chave]) {
+                        if (pgBancoDados[chave].producao) {
+                            pgBancoDados[chave].producao.forEach(c => {
+                                valoresProducao[m - 1] += pgSomarDias(c.diasObj || c.dias);
+                            });
+                        }
+                        if (pgBancoDados[chave].chip) {
+                            pgBancoDados[chave].chip.forEach(c => {
+                                valoresChip[m - 1] += pgSomarDias(c.diasObj || c.dias);
+                            });
+                        }
+                    }
+                }
+            } else {
+                const anosSet = new Set();
+                Object.keys(pgBancoDados).forEach(chave => {
+                    const partes = chave.split('_');
+                    if (partes.length === 2) anosSet.add(parseInt(partes[0], 10));
+                });
+
+                rotulos = Array.from(anosSet).sort((a, b) => a - b);
+                valoresProducao = new Array(rotulos.length).fill(0);
+                valoresChip = new Array(rotulos.length).fill(0);
+
+                rotulos.forEach((ano, idx) => {
+                    for (let m = 1; m <= 12; m++) {
+                        const chave = `${ano}_${m}`;
+                        if (pgBancoDados[chave]) {
+                            if (pgBancoDados[chave].producao) {
+                                pgBancoDados[chave].producao.forEach(c => {
+                                    valoresProducao[idx] += pgSomarDias(c.diasObj || c.dias);
+                                });
+                            }
+                            if (pgBancoDados[chave].chip) {
+                                pgBancoDados[chave].chip.forEach(c => {
+                                    valoresChip[idx] += pgSomarDias(c.diasObj || c.dias);
+                                });
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (pgMeuGrafico) pgMeuGrafico.destroy();
+
+            pgMeuGrafico = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: rotulos,
+                    datasets: [
+                        { label: 'Produção', data: valoresProducao, backgroundColor: '#3b82f6', borderRadius: 6 },
+                        { label: 'Produção Chip', data: valoresChip, backgroundColor: '#8b5cf6', borderRadius: 6 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: getComputedStyle(document.body).getPropertyValue('--text-main').trim() }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: getComputedStyle(document.body).getPropertyValue('--border-color').trim() },
+                            ticks: { color: getComputedStyle(document.body).getPropertyValue('--text-muted').trim() }
+                        },
+                        y: {
+                            grid: { color: getComputedStyle(document.body).getPropertyValue('--border-color').trim() },
+                            ticks: { color: getComputedStyle(document.body).getPropertyValue('--text-muted').trim() }
+                        }
+                    }
+                }
+            });
+        };
+
+        function pgMontarMatrizAbaExcel(dadosLista, totalDias) {
+            const headers = ['Cliente / Produto'];
+            for (let d = 1; d <= totalDias; d++) headers.push(`${d}`);
+            headers.push('TOTAL', 'MÉDIA');
+
+            const rows = [headers];
+            let totDia = new Array(totalDias).fill(0);
+            let somaGeral = 0;
+            let totalLancamentos = 0;
+
+            (dadosLista || []).forEach(item => {
+                let somaCliente = 0;
+                let lancamentosCliente = 0;
+                const row = [item.nome];
+                const diasObj = pgObjetoDiasNormalizado(item.diasObj || item.dias);
+
+                for (let d = 1; d <= totalDias; d++) {
+                    const val = diasObj[`d${d}`];
+                    if (val !== null && val !== undefined && val !== '') {
+                        const nVal = parseFloat(val);
+                        somaCliente += nVal;
+                        totDia[d - 1] += nVal;
+                        somaGeral += nVal;
+                        lancamentosCliente++;
+                        totalLancamentos++;
+                        row.push(nVal);
+                    } else {
+                        row.push('');
+                    }
+                }
+
+                const mediaCliente = lancamentosCliente > 0 ? parseFloat((somaCliente / lancamentosCliente).toFixed(1)) : 0;
+                row.push(somaCliente, mediaCliente);
+                rows.push(row);
+            });
+
+            const totalRow = ['TOTAL DIÁRIO'];
+            for (let d = 0; d < totalDias; d++) {
+                totalRow.push(totDia[d] > 0 ? totDia[d] : '');
+            }
+            const mediaGeral = totalLancamentos > 0 ? parseFloat((somaGeral / totalLancamentos).toFixed(1)) : 0;
+            totalRow.push(somaGeral, mediaGeral);
+            rows.push(totalRow);
+
+            return { rows, somaGeral };
+        }
+
+        window.pgBaixarExcel = function() {
+            if (typeof XLSX === 'undefined') {
+                mostrarToast("Biblioteca Excel ainda carregando...", "warning");
+                return;
+            }
+            const mes = parseInt(document.getElementById('pg-mes').value, 10);
+            const ano = parseInt(document.getElementById('pg-ano').value, 10);
+            const totalDias = pgGetDiasNoMes(mes, ano);
+            const dadosMes = pgObterDadosMesAtual();
+
+            const wb = XLSX.utils.book_new();
+
+            const prodData = pgMontarMatrizAbaExcel(dadosMes.producao, totalDias);
+            const wsProd = XLSX.utils.aoa_to_sheet(prodData.rows);
+            XLSX.utils.book_append_sheet(wb, wsProd, "Produção");
+
+            const chipData = pgMontarMatrizAbaExcel(dadosMes.chip, totalDias);
+            const wsChip = XLSX.utils.aoa_to_sheet(chipData.rows);
+            XLSX.utils.book_append_sheet(wb, wsChip, "Produção Chip");
+
+            const totalGeral = prodData.somaGeral + chipData.somaGeral;
+            const resumoRows = [
+                ["RESUMO DE PRODUÇÃO - " + pgMesesNomes[mes - 1] + "/" + ano],
+                [""],
+                ["Categoria", "Total de Produção (unid)"],
+                ["Produção", prodData.somaGeral],
+                ["Produção Chip", chipData.somaGeral],
+                ["TOTAL GERAL ACUMULADO", totalGeral]
+            ];
+            const wsResumo = XLSX.utils.aoa_to_sheet(resumoRows);
+            XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo Geral");
+
+            XLSX.writeFile(wb, `relatorio_producao_${pgMesesNomes[mes - 1]}_${ano}.xlsx`);
+        };
+
+        window.pgLimparMes = async function() {
+            if (!eAdministrador()) return;
+            if (confirm("Tem certeza que deseja limpar todos os lançamentos deste mês na aba atual?")) {
+                const dadosMes = pgObterDadosMesAtual();
+                (dadosMes[pgAbaAtiva] || []).forEach(c => c.diasObj = {});
+                pgSalvarDados();
+                await registrarLog(`Planilha Geral: Limpou lançamentos do mês atual (${pgAbaAtiva})`);
+                pgRender(true);
+                mostrarToast("Mês atual limpo com sucesso!", "success");
+            }
+        };
+
+        window.pgExportarBackup = function() {
+            if (!eAdministrador()) return;
+            const str = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(pgBancoDados));
+            const anchor = document.createElement('a');
+            anchor.setAttribute("href", str);
+            anchor.setAttribute("download", `backup_producao_completo_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+        };
+
+        window.pgImportarBackup = function(event) {
+            if (!eAdministrador()) return;
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    pgBancoDados = JSON.parse(e.target.result);
+                    pgSalvarDados();
+                    await registrarLog("Planilha Geral: Restaurou backup JSON completo");
+                    pgRender(true);
+                    mostrarToast("Backup completo restaurado e salvo no Firebase!", "success");
+                } catch (err) {
+                    mostrarToast("Erro ao ler arquivo de backup.", "error");
+                }
+            };
+            reader.readAsText(file);
+        };
     </script>
 </body>
 </html>
