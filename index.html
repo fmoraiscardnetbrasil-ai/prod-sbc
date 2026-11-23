@@ -1116,8 +1116,11 @@
 
                 <section class="panel-card">
                     <div class="panel-header space-between">
-                        <h3>📋 Histórico de Acessos da Portaria</h3>
-                        <span class="info-auxiliar">Consulte entradas, registe saídas rápidas e filtre por dia, mês e ano</span>
+                        <div>
+                            <h3>📋 Histórico de Acessos da Portaria</h3>
+                            <span class="info-auxiliar">Consulte entradas, registe saídas rápidas e filtre por dia, mês e ano</span>
+                        </div>
+                        <button type="button" onclick="gerarRelatorioPortariaPDF()" class="btn-primary" style="background-color: #0284c7; height: 38px; padding: 0 16px; font-size: 13px;">📄 Gerar Relatório PDF</button>
                     </div>
 
                     <div class="filtro-grid">
@@ -3016,6 +3019,217 @@
                     mostrarToast("Erro ao excluir registo.", "error");
                 }
             }
+        };
+
+        window.gerarRelatorioPortariaPDF = function() {
+            const anoSel = document.getElementById('portaria-filtro-ano').value;
+            const mesSel = document.getElementById('portaria-filtro-mes').value;
+            const diaSel = document.getElementById('portaria-filtro-dia').value;
+            const opSel = document.getElementById('portaria-filtro-operacao').value;
+            const movSel = document.getElementById('portaria-filtro-movimento').value;
+            const termoBusca = (document.getElementById('portaria-filtro-busca').value || "").toLowerCase();
+
+            const filtrados = listaGeralPortaria.filter(r => {
+                if (anoSel && r.ano !== anoSel) return false;
+                if (mesSel && r.mes !== mesSel) return false;
+                if (diaSel && r.dia !== diaSel) return false;
+                if (opSel && (r.operacao || 'Entrega') !== opSel) return false;
+                if (movSel) {
+                    if (movSel === 'Saída') {
+                        if (r.statusSaida !== 'Concluído' && r.tipoMovimento !== 'Saída') return false;
+                    } else if (movSel === 'Entrada') {
+                        if (r.tipoMovimento !== 'Entrada' || r.statusSaida === 'Concluído') return false;
+                    } else if (movSel === 'Agendado') {
+                        if (r.tipoMovimento !== 'Agendado' && r.statusSaida !== 'Agendado') return false;
+                    }
+                }
+
+                const listaPessoas = Array.isArray(r.pessoas) && r.pessoas.length > 0
+                    ? r.pessoas
+                    : [{ papel: '', nome: r.nome || '', documento: r.documento || '' }];
+
+                const matchPessoa = listaPessoas.some(p =>
+                    (p.nome || "").toLowerCase().includes(termoBusca) ||
+                    (p.documento || "").toLowerCase().includes(termoBusca)
+                );
+                const emp = (r.empresa || "").toLowerCase();
+                const placa = (r.placa || "").toLowerCase();
+
+                if (termoBusca && !matchPessoa && !emp.includes(termoBusca) && !placa.includes(termoBusca)) {
+                    return false;
+                }
+                return true;
+            });
+
+            filtrados.sort((a, b) => (b.dataHora || "").localeCompare(a.dataHora || ""));
+
+            if (filtrados.length === 0) {
+                mostrarToast("Nenhum registo encontrado nos filtros atuais para gerar o relatório.", "warning");
+                return;
+            }
+
+            let totalReg = filtrados.length;
+            let totalNaUnidade = 0;
+            let totalFinalizados = 0;
+            let totalAgendados = 0;
+
+            const linhasHTML = filtrados.map(r => {
+                let dataEntradaFmt = '-';
+                if (r.dataHora) {
+                    const dt = new Date(r.dataHora);
+                    if (!isNaN(dt)) dataEntradaFmt = `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()} ${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
+                }
+
+                let dataSaidaFmt = '-';
+                if (r.dataSaida) {
+                    const dtS = new Date(r.dataSaida);
+                    if (!isNaN(dtS)) dataSaidaFmt = `${String(dtS.getDate()).padStart(2, '0')}/${String(dtS.getMonth() + 1).padStart(2, '0')}/${dtS.getFullYear()} ${String(dtS.getHours()).padStart(2, '0')}:${String(dtS.getMinutes()).padStart(2, '0')}`;
+                }
+
+                let statusTexto = 'Agendado';
+                if (r.statusSaida === 'Concluído' || r.tipoMovimento === 'Saída') {
+                    statusTexto = 'Finalizado (Saída)';
+                    totalFinalizados++;
+                } else if (r.tipoMovimento === 'Entrada') {
+                    statusTexto = 'Na Unidade';
+                    totalNaUnidade++;
+                } else {
+                    totalAgendados++;
+                }
+
+                const transpTexto = r.tipoTransporte !== 'Pedestre'
+                    ? `${r.tipoTransporte || 'Veículo'} (${r.placa || '-'})`
+                    : 'Pedestre';
+
+                const pessoasTexto = Array.isArray(r.pessoas) && r.pessoas.length > 0
+                    ? r.pessoas.map(p => `${p.papel ? p.papel + ': ' : ''}${p.nome} (${p.documento || '-'})`).join('<br>')
+                    : `${r.nome || '-'} (${r.documento || '-'})`;
+
+                const obsGeral = [
+                    r.observacao && r.observacao !== '-' ? r.observacao : '',
+                    r.observacaoSaida && r.observacaoSaida !== '-' ? `Saída: ${r.observacaoSaida}` : ''
+                ].filter(Boolean).join(' | ') || '-';
+
+                return `
+                    <tr>
+                        <td>${dataEntradaFmt}</td>
+                        <td>${dataSaidaFmt}</td>
+                        <td><strong>${statusTexto}</strong></td>
+                        <td>${r.operacao || 'Entrega'}</td>
+                        <td>${transpTexto}</td>
+                        <td>${pessoasTexto}</td>
+                        <td>${r.empresa || '-'}</td>
+                        <td>${obsGeral}</td>
+                        <td>Ent: ${r.operador || '-'}<br>Saí: ${r.operadorSaida || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const agora = new Date();
+            const emissaoStr = `${String(agora.getDate()).padStart(2, '0')}/${String(agora.getMonth() + 1).padStart(2, '0')}/${agora.getFullYear()} às ${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
+
+            const filtrosAtivos = [];
+            if (diaSel) filtrosAtivos.push(`Dia: ${diaSel}`);
+            if (mesSel) filtrosAtivos.push(`Mês: ${mesSel}`);
+            if (anoSel) filtrosAtivos.push(`Ano: ${anoSel}`);
+            if (opSel) filtrosAtivos.push(`Operação: ${opSel}`);
+            if (movSel) filtrosAtivos.push(`Status: ${movSel}`);
+            if (termoBusca) filtrosAtivos.push(`Busca: "${termoBusca.toUpperCase()}"`);
+            const textoFiltros = filtrosAtivos.length > 0 ? filtrosAtivos.join(' | ') : 'Todos os registos (Sem filtro)';
+
+            registrarLog(`Gerou relatório PDF da Portaria (${totalReg} registos)`);
+
+            const win = window.open('', '_blank');
+            win.document.write(`
+                <!DOCTYPE html>
+                <html lang="pt-BR">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Relatório de Portaria - Cardnet</title>
+                    <style>
+                        @page { size: A4 landscape; margin: 12mm; }
+                        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+                        body { margin: 0; padding: 20px; color: #1e293b; background: #fff; font-size: 11px; }
+                        .no-print-bar {
+                            background: #1e293b; color: #fff; padding: 12px 20px; margin: -20px -20px 20px -20px;
+                            display: flex; justify-content: space-between; align-items: center;
+                        }
+                        .btn-print {
+                            background: #2563eb; color: #fff; border: none; padding: 8px 16px;
+                            border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;
+                        }
+                        .btn-print:hover { background: #1d4ed8; }
+                        .header {
+                            display: flex; justify-content: space-between; align-items: flex-end;
+                            border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 14px;
+                        }
+                        .header h1 { margin: 0; font-size: 18px; color: #0f172a; }
+                        .header p { margin: 3px 0 0 0; color: #475569; font-size: 11px; }
+                        .meta { text-align: right; font-size: 11px; color: #475569; }
+                        .resumo-grid {
+                            display: flex; gap: 12px; margin-bottom: 14px;
+                        }
+                        .resumo-box {
+                            flex: 1; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 12px; background: #f8fafc;
+                        }
+                        .resumo-box span { display: block; font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 700; }
+                        .resumo-box strong { font-size: 15px; color: #0f172a; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+                        th, td { border: 1px solid #cbd5e1; padding: 6px 7px; text-align: left; vertical-align: top; }
+                        th { background: #1e293b; color: #fff; font-size: 10px; text-transform: uppercase; }
+                        tr:nth-child(even) td { background: #f8fafc; }
+                        @media print {
+                            .no-print-bar { display: none !important; }
+                            body { padding: 0; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="no-print-bar">
+                        <span><strong>Pré-visualização do Relatório de Portaria</strong> — Clique no botão ao lado para salvar em PDF ou imprimir.</span>
+                        <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+                    </div>
+
+                    <div class="header">
+                        <div>
+                            <h1>💳 CARDNET — RELATÓRIO DE CONTROLE DE PORTARIA</h1>
+                            <p><strong>Filtros aplicados:</strong> ${textoFiltros}</p>
+                        </div>
+                        <div class="meta">
+                            <div><strong>Emitido em:</strong> ${emissaoStr}</div>
+                            <div><strong>Operador:</strong> ${operadorAtual || 'Sistema'}</div>
+                        </div>
+                    </div>
+
+                    <div class="resumo-grid">
+                        <div class="resumo-box"><span>Total de Registos</span><strong>${totalReg}</strong></div>
+                        <div class="resumo-box"><span>Na Unidade (Em Aberto)</span><strong>${totalNaUnidade}</strong></div>
+                        <div class="resumo-box"><span>Finalizados (Com Saída)</span><strong>${totalFinalizados}</strong></div>
+                        <div class="resumo-box"><span>Agendados</span><strong>${totalAgendados}</strong></div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">Entrada</th>
+                                <th style="width: 10%;">Saída</th>
+                                <th style="width: 10%;">Status</th>
+                                <th style="width: 8%;">Operação</th>
+                                <th style="width: 12%;">Transporte / Placa</th>
+                                <th style="width: 18%;">Pessoas / Documentos</th>
+                                <th style="width: 11%;">Empresa</th>
+                                <th style="width: 12%;">Observações</th>
+                                <th style="width: 9%;">Operadores</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${linhasHTML}
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `);
+            win.document.close();
         };
 
         // RENDERIZAÇÃO DE PENDENTES NA EXPEDIÇÃO
