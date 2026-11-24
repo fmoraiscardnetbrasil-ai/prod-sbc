@@ -1006,6 +1006,10 @@
                                 <option value="atrasado">🔴 Atrasados</option>
                             </select>
                         </div>
+                        <div class="input-grupo" style="grid-column: span 2;">
+                            <label for="filtro-busca-producao">Pesquisa Rápida (Ficheiro / OS / Operador)</label>
+                            <input type="text" id="filtro-busca-producao" placeholder="Digite o número da OS, nome do ficheiro ou operador..." oninput="renderizarTabelaProducao()">
+                        </div>
                     </div>
 
                     <div class="table-responsive">
@@ -1320,13 +1324,14 @@
                         <div class="input-grupo"><label for="filtro-dia">Dia</label><select id="filtro-dia" onchange="carregarHistorico()"><option value="">Todos os Dias</option></select></div>
                         <div class="input-grupo"><label for="filtro-prazo">Status do Prazo</label><select id="filtro-prazo" onchange="carregarHistorico()"><option value="">Todos os Status</option><option value="no-prazo">No Prazo</option><option value="atrasado">Atrasado</option></select></div>
                         <div class="input-grupo"><label for="filtro-operador">Operador Finalizador</label><select id="filtro-operador" onchange="carregarHistorico()"><option value="">Todos os Operadores</option></select></div>
+                        <div class="input-grupo" style="grid-column: span 2;"><label for="filtro-busca-historico">Pesquisa Rápida (Ficheiro / OS / Tipo Coleta)</label><input type="text" id="filtro-busca-historico" placeholder="Digite o ficheiro, OS, transportadora, correio ou motoboy..." oninput="carregarHistorico()"></div>
                     </div>
                     <div class="table-responsive">
                         <table class="styled-table">
                             <thead>
-                                <tr><th>Data Conclusão</th><th>Ficheiro</th><th>Qtd</th><th>Gravação Embedding</th><th>IDV</th><th>Manuseio</th><th>Situação</th><th id="th-acoes-historico" style="display: none;">Ações / Reabertura</th></tr>
+                                <tr><th>Data Conclusão</th><th>Ficheiro</th><th>Qtd</th><th>Gravação Embedding</th><th>IDV</th><th>Manuseio</th><th>Expedição (Coleta)</th><th>Situação</th><th id="th-acoes-historico" style="display: none;">Ações / Reabertura</th></tr>
                             </thead>
-                            <tbody id="tabela-historico"><tr><td colspan="8" class="text-center">Aguarde...</td></tr></tbody>
+                            <tbody id="tabela-historico"><tr><td colspan="9" class="text-center">Aguarde...</td></tr></tbody>
                         </table>
                     </div>
                 </section>
@@ -1381,13 +1386,14 @@
                         <div class="input-grupo"><label for="rel-filtro-dia">Dia</label><select id="rel-filtro-dia" onchange="carregarRelatorios()"><option value="">Todos os Dias</option></select></div>
                         <div class="input-grupo"><label for="rel-filtro-prazo">Status do Prazo</label><select id="rel-filtro-prazo" onchange="carregarRelatorios()"><option value="">Todos os Status</option><option value="no-prazo">No Prazo</option><option value="atrasado">Atrasado</option></select></div>
                         <div class="input-grupo"><label for="rel-filtro-operador">Operador Responsável</label><select id="rel-filtro-operador" onchange="carregarRelatorios()"><option value="">Todos os Operadores</option></select></div>
+                        <div class="input-grupo" style="grid-column: span 2;"><label for="rel-filtro-busca">Pesquisa Rápida (Ficheiro / OS / Justificativa / Coleta)</label><input type="text" id="rel-filtro-busca" placeholder="Digite o ficheiro, OS, transportadora, correio, motoboy..." oninput="carregarRelatorios()"></div>
                     </div>
                     <div class="table-responsive">
                         <table class="styled-table">
                             <thead>
-                                <tr><th>Data Conclusão</th><th>Nome do Ficheiro / OS</th><th>Qtd Cartões</th><th>Gravação Embedding</th><th>IDV</th><th>Manuseio</th><th>Status do Prazo</th><th>Tipo Envio</th><th>Justificativa (Apenas Atrasos)</th></tr>
+                                <tr><th>Data Conclusão</th><th>Nome do Ficheiro / OS</th><th>Qtd Cartões</th><th>Gravação Embedding</th><th>IDV</th><th>Manuseio</th><th>Expedição (Coleta)</th><th>Status do Prazo</th><th>Tipo Envio</th><th>Justificativa (Apenas Atrasos)</th></tr>
                             </thead>
-                            <tbody id="tabela-relatorio-detalhado"><tr><td colspan="9" class="text-center">Carregando dados...</td></tr></tbody>
+                            <tbody id="tabela-relatorio-detalhado"><tr><td colspan="10" class="text-center">Carregando dados...</td></tr></tbody>
                         </table>
                     </div>
                 </section>
@@ -3963,7 +3969,10 @@
                     if (sec === 'expedicao' && st === "Concluído") st = "Coletado";
                     resultado[sec] = { status: st, op: null, data: null };
                 } else if (setores[sec]) {
-                    resultado[sec] = setores[sec];
+                    resultado[sec] = { ...setores[sec] };
+                    if (sec === 'expedicao' && resultado[sec].status === "Concluído") {
+                        resultado[sec].status = "Coletado";
+                    }
                 } else {
                     resultado[sec] = { status: "Pendente", op: null, data: null };
                 }
@@ -3979,6 +3988,7 @@
 
             const filtroPrazoSelect = document.getElementById('filtro-status-prazo');
             const filtroPrazoValor = filtroPrazoSelect ? filtroPrazoSelect.value : "";
+            const termoBuscaProd = (document.getElementById('filtro-busca-producao')?.value || "").trim().toLowerCase();
 
             ativos.sort((a, b) => {
                 if (a.dataPrevista !== b.dataPrevista) return a.dataPrevista.localeCompare(b.dataPrevista);
@@ -4005,16 +4015,28 @@
             });
 
             const ativosFiltrados = ativos.filter(lote => {
-                if (!filtroPrazoValor) return true;
+                if (filtroPrazoValor) {
+                    const diasAtraso = calcularDiasAtraso(lote.dataPrevista, hojeStr);
+                    const ehHoje = (lote.dataPrevista === hojeStr);
 
-                const diasAtraso = calcularDiasAtraso(lote.dataPrevista, hojeStr);
-                const ehHoje = (lote.dataPrevista === hojeStr);
+                    const batePrazo =
+                        (filtroPrazoValor === "no-prazo" && diasAtraso === 0 && !ehHoje) ||
+                        (filtroPrazoValor === "vence-breve" && ehHoje) ||
+                        (filtroPrazoValor === "atrasado" && diasAtraso > 0);
+                    if (!batePrazo) return false;
+                }
 
-                if (filtroPrazoValor === "no-prazo" && diasAtraso === 0 && !ehHoje) return true;
-                if (filtroPrazoValor === "vence-breve" && ehHoje) return true;
-                if (filtroPrazoValor === "atrasado" && diasAtraso > 0) return true;
+                if (termoBuscaProd) {
+                    const textoPesquisaProd = [
+                        lote.nome || "",
+                        lote.operador || "",
+                        lote.dataPrevista ? lote.dataPrevista.split('-').reverse().join('/') : "",
+                        String(lote.qtd || "")
+                    ].join(" ").toLowerCase();
+                    if (!textoPesquisaProd.includes(termoBuscaProd)) return false;
+                }
 
-                return false;
+                return true;
             });
 
             if (ativosFiltrados.length === 0) {
@@ -4240,6 +4262,75 @@
             montarSelect('filtro-dia', diasSet, "Todos os Dias");
         };
 
+        window.formatarCelulaExpedicaoLote = function(l) {
+            const exp = (l.setores && l.setores.expedicao) ? l.setores.expedicao : { status: "Pendente", data: null, tipoColeta: "" };
+            const dataVal = exp.data ? exp.data.split('T')[0] : "";
+            const coletado = Boolean(dataVal) || exp.status === "Coletado" || exp.status === "Concluído";
+            const tipoVal = exp.tipoColeta || "";
+            const podeEditar = operadorAtual !== "";
+            const disabledAttr = podeEditar ? "" : "disabled title='Faça login para editar'";
+
+            const indicadorStatus = coletado
+                ? `<span class="badge-no-prazo" style="font-size: 11px; padding: 3px 8px;">✅ Coletado</span>`
+                : `<span class="badge-vence-breve" style="font-size: 11px; padding: 3px 8px;">⏳ Pendente</span>`;
+
+            return `
+                <div style="display: flex; flex-direction: column; gap: 6px; min-width: 175px;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <input type="date" value="${dataVal}" onchange="atualizarExpedicaoLote('${l.id}', 'data', this.value)" onclick="this.showPicker && this.showPicker()" ${disabledAttr} style="flex: 1; padding: 4px 6px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--input-text); font-size: 11px;" title="Data da coleta">
+                        ${indicadorStatus}
+                    </div>
+                    <div>
+                        <select onchange="atualizarExpedicaoLote('${l.id}', 'tipoColeta', this.value)" ${disabledAttr} style="width: 100%; padding: 4px 6px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--input-text); font-size: 11px; font-weight: 600;">
+                            <option value="" ${tipoVal === '' ? 'selected' : ''}>Tipo de coleta...</option>
+                            <option value="Transportadora" ${tipoVal === 'Transportadora' ? 'selected' : ''}>🚛 Transportadora</option>
+                            <option value="Correio" ${tipoVal === 'Correio' ? 'selected' : ''}>📮 Correio</option>
+                            <option value="Motoboy" ${tipoVal === 'Motoboy' ? 'selected' : ''}>🏍️ Motoboy</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+        };
+
+        window.atualizarExpedicaoLote = async function(loteId, campo, valor) {
+            if (!operadorAtual) {
+                mostrarToast("Faça login para atualizar a expedição!", "warning");
+                carregarHistorico();
+                carregarRelatorios();
+                return;
+            }
+            const lote = listaGeralLotes.find(l => l.id === loteId);
+            if (!lote) return;
+
+            try {
+                const novosSetores = { ...lote.setores };
+                const atualExp = { ...(novosSetores.expedicao || { status: "Pendente", op: null, data: null, tipoColeta: "" }) };
+
+                if (campo === 'data') {
+                    atualExp.data = valor || null;
+                    atualExp.status = valor ? "Coletado" : "Pendente";
+                } else if (campo === 'tipoColeta') {
+                    atualExp.tipoColeta = valor;
+                    if (valor && !atualExp.data) {
+                        atualExp.data = new Date().toISOString().split('T')[0];
+                        atualExp.status = "Coletado";
+                    } else {
+                        atualExp.status = atualExp.data ? "Coletado" : "Pendente";
+                    }
+                }
+
+                atualExp.op = operadorAtual;
+                novosSetores.expedicao = atualExp;
+
+                await updateDoc(doc(db, "lotes", loteId), { setores: novosSetores });
+                await registrarLog(`Expedição (Concluídos): Atualizou ${campo} do lote "${lote.nome}" (${atualExp.status}${atualExp.tipoColeta ? ' - ' + atualExp.tipoColeta : ''})`);
+                mostrarToast("Expedição atualizada com sucesso!", "success");
+            } catch (e) {
+                console.error(e);
+                mostrarToast("Erro ao atualizar dados de expedição.", "error");
+            }
+        };
+
         window.carregarHistorico = function() {
             const tbody = document.getElementById('tabela-historico');
             const anoSel = document.getElementById('filtro-ano').value;
@@ -4247,7 +4338,8 @@
             const diaSel = document.getElementById('filtro-dia').value;
             const prazoSel = document.getElementById('filtro-prazo').value;
             const opSel = document.getElementById('filtro-operador').value;
-            const colVis = eAdministrador() ? 8 : 7;
+            const termoBusca = (document.getElementById('filtro-busca-historico')?.value || "").trim().toLowerCase();
+            const colVis = eAdministrador() ? 9 : 8;
 
             tbody.innerHTML = "";
             let finalizados = listaGeralLotes.filter(l => {
@@ -4262,6 +4354,18 @@
                 const diasAtraso = calcularDiasAtraso(l.dataPrevista, dataConcStr);
                 const statusPrazo = diasAtraso > 0 ? "atrasado" : "no-prazo";
                 if (prazoSel && statusPrazo !== prazoSel) return false;
+
+                if (termoBusca) {
+                    const exp = (l.setores && l.setores.expedicao) ? l.setores.expedicao : {};
+                    const textoPesquisa = [
+                        l.nome || "",
+                        l.operador || "",
+                        exp.status || "",
+                        exp.tipoColeta || "",
+                        exp.data ? exp.data.split('T')[0].split('-').reverse().join('/') : ""
+                    ].join(" ").toLowerCase();
+                    if (!textoPesquisa.includes(termoBusca)) return false;
+                }
                 return true;
             });
 
@@ -4291,6 +4395,7 @@
                     <td>${formatarInfoSetorRelatorio(l.setores.gravacao, l.dataPrevista, dataConcStr)}</td>
                     <td>${formatarInfoSetorRelatorio(l.setores.idv, l.dataPrevista, dataConcStr)}</td>
                     <td>${formatarInfoSetorRelatorio(l.setores.manuseio, l.dataPrevista, dataConcStr)}</td>
+                    <td>${formatarCelulaExpedicaoLote(l)}</td>
                     <td>${sitHTML}</td>${celAcao}
                 `;
                 tbody.appendChild(tr);
@@ -4363,6 +4468,7 @@
             const diaSel = document.getElementById('rel-filtro-dia').value;
             const prazoSel = document.getElementById('rel-filtro-prazo').value;
             const opSel = document.getElementById('rel-filtro-operador').value;
+            const termoBuscaRel = (document.getElementById('rel-filtro-busca')?.value || "").trim().toLowerCase();
 
             let finalizados = listaGeralLotes.filter(l => {
                 if (l.status !== "Finalizado" || !l.dataConclusao) return false;
@@ -4376,6 +4482,19 @@
                 const diasAtraso = calcularDiasAtraso(l.dataPrevista, dataConcStr);
                 const statusPrazo = diasAtraso > 0 ? "atrasado" : "no-prazo";
                 if (prazoSel && statusPrazo !== prazoSel) return false;
+
+                if (termoBuscaRel) {
+                    const exp = (l.setores && l.setores.expedicao) ? l.setores.expedicao : {};
+                    const textoPesquisaRel = [
+                        l.nome || "",
+                        l.operador || "",
+                        l.justificativa || "",
+                        exp.status || "",
+                        exp.tipoColeta || "",
+                        exp.data ? exp.data.split('T')[0].split('-').reverse().join('/') : ""
+                    ].join(" ").toLowerCase();
+                    if (!textoPesquisaRel.includes(termoBuscaRel)) return false;
+                }
                 return true;
             });
 
@@ -4416,7 +4535,7 @@
             const tbodyDet = document.getElementById('tabela-relatorio-detalhado');
             tbodyDet.innerHTML = "";
             if (finalizados.length === 0) {
-                tbodyDet.innerHTML = `<tr><td colspan="9" class="text-center">Nenhum registo encontrado.</td></tr>`;
+                tbodyDet.innerHTML = `<tr><td colspan="10" class="text-center">Nenhum registo encontrado.</td></tr>`;
                 return;
             }
 
@@ -4443,6 +4562,7 @@
                     <td>${formatarInfoSetorRelatorio(l.setores.gravacao, l.dataPrevista, dataConcStr)}</td>
                     <td>${formatarInfoSetorRelatorio(l.setores.idv, l.dataPrevista, dataConcStr)}</td>
                     <td>${formatarInfoSetorRelatorio(l.setores.manuseio, l.dataPrevista, dataConcStr)}</td>
+                    <td>${formatarCelulaExpedicaoLote(l)}</td>
                     <td>${sitHTML}</td><td>${tipoEnvio}</td>
                     <td>${campoJustificativa}</td>
                 `;
