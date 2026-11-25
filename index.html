@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cardnet - Sistema de Produção por Setor</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg-body: #f4f7f6;
@@ -1092,6 +1092,8 @@
                                             <option value="Motorista">🚛 Motorista</option>
                                             <option value="Ajudante">👷 Ajudante</option>
                                             <option value="Visitante">🚶 Visitante</option>
+											<option value="Representante">🚶 Representante</option>
+											<option value="Prestador de Serviços">🚶 Prestador de Serviços</option>
                                         </select>
                                     </div>
                                     <div class="input-grupo">
@@ -1659,8 +1661,8 @@
     <!-- JS & FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getDatabase, ref as rtdbRef, onValue as rtdbOnValue, set as rtdbSet } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, limit, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getDatabase, ref as rtdbRef, onValue as rtdbOnValue, set as rtdbSet, update as rtdbUpdate } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         // Força letras maiúsculas em tempo real em todos os campos de texto e textarea (exceto senhas)
         document.addEventListener('input', function(e) {
@@ -1692,6 +1694,15 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        // Ativa cache offline local para abertura instantânea e tolerância a oscilações de rede
+        enableIndexedDbPersistence(db).catch((err) => {
+            if (err.code === 'failed-precondition') {
+                console.warn("Cache offline indisponível: múltiplas abas abertas.");
+            } else if (err.code === 'unimplemented') {
+                console.warn("Navegador não suporta persistência offline.");
+            }
+        });
 
         // Segundo Banco de Dados (Firebase Realtime Database - Planilha de Produção Geral)
         const firebaseConfigPlanilha = {
@@ -1729,6 +1740,8 @@
         let unsubscribeLogs = null;
         let unsubscribePortaria = null;
         let unsubscribeOperadores = null;
+        let planilhaGeralIniciada = false;
+        let sistemaPosLoginIniciado = false;
 
         function mostrarToast(mensagem, tipo = 'success') {
             const container = document.getElementById('toast-container');
@@ -1896,7 +1909,24 @@
             } catch (e) { console.error("Erro ao inicializar operadores padrão:", e); }
         }
 
-        window.onload = async function() {
+        function iniciarListenersEssenciaisPosLogin() {
+            if (sistemaPosLoginIniciado) return;
+            sistemaPosLoginIniciado = true;
+
+            // 1. Carrega primeiro apenas o essencial para a tela inicial (Produção, Avisos e Aniversariantes)
+            escutarLotesEmTempoReal();
+            escutarAvisosEmTempoReal();
+            escutarOperadoresEmTempoReal();
+
+            // 2. Carrega módulos secundários e a Planilha Geral (prodcardnet) em segundo plano sem travar a entrada
+            setTimeout(() => {
+                escutarNotasEmTempoReal();
+                escutarRejeitosEmTempoReal();
+                iniciarEscutaPlanilhaGeral();
+            }, 1500);
+        }
+
+        window.onload = function() {
             const temaSalvo = localStorage.getItem("cardnet_tema");
             const btnTema = document.getElementById("btn-alternar-tema");
             if (temaSalvo === "light") {
@@ -1907,8 +1937,10 @@
                 btnTema.innerText = "🌙";
             }
 
-            await verificarInicializacaoOperadores();
+            // Libera o modal de login imediatamente sem bloquear na rede
             document.getElementById("modal-login").style.display = "flex";
+            const inputOp = document.getElementById("input-operador-login");
+            if (inputOp) inputOp.focus();
             
             const inputDataRejeito = document.getElementById("rejeito-data");
             if (inputDataRejeito) inputDataRejeito.value = new Date().toISOString().split('T')[0];
@@ -1921,18 +1953,10 @@
             }
 
             alternarExigenciaPlaca();
-
-            escutarLotesEmTempoReal();
-            escutarRejeitosEmTempoReal();
-            escutarAvisosEmTempoReal();
-            escutarNotasEmTempoReal();
-            escutarLogsEmTempoReal();
-            escutarPortariaEmTempoReal();
-            escutarOperadoresEmTempoReal();
         };
 
         function escutarLotesEmTempoReal() {
-            if (unsubscribeLotes) unsubscribeLotes();
+            if (unsubscribeLotes) return;
             unsubscribeLotes = onSnapshot(collection(db, "lotes"), (querySnapshot) => {
                 listaGeralLotes = [];
                 querySnapshot.forEach((docSnap) => {
@@ -1952,7 +1976,7 @@
         }
 
         function escutarRejeitosEmTempoReal() {
-            if (unsubscribeRejeitos) unsubscribeRejeitos();
+            if (unsubscribeRejeitos) return;
             unsubscribeRejeitos = onSnapshot(collection(db, "rejeitos"), (querySnapshot) => {
                 listaGeralRejeitos = [];
                 querySnapshot.forEach((docSnap) => {
@@ -1970,7 +1994,7 @@
         }
 
         function escutarAvisosEmTempoReal() {
-            if (unsubscribeAvisos) unsubscribeAvisos();
+            if (unsubscribeAvisos) return;
             unsubscribeAvisos = onSnapshot(collection(db, "avisos"), (querySnapshot) => {
                 listaGeralAvisos = [];
                 querySnapshot.forEach((docSnap) => {
@@ -1983,8 +2007,9 @@
         }
 
         function escutarLogsEmTempoReal() {
-            if (unsubscribeLogs) unsubscribeLogs();
-            unsubscribeLogs = onSnapshot(collection(db, "logs_sistema"), (querySnapshot) => {
+            if (unsubscribeLogs) return; // Já inscrito
+            const qLogs = query(collection(db, "logs_sistema"), orderBy("dataHora", "desc"), limit(300));
+            unsubscribeLogs = onSnapshot(qLogs, (querySnapshot) => {
                 listaGeralLogs = [];
                 querySnapshot.forEach((docSnap) => {
                     const lg = docSnap.data();
@@ -2009,8 +2034,9 @@
         }
 
         function escutarPortariaEmTempoReal() {
-            if (unsubscribePortaria) unsubscribePortaria();
-            unsubscribePortaria = onSnapshot(collection(db, "portaria"), (querySnapshot) => {
+            if (unsubscribePortaria) return; // Já inscrito
+            const qPortaria = query(collection(db, "portaria"), orderBy("dataCadastro", "desc"), limit(400));
+            unsubscribePortaria = onSnapshot(qPortaria, (querySnapshot) => {
                 listaGeralPortaria = [];
                 querySnapshot.forEach((docSnap) => {
                     const reg = docSnap.data();
@@ -2118,7 +2144,7 @@
         }
 
         function escutarNotasEmTempoReal() {
-            if (unsubscribeNotas) unsubscribeNotas();
+            if (unsubscribeNotas) return;
             unsubscribeNotas = onSnapshot(collection(db, "solicitacoes_notas"), (querySnapshot) => {
                 listaGeralNotas = [];
                 querySnapshot.forEach((docSnap) => {
@@ -2186,7 +2212,7 @@
         }
 
         function escutarOperadoresEmTempoReal() {
-            if (unsubscribeOperadores) unsubscribeOperadores();
+            if (unsubscribeOperadores) return;
             unsubscribeOperadores = onSnapshot(collection(db, "operadores"), (querySnapshot) => {
                 listaGeralOperadoresCache = [];
                 querySnapshot.forEach(docSnap => {
@@ -2249,6 +2275,7 @@
         window.fazerLogin = async function() {
             const nomeInput = document.getElementById("input-operador-login");
             const senhaInput = document.getElementById("input-senha-login");
+            const btnLogin = document.querySelector("#modal-login .btn-primary");
             const nomeOriginal = nomeInput.value.trim();
             const nome = nomeOriginal.toUpperCase();
             const senha = senhaInput.value;
@@ -2258,6 +2285,11 @@
                 return; 
             }
 
+            if (btnLogin) {
+                btnLogin.disabled = true;
+                btnLogin.innerText = "Conectando...";
+            }
+
             try {
                 let docRef = doc(db, "operadores", nome);
                 let docSnap = await getDoc(docRef);
@@ -2265,6 +2297,13 @@
                 if (!docSnap.exists() && nomeOriginal.length > 0) {
                     const nomeFormatado = nomeOriginal.charAt(0).toUpperCase() + nomeOriginal.slice(1).toLowerCase();
                     docRef = doc(db, "operadores", nomeFormatado);
+                    docSnap = await getDoc(docRef);
+                }
+
+                // Se for o primeiro acesso absoluto e ainda não existirem operadores padrão no banco, inicializa agora
+                if (!docSnap.exists() && ["FLÁVIO", "FLAVIO", "ANDRÉ", "ANDRE", "LEANDRO"].includes(nome)) {
+                    await verificarInicializacaoOperadores();
+                    docRef = doc(db, "operadores", nome);
                     docSnap = await getDoc(docRef);
                 }
 
@@ -2287,7 +2326,11 @@
                 document.getElementById("modal-login").style.display = "none";
                 document.getElementById("display-usuario").innerText = "👤 Operador: " + operadorAtual;
                 
-                await registrarLog("Efetuou login no sistema");
+                // Inicia os listeners em tempo real somente após autenticar com sucesso
+                iniciarListenersEssenciaisPosLogin();
+
+                // Registra log sem travar a abertura da tela
+                registrarLog("Efetuou login no sistema");
                 atualizarVisibilidadeUI();
                 mostrarToast(`Bem-vindo, ${operadorAtual}!`, "success");
                 
@@ -2309,7 +2352,12 @@
                 senhaInput.value = "";
             } catch (error) {
                 console.error("Erro no login:", error);
-                mostrarToast("Erro ao conectar ao servidor. Verifique o console.", "error");
+                mostrarToast("Erro ao conectar ao servidor. Verifique sua conexão e tente novamente.", "error");
+            } finally {
+                if (btnLogin) {
+                    btnLogin.disabled = false;
+                    btnLogin.innerText = "Entrar no Sistema";
+                }
             }
         };
 
@@ -2431,13 +2479,16 @@
             if (abaId === 'producao') {
                 renderizarTabelaProducao();
             } else if (abaId === 'portaria') {
+                escutarPortariaEmTempoReal();
                 alternarExigenciaPlaca();
                 atualizarFiltrosPortariaDinamicos();
                 atualizarDiasPortariaFiltro();
                 carregarPortaria();
             } else if (abaId === 'planilha-geral') {
+                iniciarEscutaPlanilhaGeral();
                 pgRender(true);
             } else if (abaId === 'expedicao') {
+                escutarNotasEmTempoReal();
                 renderizarTabelaExpedicaoPendentes();
                 atualizarFiltrosExpedicaoDinamicos();
                 atualizarDiasExpedicaoFiltro();
@@ -2447,14 +2498,17 @@
                 atualizarDiasFiltro();
                 carregarHistorico();
             } else if (abaId === 'relatorios') {
+                escutarRejeitosEmTempoReal();
                 atualizarFiltrosRelatorios();
                 atualizarDiasRelatorio();
                 carregarRelatorios();
             } else if (abaId === 'rejeitos') {
+                escutarRejeitosEmTempoReal();
                 atualizarFiltrosRejeitoDinamicos();
                 atualizarDiasRejeitoFiltro();
                 carregarRejeitos();
             } else if (abaId === 'solicitacao-notas') {
+                escutarNotasEmTempoReal();
                 atualizarFiltrosNotaDinamicos();
                 atualizarDiasNotaFiltro();
                 carregarSolicitacoesNotas();
@@ -2464,6 +2518,7 @@
                 renderizarTabelaUsuarios(querySnapshot);
             } else if (abaId === 'logs') {
                 if (!eAdministrador()) { mostrarToast("Acesso restrito a administradores.", "error"); return; }
+                escutarLogsEmTempoReal();
                 atualizarFiltrosLogDinamicos();
                 atualizarDiasLogFiltro();
                 carregarLogsSistema();
@@ -2539,6 +2594,8 @@
                             <option value="Motorista">🚛 Motorista</option>
                             <option value="Ajudante">👷 Ajudante</option>
                             <option value="Visitante">🚶 Visitante</option>
+							<option value="Representante">🚶 Representante</option>
+							<option value="Prestador de Serviços">🚶 Prestador de Serviços</option>
                         </select>
                     </div>
                     <div class="input-grupo">
@@ -2721,6 +2778,8 @@
                     <option value="Motorista" ${papel === 'Motorista' ? 'selected' : ''}>🚛 Motorista</option>
                     <option value="Ajudante" ${papel === 'Ajudante' ? 'selected' : ''}>👷 Ajudante</option>
                     <option value="Visitante" ${papel === 'Visitante' ? 'selected' : ''}>🚶 Visitante</option>
+					<option value="Representante" ${papel === 'Representante' ? 'selected' : ''}>🚶 Representante</option>
+					<option value="Prestador de Serviços" ${papel === 'Prestador de Serviços' ? 'selected' : ''}>🚶 Prestador de Serviços</option>
                 </select>
                 <input type="text" class="edit-pessoa-nome" value="${nome.replace(/"/g, '&quot;')}" placeholder="Nome completo" style="padding: 8px; font-size: 13px;" required>
                 <input type="text" class="edit-pessoa-doc" value="${(docVal && docVal !== '-') ? docVal.replace(/"/g, '&quot;') : ''}" placeholder="Doc (RG/CPF)" style="padding: 8px; font-size: 13px;">
@@ -4286,8 +4345,8 @@
                             <option value="Transportadora" ${tipoVal === 'Transportadora' ? 'selected' : ''}>🚛 Transportadora</option>
                             <option value="Correio" ${tipoVal === 'Correio' ? 'selected' : ''}>📮 Correio</option>
                             <option value="Motoboy" ${tipoVal === 'Motoboy' ? 'selected' : ''}>🏍️ Motoboy</option>
-                            <option value="Motoboy" ${tipoVal === 'Motoboy' ? 'selected' : ''}>📮 Cardnet</option>
-                        </selectCardnet
+                            <option value="Cardnet" ${tipoVal === 'Cardnet' ? 'selected' : ''}>📮 Cardnet</option>
+                        </select>
                     </div>
                 </div>
             `;
@@ -4765,8 +4824,11 @@
         }
 
         function iniciarEscutaPlanilhaGeral() {
+            if (planilhaGeralIniciada) return;
+            planilhaGeralIniciada = true;
             const refDados = rtdbRef(dbPlanilha, 'producao_dados');
             rtdbOnValue(refDados, (snapshot) => {
+                pgDadosCarregadosDoServidor = true;
                 const data = snapshot.val();
                 if (data) {
                     pgBancoDados = data;
@@ -4802,7 +4864,6 @@
             });
         }
 
-        iniciarEscutaPlanilhaGeral();
 
         function pgSalvarDados() {
             if (!eAdministrador()) return;
@@ -4812,6 +4873,8 @@
         function pgGetDiasNoMes(mes, ano) {
             return new Date(ano, mes, 0).getDate();
         }
+
+        let pgDadosCarregadosDoServidor = false;
 
         function pgObterDadosMesAtual() {
             const mes = document.getElementById('pg-mes').value;
@@ -4823,7 +4886,7 @@
                     producao: PG_CLIENTES_PADRAO.producao.map(nome => ({ nome, diasObj: {} })),
                     chip: PG_CLIENTES_PADRAO.chip.map(nome => ({ nome, diasObj: {} }))
                 };
-                if (eAdministrador()) pgSalvarDados();
+                if (eAdministrador() && pgDadosCarregadosDoServidor) pgSalvarDados();
             }
 
             ['producao', 'chip'].forEach(cat => {
@@ -4986,19 +5049,33 @@
 
         window.pgAtualizarValor = function(clienteIdx, dia, valor) {
             if (!eAdministrador()) return;
+            const mes = document.getElementById('pg-mes').value;
+            const ano = document.getElementById('pg-ano').value;
+            const chave = `${ano}_${mes}`;
             const busca = (document.getElementById('pg-busca').value || "").toLowerCase();
             const dadosMes = pgObterDadosMesAtual();
             const listaFiltrada = (dadosMes[pgAbaAtiva] || []).filter(item => item.nome.toLowerCase().includes(busca));
             const clienteReal = listaFiltrada[clienteIdx];
 
             if (clienteReal) {
+                const indiceReal = (dadosMes[pgAbaAtiva] || []).indexOf(clienteReal);
                 if (!clienteReal.diasObj) clienteReal.diasObj = {};
-                if (valor === '' || valor === null || valor === undefined) {
+                const valorNumerico = (valor === '' || valor === null || valor === undefined) ? null : parseFloat(valor);
+
+                if (valorNumerico === null) {
                     delete clienteReal.diasObj[`d${dia}`];
                 } else {
-                    clienteReal.diasObj[`d${dia}`] = parseFloat(valor);
+                    clienteReal.diasObj[`d${dia}`] = valorNumerico;
                 }
-                pgSalvarDados();
+
+                if (indiceReal >= 0) {
+                    rtdbUpdate(rtdbRef(dbPlanilha, `producao_dados/${chave}/${pgAbaAtiva}/${indiceReal}/diasObj`), {
+                        [`d${dia}`]: valorNumerico
+                    });
+                } else {
+                    pgSalvarDados();
+                }
+
                 pgRecalcularTotaisSemRedesenhar();
                 mostrarToast("Salvo na planilha!", "success");
             }
