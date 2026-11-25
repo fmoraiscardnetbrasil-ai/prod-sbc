@@ -1386,7 +1386,7 @@
                         <div class="input-grupo"><label for="rel-filtro-dia">Dia</label><select id="rel-filtro-dia" onchange="carregarRelatorios()"><option value="">Todos os Dias</option></select></div>
                         <div class="input-grupo"><label for="rel-filtro-prazo">Status do Prazo</label><select id="rel-filtro-prazo" onchange="carregarRelatorios()"><option value="">Todos os Status</option><option value="no-prazo">No Prazo</option><option value="atrasado">Atrasado</option></select></div>
                         <div class="input-grupo"><label for="rel-filtro-operador">Operador Responsável</label><select id="rel-filtro-operador" onchange="carregarRelatorios()"><option value="">Todos os Operadores</option></select></div>
-                        <div class="input-grupo" style="grid-column: span 2;"><label for="rel-filtro-busca">Pesquisa Rápida (Ficheiro / OS / Justificativa / Coleta)</label><input type="text" id="rel-filtro-busca" placeholder="Digite o ficheiro, OS, transportadora, correio, motoboy..." oninput="carregarRelatorios()"></div>
+                        <div class="input-grupo" style="grid-column: span 2;"><label for="rel-filtro-busca">Pesquisa Rápida (Ficheiro / OS / Justificativa / Coleta)</label><input type="text" id="rel-filtro-busca" placeholder="Digite o ficheiro, OS, transportadora, correio, motoboy ,cardnet..." oninput="carregarRelatorios()"></div>
                     </div>
                     <div class="table-responsive">
                         <table class="styled-table">
@@ -4286,7 +4286,8 @@
                             <option value="Transportadora" ${tipoVal === 'Transportadora' ? 'selected' : ''}>🚛 Transportadora</option>
                             <option value="Correio" ${tipoVal === 'Correio' ? 'selected' : ''}>📮 Correio</option>
                             <option value="Motoboy" ${tipoVal === 'Motoboy' ? 'selected' : ''}>🏍️ Motoboy</option>
-                        </select>
+                            <option value="Motoboy" ${tipoVal === 'Motoboy' ? 'selected' : ''}>📮 Cardnet</option>
+                        </selectCardnet
                     </div>
                 </div>
             `;
