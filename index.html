@@ -1610,7 +1610,6 @@
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <button class="btn-primary" style="height: 38px; padding: 0 14px; font-size: 13px; background-color: #10b981;" onclick="pgBaixarExcel()">📥 Baixar Excel</button>
                             <button id="pg-btn-backup" class="btn-secondary" style="height: 38px; padding: 0 14px; font-size: 13px;" onclick="pgExportarBackup()">Backup</button>
-                            <button id="pg-btn-restaurar" class="btn-secondary" style="height: 38px; padding: 0 14px; font-size: 13px;" onclick="document.getElementById('pg-arquivo-backup').click()">Restaurar</button>
                             <input id="pg-arquivo-backup" type="file" accept=".json" hidden onchange="pgImportarBackup(event)">
                         </div>
                     </div>
@@ -1644,9 +1643,7 @@
                             <h4 id="pg-titulo-tabela" style="margin: 0; font-size: 16px;">Produção</h4>
                             <span class="info-auxiliar">Clique em qualquer dia, digite a quantidade e pressione <strong>ENTER</strong> ou mude com o mouse.</span>
                         </div>
-                        <button id="pg-btn-limpar-mes" class="btn-danger" style="padding: 6px 12px; font-size: 12px; height: auto;" onclick="pgLimparMes()">Limpar mês atual</button>
-                    </div>
-
+                        
                     <div class="pg-table-wrap">
                         <table id="pg-tabela" class="pg-table"></table>
                     </div>
