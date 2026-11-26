@@ -1657,6 +1657,7 @@
     </div>
 
     <!-- JS & FIREBASE -->
+    <script src="config.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -1681,8 +1682,9 @@
         // Configuração do Firebase
         // IMPORTANTE: Configure suas chaves ou utilize a variável window.FIREBASE_CONFIG
         const firebaseConfig = window.FIREBASE_CONFIG || {
-            apiKey: "SUA_API_KEY_AQUI",
+            apiKey: "AIzaSyCVPh1U7jH0WLuPWLWtZDvAgEfPLROqxcA",
             authDomain: "prod-sbc.firebaseapp.com",
+            databaseURL: "https://prod-sbc-default-rtdb.firebaseio.com",
             projectId: "prod-sbc",
             storageBucket: "prod-sbc.firebasestorage.app",
             messagingSenderId: "330938798472",
@@ -1694,7 +1696,7 @@
         const db = getFirestore(app);
 
         // Segundo Banco de Dados (Firebase Realtime Database - Planilha de Produção Geral)
-        const firebaseConfigPlanilha = {
+        const firebaseConfigPlanilha = window.FIREBASE_CONFIG_PLANILHA || {
             apiKey: "AIzaSyBAFZ-cV19gjmqldhwJJWeaB3P5sIiqVSc",
             authDomain: "prodcardnet.firebaseapp.com",
             databaseURL: "https://prodcardnet-default-rtdb.firebaseio.com",
@@ -2246,9 +2248,14 @@
             });
         }
 
+        let loginEmAndamento = false;
+
         window.fazerLogin = async function() {
+            if (loginEmAndamento) return;
+
             const nomeInput = document.getElementById("input-operador-login");
             const senhaInput = document.getElementById("input-senha-login");
+            const btnLogin = document.querySelector("#modal-login .btn-primary");
             const nomeOriginal = nomeInput.value.trim();
             const nome = nomeOriginal.toUpperCase();
             const senha = senhaInput.value;
@@ -2256,6 +2263,12 @@
             if (!nome || !senha) { 
                 mostrarToast("Preencha nome e senha!", "warning"); 
                 return; 
+            }
+
+            loginEmAndamento = true;
+            if (btnLogin) {
+                btnLogin.disabled = true;
+                btnLogin.innerText = "Conectando...";
             }
 
             try {
@@ -2269,6 +2282,15 @@
                 }
 
                 if (!docSnap.exists()) {
+                    const todosOps = await getDocs(collection(db, "operadores"));
+                    const nomeNorm = nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    todosOps.forEach(d => {
+                        const idNorm = d.id.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                        if (idNorm === nomeNorm) docSnap = d;
+                    });
+                }
+
+                if (!docSnap.exists()) {
                     mostrarToast("Acesso negado! Utilizador não encontrado.", "error");
                     return;
                 }
@@ -2276,13 +2298,13 @@
                 const dadosOp = docSnap.data();
                 const senhaSalva = typeof dadosOp === 'string' ? dadosOp : (dadosOp ? dadosOp.senha : null);
 
-                if (!senhaSalva || senhaSalva !== senha) {
+                if (!senhaSalva || String(senhaSalva) !== String(senha)) {
                     mostrarToast("Acesso negado! Senha incorreta.", "error");
                     return;
                 }
 
                 operadorAtual = docSnap.id.toUpperCase();
-                permissoesOperadorAtual = dadosOp.permissoes || { producao: true, historico: true, relatorios: false, rejeitos: false, solicitacaoNotas: false, expedicao: true, portaria: true };
+                permissoesOperadorAtual = dadosOp.permissoes || { producao: true, historico: true, relatorios: false, rejeitos: false, solicitacaoNotas: false, expedicao: true, portaria: true, planilhaGeral: true };
 
                 document.getElementById("modal-login").style.display = "none";
                 document.getElementById("display-usuario").innerText = "👤 Operador: " + operadorAtual;
@@ -2309,7 +2331,13 @@
                 senhaInput.value = "";
             } catch (error) {
                 console.error("Erro no login:", error);
-                mostrarToast("Erro ao conectar ao servidor. Verifique o console.", "error");
+                mostrarToast("Erro ao conectar ao servidor. Verifique sua conexão.", "error");
+            } finally {
+                loginEmAndamento = false;
+                if (btnLogin) {
+                    btnLogin.disabled = false;
+                    btnLogin.innerText = "Entrar no Sistema";
+                }
             }
         };
 
@@ -4287,7 +4315,7 @@
                             <option value="Correio" ${tipoVal === 'Correio' ? 'selected' : ''}>📮 Correio</option>
                             <option value="Motoboy" ${tipoVal === 'Motoboy' ? 'selected' : ''}>🏍️ Motoboy</option>
                             <option value="Motoboy" ${tipoVal === 'Motoboy' ? 'selected' : ''}>📮 Cardnet</option>
-                        </selectCardnet
+                        </select>
                     </div>
                 </div>
             `;
@@ -4730,6 +4758,27 @@
             return obj;
         }
 
+        function pgNormalizarListaCategoria(listaBruta) {
+            if (!listaBruta) return [];
+            const arr = Array.isArray(listaBruta) ? listaBruta : Object.values(listaBruta);
+            return arr
+                .filter(item => item && typeof item === 'object' && item.nome)
+                .map(item => ({
+                    ...item,
+                    diasObj: pgObjetoDiasNormalizado(item.diasObj || item.dias)
+                }));
+        }
+
+        function pgBuscarChaveMes(ano, mes) {
+            const mesNum = parseInt(mes, 10);
+            const mesPad = String(mesNum).padStart(2, '0');
+            const chaveSemZero = `${ano}_${mesNum}`;
+            const chaveComZero = `${ano}_${mesPad}`;
+            if (pgBancoDados[chaveSemZero]) return chaveSemZero;
+            if (pgBancoDados[chaveComZero]) return chaveComZero;
+            return chaveSemZero;
+        }
+
         function pgSelecionarUltimoMesComLancamento() {
             let ultimoAno = null;
             let ultimoMes = null;
@@ -4739,14 +4788,16 @@
                     const ano = parseInt(partes[0], 10);
                     const mes = parseInt(partes[1], 10);
                     const dadosMes = pgBancoDados[chave];
+                    if (!dadosMes || typeof dadosMes !== 'object') return;
                     let possuiLancamento = false;
                     ['producao', 'chip'].forEach(cat => {
-                        if (dadosMes[cat]) {
-                            dadosMes[cat].forEach(item => {
-                                const diasObj = item.diasObj || item.dias || {};
-                                if (Object.keys(diasObj).length > 0) possuiLancamento = true;
-                            });
-                        }
+                        const lista = pgNormalizarListaCategoria(dadosMes[cat]);
+                        lista.forEach(item => {
+                            const valores = Object.values(item.diasObj || {});
+                            if (valores.some(v => !isNaN(v) && Number(v) !== 0)) {
+                                possuiLancamento = true;
+                            }
+                        });
                     });
                     if (possuiLancamento) {
                         if (!ultimoAno || ano > ultimoAno || (ano === ultimoAno && mes > ultimoMes)) {
@@ -4759,8 +4810,8 @@
             if (ultimoAno && ultimoMes) {
                 const elMes = document.getElementById('pg-mes');
                 const elAno = document.getElementById('pg-ano');
-                if (elMes) elMes.value = ultimoMes;
-                if (elAno) elAno.value = ultimoAno;
+                if (elMes) elMes.value = String(ultimoMes);
+                if (elAno) elAno.value = String(ultimoAno);
             }
         }
 
@@ -4768,16 +4819,13 @@
             const refDados = rtdbRef(dbPlanilha, 'producao_dados');
             rtdbOnValue(refDados, (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
+                if (data && typeof data === 'object') {
                     pgBancoDados = data;
                     Object.keys(pgBancoDados).forEach(chave => {
-                        ['producao', 'chip'].forEach(cat => {
-                            if (pgBancoDados[chave][cat]) {
-                                pgBancoDados[chave][cat].forEach(item => {
-                                    item.diasObj = pgObjetoDiasNormalizado(item.diasObj || item.dias);
-                                });
-                            }
-                        });
+                        if (pgBancoDados[chave] && typeof pgBancoDados[chave] === 'object') {
+                            pgBancoDados[chave].producao = pgNormalizarListaCategoria(pgBancoDados[chave].producao);
+                            pgBancoDados[chave].chip = pgNormalizarListaCategoria(pgBancoDados[chave].chip);
+                        }
                     });
                 }
                 const stEl = document.getElementById('pg-status-firebase');
@@ -4790,13 +4838,14 @@
                     pgCarregouMesInicial = true;
                 }
                 if (!window.pgUsuarioEditando) {
-                    pgRender(false);
+                    pgRender(true);
                 }
             }, (error) => {
                 console.error("Erro RTDB Planilha:", error);
+                const msgErro = (error && error.message) ? error.message : "Erro de comunicação com o Realtime Database";
                 const stEl = document.getElementById('pg-status-firebase');
                 if (stEl) {
-                    stEl.innerText = '🔴 Erro na conexão com banco da planilha';
+                    stEl.innerText = '🔴 Sem comunicação com o banco da planilha: ' + msgErro;
                     stEl.style.color = '#ef4444';
                 }
             });
@@ -4816,7 +4865,7 @@
         function pgObterDadosMesAtual() {
             const mes = document.getElementById('pg-mes').value;
             const ano = document.getElementById('pg-ano').value;
-            const chave = `${ano}_${mes}`;
+            const chave = pgBuscarChaveMes(ano, mes);
 
             if (!pgBancoDados[chave]) {
                 pgBancoDados[chave] = {
@@ -4827,12 +4876,8 @@
             }
 
             ['producao', 'chip'].forEach(cat => {
-                if (pgBancoDados[chave][cat]) {
-                    pgBancoDados[chave][cat].forEach(item => {
-                        item.diasObj = pgObjetoDiasNormalizado(item.diasObj || item.dias);
-                    });
-                    pgBancoDados[chave][cat].sort((a, b) => a.nome.localeCompare(b.nome));
-                }
+                pgBancoDados[chave][cat] = pgNormalizarListaCategoria(pgBancoDados[chave][cat]);
+                pgBancoDados[chave][cat].sort((a, b) => a.nome.localeCompare(b.nome));
             });
 
             return pgBancoDados[chave];
@@ -5215,7 +5260,7 @@
                 valoresChip = new Array(12).fill(0);
 
                 for (let m = 1; m <= 12; m++) {
-                    const chave = `${anoAtual}_${m}`;
+                    const chave = pgBuscarChaveMes(anoAtual, m);
                     if (pgBancoDados[chave]) {
                         if (pgBancoDados[chave].producao) {
                             pgBancoDados[chave].producao.forEach(c => {
@@ -5242,7 +5287,7 @@
 
                 rotulos.forEach((ano, idx) => {
                     for (let m = 1; m <= 12; m++) {
-                        const chave = `${ano}_${m}`;
+                        const chave = pgBuscarChaveMes(ano, m);
                         if (pgBancoDados[chave]) {
                             if (pgBancoDados[chave].producao) {
                                 pgBancoDados[chave].producao.forEach(c => {
